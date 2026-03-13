@@ -32,7 +32,7 @@ const ProductCard = ({
       to={`/product/${id}`}
       className="flex flex-col gap-1 md:gap-2 cursor-pointer group w-full font-satoshi"
     >
-      <div className="bg-[#F0EEED] rounded-[14px] md:rounded-[20px] aspect-square overflow-hidden relative">
+      <div className="bg-brand-surface rounded-[14px] md:rounded-[20px] aspect-square overflow-hidden relative">
         <img
           src={image}
           alt={name}
@@ -65,7 +65,7 @@ const ProductCard = ({
               <span className="text-gray-400 line-through text-base md:text-2xl font-bold">
                 ${oldValue}
               </span>
-              <span className="bg-[#FF3333]/10 text-[#FF3333] px-2 py-1 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-[1000] italic">
+              <span className="bg-brand-red/10 text-red px-2 py-1 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-[1000] italic">
                 -{discount}%
               </span>
             </div>

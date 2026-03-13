@@ -1,10 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  FiCheckCircle,
-  FiPackage,
-  FiShoppingBag,
-} from "react-icons/fi";
+import { FiCheckCircle, FiPackage, FiShoppingBag } from "react-icons/fi";
 import { Helmet } from "react-helmet-async";
 import { useCart } from "../context/CartContext";
 import Button from "../components/ui/Button";
@@ -58,7 +54,7 @@ const Success = () => {
           </p>
         </div>
 
-        <div className="bg-[#FAFAFA] p-8 rounded-[48px] border border-zinc-100 space-y-6 shadow-sm group hover:border-black transition-all duration-500">
+        <div className="bg-brand-offwhite p-8 rounded-[48px] border border-zinc-100 space-y-6 shadow-sm group hover:border-black transition-all duration-500">
           <div className="space-y-1">
             <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.4em] italic">
               Takip Numarası

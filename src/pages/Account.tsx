@@ -22,7 +22,7 @@ import { Link, useNavigate } from "react-router-dom";
 const Account = () => {
   const { user, orders, logout } = useUser();
   const [activeTab, setActiveTab] = useState("siparislerim");
-  const [showLogoutModal, setShowLogoutModal] = useState(false); 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
 
   const totalSpent = useMemo(
@@ -176,7 +176,7 @@ const Account = () => {
 
             <Button
               variant="outline"
-              onClick={() => setShowLogoutModal(true)} 
+              onClick={() => setShowLogoutModal(true)}
               className="w-full !justify-start !px-6 !py-5 !rounded-2xl mt-8 !text-[11px] tracking-[0.2em] gap-4 !border-red-600/20 !text-red-600 hover:!bg-red-600 hover:!text-white italic"
             >
               <FiLogOut size={16} />
@@ -185,7 +185,7 @@ const Account = () => {
           </div>
         </aside>
 
-        <div className="min-w-0 w-full bg-[#FAFAFA] rounded-[50px] p-8 md:p-14 border border-zinc-100 shadow-inner overflow-hidden min-h-[600px] relative">
+        <div className="min-w-0 w-full bg-brand-offwhite rounded-[50px] p-8 md:p-14 border border-zinc-100 shadow-inner overflow-hidden min-h-[600px] relative">
           {activeTab === "siparislerim" && (
             <div className="animate-in fade-in slide-in-from-right-8 duration-700 space-y-10">
               <div className="flex items-center justify-between">
@@ -261,7 +261,7 @@ const Account = () => {
                 <div className="py-32 flex flex-col items-center justify-center border-4 border-dashed border-zinc-100 rounded-[50px] opacity-30">
                   <FiShoppingBag size={60} className="mb-4" />
                   <p className="font-black text-[11px] uppercase tracking-[0.4em] italic">
-                    Henüz keşif yapılmadı
+                    Henüz alışveriş yapılmadı
                   </p>
                 </div>
               )}

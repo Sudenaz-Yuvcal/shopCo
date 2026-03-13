@@ -65,7 +65,7 @@ const DressStyle = () => {
 
   return (
     <section className="px-6 py-20 bg-white">
-      <div className="max-w-7xl mx-auto bg-[#F0F0F0] rounded-[40px] p-8 md:p-16 text-center">
+      <div className="max-w-7xl mx-auto bg-brand-gray rounded-[40px] p-8 md:p-16 text-center">
         <h2 className="text-4xl md:text-6xl font-[1000] text-black italic uppercase tracking-tighter mb-12">
           STİLİNE GÖRE GÖZ AT
         </h2>

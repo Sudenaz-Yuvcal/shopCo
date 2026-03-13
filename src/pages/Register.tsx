@@ -57,13 +57,15 @@ const Register: React.FC = () => {
   };
 
   const isFormValid = useMemo(() => {
-    return (
-      formData.fullName.trim().includes(" ") &&
-      formData.email.trim() !== "" &&
-      formData.password !== "" &&
-      formData.confirmPassword !== "" &&
-      Object.values(errors).every((x) => x === "")
-    );
+    const isNameValid =
+      formData.fullName.trim().length > 0 &&
+      formData.fullName.trim().includes(" ");
+    const isEmailValid = formData.email.trim() !== "" && !errors.email;
+    const isPasswordValid = formData.password !== "" && !errors.password;
+    const isConfirmValid =
+      formData.confirmPassword === formData.password && !errors.confirmPassword;
+
+    return isNameValid && isEmailValid && isPasswordValid && isConfirmValid;
   }, [formData, errors]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -96,8 +98,6 @@ const Register: React.FC = () => {
 
         navigate("/", { state: { isNewUser: true } });
       }, 2000);
-    } else {
-      toast.error("LÜTFEN TÜM ALANLARI DOĞRU DOLDURUN.", { theme: "dark" });
     }
   };
 
@@ -123,7 +123,7 @@ const Register: React.FC = () => {
 
       <div className="max-w-[1100px] w-full grid md:grid-cols-2 bg-white rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.12)] border border-zinc-100 overflow-hidden z-10 my-12 relative">
         <div className="relative bg-black p-12 hidden md:flex flex-col justify-between items-start text-left">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+          <div className="absolute inset-0 opacity-10" />
           <div className="relative z-10">
             <span className="text-[10px] font-black text-zinc-500 tracking-[0.4em] uppercase">
               ELITE KATILIN
@@ -175,7 +175,7 @@ const Register: React.FC = () => {
                   name="fullName"
                   placeholder="ADINIZ VE SOYADINIZ"
                   onChange={handleChange}
-                  className="!bg-[#F9F9F9] !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all"
+                  className="!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all"
                   required
                 />
               </div>
@@ -192,7 +192,7 @@ const Register: React.FC = () => {
                   type="email"
                   placeholder="ornek@mail.com"
                   onChange={handleChange}
-                  className={`!bg-[#F9F9F9] !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all ${errors.email ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all ${errors.email ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}
                   required
                 />
                 {errors.email && (
@@ -215,7 +215,7 @@ const Register: React.FC = () => {
                     type="password"
                     placeholder="••••••••"
                     onChange={handleChange}
-                    className={`!bg-[#F9F9F9] !border-none !rounded-[20px] pl-14 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${errors.password ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}
+                    className={`!bg-brand-soft !border-none !rounded-[20px] pl-14 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${errors.password ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}
                     required
                   />
                 </div>
@@ -231,12 +231,13 @@ const Register: React.FC = () => {
                     type="password"
                     placeholder="••••••••"
                     onChange={handleChange}
-                    className={`!bg-[#F9F9F9] !border-none !rounded-[20px] pl-14 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${errors.confirmPassword ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}
+                    className={`!bg-brand-soft !border-none !rounded-[20px] pl-14 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${errors.confirmPassword ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}
                     required
                   />
                 </div>
               </div>
             </div>
+
             {(errors.password || errors.confirmPassword) && (
               <span className="text-[9px] font-black text-red-600 uppercase tracking-widest block text-center mt-2">
                 {errors.password || errors.confirmPassword}
@@ -249,9 +250,13 @@ const Register: React.FC = () => {
                 variant="primary"
                 size="xl"
                 disabled={!isFormValid || isLoading}
-                className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all ${!isFormValid || isLoading ? "opacity-30 grayscale cursor-not-allowed" : "hover:scale-[1.02] hover:bg-zinc-900 active:scale-95"}`}
+                className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all ${
+                  !isFormValid || isLoading
+                    ? "opacity-30 grayscale cursor-not-allowed pointer-events-none"
+                    : "hover:scale-[1.02] hover:bg-zinc-900 active:scale-95"
+                }`}
               >
-                KAYIT OL VE KEŞFET →
+                {isLoading ? "İŞLENİYOR..." : "KAYIT OL VE KEŞFET →"}
               </Button>
             </div>
           </form>

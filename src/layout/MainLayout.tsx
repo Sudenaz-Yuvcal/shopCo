@@ -8,8 +8,8 @@ import PromoModal from "../components/home/PromoModal";
 import WelcomeGift from "../components/home/WelcomeGift";
 import WheelOfFortune from "../components/WheelOfFortune";
 import CookieBanner from "../components/ui/CookieBanner";
-import type {Product} from  "../types/product";
-
+import type { Product } from "../types/product";
+import "../index.css";
 import { FaTwitter, FaFacebookF, FaInstagram, FaGithub } from "react-icons/fa";
 import {
   RiMailLine,
@@ -233,7 +233,7 @@ const MainLayout: React.FC = () => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSeeAll()}
                       placeholder="ZARA, GUCCI, CALVIN ARA..."
-                      className="!py-3 pl-12 w-full text-[10px] bg-[#F0F0F0] border-none !rounded-full font-black tracking-widest focus:ring-2 focus:ring-black transition-all"
+                      className="!py-3 pl-12 w-full text-[10px] bg-brand-gray border-none !rounded-full font-black tracking-widest focus:ring-2 focus:ring-black transition-all"
                     />
                     <RiSearchLine className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 text-lg group-focus-within:opacity-100 group-focus-within:text-black transition-all" />
                     {searchTerm && (
@@ -258,11 +258,11 @@ const MainLayout: React.FC = () => {
                               <div
                                 key={p.id}
                                 onClick={() => handleProductClick(p.id)}
-                                className="flex items-center gap-4 p-3 hover:bg-[#F9F9F9] rounded-[20px] cursor-pointer transition-all group"
+                                className="flex items-center gap-4 p-3 hover:bg-brand-soft rounded-[20px] cursor-pointer transition-all group"
                               >
                                 <img
                                   src={p.image}
-                                  className="w-14 h-14 bg-[#F0EEED] rounded-xl overflow-hidden shrink-0 border border-black/5"
+                                  className="w-14 h-14 bg-brand-surface rounded-xl overflow-hidden shrink-0 border border-black/5"
                                   alt=""
                                 />
                                 <div className="flex-1 min-w-0">
@@ -411,7 +411,7 @@ const MainLayout: React.FC = () => {
           <Outlet />
         </main>
 
-        <footer className="bg-[#F0F0F0] pt-48 pb-12 relative mt-40 w-full font-satoshi text-left">
+        <footer className="bg-brand-gray pt-48 pb-12 relative mt-40 w-full font-satoshi text-left">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-7xl bg-black rounded-[40px] p-8 md:p-14 flex flex-col lg:flex-row justify-between items-center gap-8 shadow-[0_40px_80px_rgba(0,0,0,0.4)] overflow-hidden border border-white/5">
             <div className="absolute top-0 right-0 w-80 h-80 bg-zinc-800/30 rounded-full -mr-32 -mt-32 blur-3xl" />
             <div className="absolute bottom-0 left-0 w-60 h-60 bg-zinc-800/20 rounded-full -ml-20 -mb-20 blur-3xl" />

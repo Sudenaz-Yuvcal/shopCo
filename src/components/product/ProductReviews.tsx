@@ -88,14 +88,14 @@ const ProductReviews = () => {
         <div className="flex items-center gap-3 w-full md:w-auto">
           <Button
             variant="outline"
-            className="!w-12 !h-12 !p-0 !bg-[#F0F0F0] !border-none shadow-sm hover:scale-110 active:scale-90"
+            className="!w-12 !h-12 !p-0 bg-brand-gray !border-none shadow-sm hover:scale-110 active:scale-90"
           >
             <RiEqualizerLine size={24} className="text-black" />
           </Button>
           <Button
             variant="outline"
             size="md"
-            className="hidden md:flex !bg-[#F0F0F0] !border-none !px-8 gap-4 hover:scale-105"
+            className="hidden md:flex bg-brand-gray !border-none !px-8 gap-4 hover:scale-105"
           >
             En Yeni
             <RiArrowDownSLine

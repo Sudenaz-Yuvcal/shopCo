@@ -18,12 +18,7 @@ const Checkout = () => {
   } = totals;
   const navigate = useNavigate();
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-  } = useForm<ICheckoutForm>();
-
+  const { register, handleSubmit, setValue } = useForm<ICheckoutForm>();
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 16);
@@ -153,7 +148,7 @@ const Checkout = () => {
                   KART DETAYLARI
                 </h2>
               </div>
-              <div className="bg-[#FAFAFA] p-8 rounded-[40px] border border-zinc-100 space-y-6">
+              <div className="bg-brand-offwhite p-8 rounded-[40px] border border-zinc-100 space-y-6">
                 <Input
                   {...register("cardName", { required: true })}
                   placeholder="KART ÜZERİNDEKİ İSİM"

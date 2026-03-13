@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FiStar, FiZap, FiArrowUpRight } from "react-icons/fi";
 import { ALL_PRODUCTS } from "../constants/Product";
 import type { Product } from "../types/product";
-import { useMemo } from "react"; 
+import { useMemo } from "react";
 const NewProduct = () => {
   const newArrivals = useMemo(
     () => [...ALL_PRODUCTS].sort((a, b) => b.id - a.id),
@@ -21,7 +21,7 @@ const NewProduct = () => {
       </Helmet>
 
       <div className="max-w-7xl mx-auto px-6 py-12 text-left font-satoshi">
-        <div className="w-full bg-[#FAFAFA] rounded-[48px] p-10 md:p-20 mb-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between border-2 border-zinc-50 shadow-sm">
+        <div className="w-full bg-brand-offwhite rounded-[48px] p-10 md:p-20 mb-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between border-2 border-zinc-50 shadow-sm">
           <div className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-[0.02] pointer-events-none select-none">
             <h2 className="text-[250px] lg:text-[450px] font-[1000] italic uppercase leading-none text-black">
               NEW
@@ -70,7 +70,7 @@ const NewProduct = () => {
               to={`/product/${product.id}`}
               className="group flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-10 duration-1000"
             >
-              <div className="relative aspect-[3/4] bg-[#F5F5F5] rounded-[40px] overflow-hidden transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)]">
+              <div className="relative aspect-[3/4] bg-brand-neutral rounded-[40px] overflow-hidden transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)]">
                 <img
                   src={product.image}
                   alt={product.name}

@@ -46,7 +46,7 @@ const ProductDetail = () => {
   const product = ALL_PRODUCTS.find((p: Product) => p.id === Number(id));
 
   const [selectedSize, setSelectedSize] = useState("Large");
-  const [selectedColor, setSelectedColor] = useState("#4F4631");
+  const [selectedColor, setSelectedColor] = useState("khaki");
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("Yorumlar & Değerlendirmeler");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -54,6 +54,14 @@ const ProductDetail = () => {
   const [zoomStyle, setZoomStyle] = useState({ backgroundPosition: "50% 50%" });
   const [showAddedModal, setShowAddedModal] = useState(false);
   const [mainImage, setMainImage] = useState("");
+  const [visibleReviews, setVisibleReviews] = useState(4);
+  const [sortBy, setSortBy] = useState<SortOption>("latest");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newReview, setNewReview] = useState({
+    author: "",
+    rating: 5,
+    text: "",
+  });
 
   const [reviews, setReviews] = useState<Review[]>([
     {
@@ -79,14 +87,11 @@ const ProductDetail = () => {
     },
   ]);
 
-  const [visibleReviews, setVisibleReviews] = useState(4);
-  const [sortBy, setSortBy] = useState<SortOption>("latest");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newReview, setNewReview] = useState({
-    author: "",
-    rating: 5,
-    text: "",
-  });
+  const COLOR_OPTIONS = [
+    { name: "Kahverengi", id: "khaki", tailwind: "bg-khaki" },
+    { name: "Yeşil", id: "green", tailwind: "bg-green" },
+    { name: "Mavi", id: "denim", tailwind: "bg-denim" },
+  ];
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -188,8 +193,8 @@ const ProductDetail = () => {
             className="absolute inset-0 bg-brand-black/60 backdrop-blur-md"
             onClick={() => setIsModalOpen(false)}
           />
-          <div className="relative bg-brand-white rounded-shop-lg w-full max-w-[400px] p-10 shadow-premium animate-in zoom-in-95">
-            <h2 className="text-3xl font-heavy font-integral uppercase italic tracking-tightest mb-8 text-center text-brand-black">
+          <div className="relative bg-brand-white rounded-shop-lg w-full max-w-[400px] p-10 shadow-premium animate-in zoom-in-95 text-brand-black">
+            <h2 className="text-3xl font-heavy font-integral uppercase italic tracking-tightest mb-8 text-center">
               DENEYİMİNİ PAYLAŞ
             </h2>
             <form
@@ -251,7 +256,7 @@ const ProductDetail = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-6 py-12 text-left font-satoshi">
+      <div className="max-w-7xl mx-auto px-6 py-12 text-left">
         <div className="flex items-center gap-3 text-zinc-300 text-[10px] font-black uppercase tracking-widest-premium mb-12 italic">
           <Link to="/" className="hover:text-brand-black">
             ANA SAYFA
@@ -267,114 +272,56 @@ const ProductDetail = () => {
         </div>
 
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-12 mb-24 items-start">
-          <div className="lg:col-span-7 space-y-8 w-full">
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex md:flex-col gap-4 order-2 md:order-1">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    onClick={() => setMainImage(product.image)}
-                    className={`w-20 h-20 md:w-24 md:h-24 rounded-shop-md overflow-hidden cursor-pointer transition-all duration-500 border-2 ${
-                      mainImage === product.image
-                        ? "border-brand-black scale-95 shadow-lg"
-                        : "border-transparent opacity-40 hover:opacity-100"
-                    }`}
-                  >
-                    <img
-                      src={product.image}
-                      className="w-full h-full object-cover"
-                      alt="Angle"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div
-                className={`flex-1 max-w-[480px] aspect-square bg-brand-gray rounded-shop-lg overflow-hidden order-1 md:order-2 relative group select-none shadow-sm ${isZoomActive ? "cursor-zoom-out" : "cursor-zoom-in"}`}
-                onClick={() => setIsZoomActive(!isZoomActive)}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={() => setIsZoomActive(false)}
-              >
-                <img
-                  src={mainImage}
-                  className={`w-full h-full object-cover transition-all duration-700 ${isZoomActive ? "opacity-0 scale-110" : "opacity-100"}`}
-                  alt={product.name}
-                />
-                {isZoomActive && (
-                  <div
-                    className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-                    style={{
-                      backgroundImage: `url(${mainImage})`,
-                      backgroundSize: "250%",
-                      backgroundPosition: zoomStyle.backgroundPosition,
-                      backgroundRepeat: "no-repeat",
-                    }}
+          <div className="lg:col-span-7 flex flex-col md:flex-row gap-5 w-full">
+            <div className="flex md:flex-col gap-4 order-2 md:order-1">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  onClick={() => setMainImage(product.image)}
+                  className={`w-20 h-20 md:w-28 md:h-28 rounded-shop-md overflow-hidden cursor-pointer transition-all duration-500 border-2 ${mainImage === product.image ? "border-brand-black scale-95 shadow-lg" : "border-transparent opacity-40 hover:opacity-100"}`}
+                >
+                  <img
+                    src={product.image}
+                    className="w-full h-full object-cover"
+                    alt="Angle"
                   />
-                )}
-                {!isZoomActive && (
-                  <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 scale-90 group-hover:scale-100">
-                    <RiZoomInLine size={20} className="text-brand-black" />
-                  </div>
-                )}
-              </div>
+                </div>
+              ))}
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 p-10 bg-brand-gray rounded-shop-lg border border-brand-gray shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="space-y-5">
-                <p className="text-[10px] font-heavy uppercase tracking-widest-premium text-zinc-400 italic">
-                  RENK SEÇENEKLERİ
-                </p>
-                <div className="flex gap-4">
-                  {["#4F4631", "#314F4A", "#31344F"].map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      style={{ backgroundColor: color }}
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 ${selectedColor === color ? "ring-2 ring-brand-black ring-offset-4 scale-110 shadow-2xl" : "opacity-60"}`}
-                    >
-                      {selectedColor === color && (
-                        <RiCheckLine className="text-brand-white text-xl animate-in zoom-in" />
-                      )}
-                    </button>
-                  ))}
+            <div
+              className={`flex-1 relative aspect-[4/5] bg-brand-gray rounded-shop-lg overflow-hidden order-1 md:order-2 group select-none shadow-sm ${isZoomActive ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+              onClick={() => setIsZoomActive(!isZoomActive)}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={() => setIsZoomActive(false)}
+            >
+              <img
+                src={mainImage}
+                className={`w-full h-full object-cover transition-all duration-700 ${isZoomActive ? "opacity-0 scale-110" : "opacity-100"}`}
+                alt={product.name}
+              />
+              {isZoomActive && (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundImage: `url(${mainImage})`,
+                    backgroundSize: "250%",
+                    backgroundPosition: zoomStyle.backgroundPosition,
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
+              )}
+              {!isZoomActive && (
+                <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
+                  <RiZoomInLine size={20} className="text-brand-black" />
                 </div>
-              </div>
-
-              <div className="space-y-5">
-                <p className="text-[10px] font-heavy uppercase tracking-widest-premium text-zinc-400 italic">
-                  BEDENİNİ SEÇ
-                </p>
-                <div className="flex flex-row gap-2 w-full">
-                  {["Small", "Medium", "Large", "X-Large"].map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`flex-1 py-3.5 rounded-full text-[11px] font-black uppercase tracking-tight transition-all duration-300 border ${
-                        selectedSize === size
-                          ? "bg-brand-black text-brand-white border-brand-black shadow-xl scale-105"
-                          : "bg-brand-white text-zinc-400 border-zinc-200 hover:bg-zinc-100 hover:text-brand-black"
-                      }`}
-                    >
-                      {size === "Small"
-                        ? "S"
-                        : size === "Medium"
-                          ? "M"
-                          : size === "Large"
-                            ? "L"
-                            : "XL"}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
-          <div className="lg:col-span-5 space-y-10 w-full pt-2">
+          <div className="lg:col-span-5 space-y-10 w-full pt-2 text-brand-black">
             <div className="space-y-6">
-              <div className="flex flex-col gap-2">
-                <ScarcityBadge />
-              </div>
-              <h1 className="text-5xl md:text-4xl font-heavy font-integral uppercase italic tracking-tightest leading-[0.85] text-brand-black">
+              <ScarcityBadge />
+              <h1 className="text-5xl md:text-6xl font-heavy font-integral uppercase italic tracking-tightest leading-[0.85]">
                 {product.name}
               </h1>
             </div>
@@ -393,37 +340,78 @@ const ProductDetail = () => {
                 {product.rating}/5.0 • {reviews.length} GÖRÜŞ
               </span>
             </div>
-
             <div className="flex items-baseline gap-6 border-b border-brand-gray pb-8">
-              <span className="text-6xl font-heavy font-satoshi tracking-tightest italic leading-none text-brand-black">
+              <span className="text-6xl font-heavy italic leading-none">
                 ${product.value}
               </span>
               {product.oldValue && (
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl text-zinc-200 line-through font-heavy italic tracking-tightest">
+                  <span className="text-3xl text-zinc-200 line-through font-heavy italic">
                     ${product.oldValue}
                   </span>
-                  <span className="bg-brand-red/10 text-brand-red px-4 py-1.5 rounded-full text-[11px] font-heavy tracking-widest">
+                  <span className="bg-brand-red/10 text-brand-red px-4 py-1.5 rounded-full text-[11px] font-heavy">
                     -{discount}%
                   </span>
                 </div>
               )}
             </div>
-
             <p className="text-zinc-400 text-sm font-medium uppercase leading-relaxed tracking-wider italic border-l-4 border-brand-black pl-8">
               Modern kesim, rafine doku. Shop.co premium koleksiyonunun en
               ikonik parçasıyla tarzını mühürle.
             </p>
 
+            <div className="space-y-5">
+              <p className="text-[10px] font-heavy uppercase tracking-widest-premium text-zinc-400 italic">
+                RENK SEÇENEKLERİ
+              </p>
+              <div className="flex gap-4">
+                {COLOR_OPTIONS.map((color) => (
+                  <button
+                    key={color.id}
+                    onClick={() => setSelectedColor(color.id)}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110  ${color.tailwind} bg-brand-denim ${selectedColor === color.id ? "ring-2 ring-brand-black ring-offset-4 scale-110 shadow-2xl" : "opacity-60"}`}
+                    title={color.name}
+                  >
+                    {selectedColor === color.id && (
+                      <RiCheckLine className="text-brand-white text-xl animate-in zoom-in" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-5">
+              <p className="text-[10px] font-heavy uppercase tracking-widest-premium text-zinc-400 italic">
+                BEDENİNİ SEÇ
+              </p>
+              <div className="flex flex-row gap-2 w-full">
+                {["Small", "Medium", "Large", "X-Large"].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`flex-1 py-3.5 rounded-full text-[11px] font-black uppercase tracking-tight transition-all duration-300 border ${selectedSize === size ? "bg-brand-black text-brand-white border-brand-black shadow-xl scale-105" : "bg-brand-white text-zinc-400 border-zinc-200 hover:bg-zinc-100 hover:text-brand-black"}`}
+                  >
+                    {size === "Small"
+                      ? "S"
+                      : size === "Medium"
+                        ? "M"
+                        : size === "Large"
+                          ? "L"
+                          : "XL"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex flex-row gap-4 pt-4 items-stretch">
-              <div className="bg-brand-gray px-6 py-4 rounded-full flex items-center justify-between shadow-inner border border-brand-gray min-w-[140px]">
+              <div className="bg-brand-gray px-6 py-4 rounded-full flex items-center justify-between border border-brand-gray min-w-[140px]">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="text-zinc-400 hover:text-brand-black transition-colors"
                 >
                   <FiMinus size={22} />
                 </button>
-                <span className="text-xl font-heavy italic tabular-nums text-brand-black">
+                <span className="text-xl font-heavy italic tabular-nums">
                   {quantity}
                 </span>
                 <button
@@ -481,23 +469,21 @@ const ProductDetail = () => {
 
         <div className="mt-32">
           <div className="flex border-b-2 border-brand-gray mb-20 overflow-x-auto scrollbar-hide">
-            {["Yorumlar & Değerlendirmeler", "Ürün Detayı", "SSS"].map(
-              (tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 min-w-[220px] pb-8 pt-4 text-[11px] font-black uppercase tracking-widest-premium transition-all relative ${activeTab === tab ? "text-brand-black italic" : "text-zinc-300 hover:text-zinc-500"}`}
-                >
-                  {tab}
-                  {activeTab === tab && (
-                    <div className="absolute bottom-[-2px] left-0 w-full h-[4px] bg-brand-black animate-in slide-in-from-left" />
-                  )}
-                </button>
-              ),
-            )}
+            {["Yorumlar & Değerlendirmeler", "SSS"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 min-w-[220px] pb-8 pt-4 text-[11px] font-black uppercase tracking-widest-premium transition-all relative ${activeTab === tab ? "text-brand-black italic" : "text-zinc-300 hover:text-zinc-500"}`}
+              >
+                {tab}
+                {activeTab === tab && (
+                  <div className="absolute bottom-[-2px] left-0 w-full h-[4px] bg-brand-black animate-in slide-in-from-left" />
+                )}
+              </button>
+            ))}
           </div>
 
-          <div className="min-h-[500px] animate-in fade-in duration-1000">
+          <div className="min-h-[500px]">
             {activeTab === "Yorumlar & Değerlendirmeler" && (
               <div className="space-y-12">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-16 text-brand-black">
@@ -570,23 +556,6 @@ const ProductDetail = () => {
                 )}
               </div>
             )}
-
-            {activeTab === "Ürün Detayı" && (
-              <div className="max-w-4xl mx-auto py-20 space-y-12 text-center text-brand-black">
-                <div className="bg-brand-gray p-12 rounded-shop-xl border border-brand-gray shadow-inner">
-                  <h3 className="text-2xl font-heavy font-integral uppercase italic tracking-tightest mb-6">
-                    EDİTÖRÜN NOTU
-                  </h3>
-                  <p className="text-zinc-400 text-xs font-bold uppercase leading-[2.2] tracking-widest italic max-w-2xl mx-auto">
-                    Bu tasarım, modern şehir hayatının dinamizmini rafine bir
-                    estetikle buluşturuyor. Her dikişinde yüksek kaliteyi
-                    hissedeceğiniz bu parça, gardırobunuzun vazgeçilmez bir yapı
-                    taşı olacak.
-                  </p>
-                </div>
-              </div>
-            )}
-
             {activeTab === "SSS" && (
               <div className="max-w-3xl mx-auto py-10 space-y-4">
                 {FAQ_DATA.map((faq, index) => (

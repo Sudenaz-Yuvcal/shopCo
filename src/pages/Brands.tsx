@@ -70,7 +70,7 @@ const Brands = () => {
             <div
               key={brand.id}
               onClick={() => navigate(`/shop?brand=${brand.name}`)}
-              className="group relative h-64 bg-[#FAFAFA] border border-zinc-100 rounded-[40px] cursor-pointer overflow-hidden transition-all duration-700 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)]"
+              className="group relative h-64 bg-brand-offwhite border border-zinc-100 rounded-[40px] cursor-pointer overflow-hidden transition-all duration-700 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)]"
             >
               <div
                 className={`absolute inset-0 bg-gradient-to-br ${brand.color} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700`}
@@ -99,7 +99,7 @@ const Brands = () => {
                 </div>
               </div>
 
-              <div className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]" />
+              <div className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none" />
             </div>
           ))}
 
@@ -112,11 +112,8 @@ const Brands = () => {
             </p>
           </div>
         </div>
-        
       </div>
-      
     </div>
-    
   );
 };
 

@@ -81,7 +81,7 @@ const Discount = () => {
                 to={`/product/${product.id}`}
                 className="group flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-8 duration-700"
               >
-                <div className="relative aspect-[3/4] bg-[#F5F5F5] rounded-[40px] overflow-hidden border border-zinc-100 shadow-sm transition-transform duration-700 group-hover:shadow-2xl">
+                <div className="relative aspect-[3/4] bg-brand-neutral rounded-[40px] overflow-hidden border border-zinc-100 shadow-sm transition-transform duration-700 group-hover:shadow-2xl">
                   <img
                     src={product.image}
                     alt={product.name}

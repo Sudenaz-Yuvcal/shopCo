@@ -23,7 +23,9 @@ const WheelOfFortune = () => {
   const [canSpin, setCanSpin] = useState(true);
 
   const clickAudio = useRef(
-    new Audio("https://www.soundjay.com/buttons/sounds/button-50.mp3"),
+    new Audio(
+      "https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3",
+    ),
   );
   const winAudio = useRef(
     new Audio(

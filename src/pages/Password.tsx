@@ -208,7 +208,7 @@ const Password: React.FC = () => {
                   placeholder={
                     method === "email" ? "ornek@mail.com" : "5XX XXX XX XX"
                   }
-                  className={`!bg-[#F9F9F9] !border-none !rounded-[24px] ${method === "phone" ? "pl-24" : "pl-16"} py-6 font-black text-sm transition-all focus:ring-2 focus:ring-black ${error ? "ring-2 ring-red-500 !bg-red-50/20" : ""}`}
+                  className={`!bg-brand-soft !border-none !rounded-[24px] ${method === "phone" ? "pl-24" : "pl-16"} py-6 font-black text-sm transition-all focus:ring-2 focus:ring-black ${error ? "ring-2 ring-red-500 !bg-red-50/20" : ""}`}
                 />
 
                 {error && (

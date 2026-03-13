@@ -10,15 +10,20 @@ const CookieBanner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 500);
-    return () => clearTimeout(timer);
+    const consent = localStorage.getItem("cookie-consent-v1");
+    
+    if (!consent) {
+      const timer = setTimeout(() => setIsVisible(true), 500);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleAction = (type: "all" | "reject" | "settings") => {
-    if (type !== "settings") {
-      setIsVisible(false);
-    } else {
+    if (type === "settings") {
       console.log("Ayarlar açılıyor...");
+    } else {
+      localStorage.setItem("cookie-consent-v1", type);
+      setIsVisible(false);
     }
   };
 
@@ -36,10 +41,7 @@ const CookieBanner: React.FC = () => {
               Online mağazamızın kullanımını iyileştirmek için birinci ve üçüncü
               taraf çerezlerini kullanıyoruz. Reddetmenizin alışveriş
               deneyiminizi etkileyebileceğini unutmayın.
-              <a
-                href="/cookie-policy"
-                className="text-white underline ml-2 font-black hover:text-zinc-300 transition-colors"
-              >
+              <a href="/cookie-policy" className="text-white underline ml-2 font-black hover:text-zinc-300 transition-colors">
                 Çerez Politikası
               </a>
             </p>
@@ -51,10 +53,7 @@ const CookieBanner: React.FC = () => {
               onClick={() => handleAction("settings")}
               className="!bg-transparent !border-none !shadow-none !px-0 !py-2 !text-zinc-500 hover:!text-white !w-auto gap-2 !text-[9px]"
             >
-              <RiSettings3Line
-                size={16}
-                className="animate-spin-[10s_linear_infinite]"
-              />
+              <RiSettings3Line size={16} className="animate-spin" />
               <span className="tracking-[0.2em]">AYARLAR</span>
             </Button>
 
@@ -75,15 +74,12 @@ const CookieBanner: React.FC = () => {
             </Button>
           </div>
 
-          <Button
+          <button
             onClick={() => setIsVisible(false)}
-            className="!w-10 !h-10 !p-0 !bg-transparent !border-none !shadow-none text-zinc-500 hover:text-white group"
+            className="w-10 h-10 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
           >
-            <RiCloseLine
-              size={24}
-              className="group-hover:rotate-90 transition-transform duration-300"
-            />
-          </Button>
+            <RiCloseLine size={24} />
+          </button>
         </div>
       </div>
     </div>

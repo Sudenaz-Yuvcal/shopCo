@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { useUser } from "../context/UserContext";
-import LoadingOverlay from "../components/ui/LoadingOverlay"; 
+import LoadingOverlay from "../components/ui/LoadingOverlay";
 import {
   RiMailLine,
   RiLockPasswordLine,
@@ -62,7 +62,7 @@ const Login: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isFormValid) {
-      setIsLoading(true); 
+      setIsLoading(true);
 
       localStorage.removeItem("is_new_registrant");
       localStorage.removeItem("welcome_coupon_expiry");
@@ -107,7 +107,7 @@ const Login: React.FC = () => {
 
       <div className="max-w-[1100px] w-full grid md:grid-cols-2 bg-white rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.12)] border border-zinc-100 overflow-hidden z-10 my-12 relative">
         <div className="relative bg-black p-12 hidden md:flex flex-col justify-between items-start text-left">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+          <div className="absolute inset-0 opacity-10" />
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-6">
               <RiShieldCheckLine className="text-zinc-500" size={20} />
@@ -163,8 +163,8 @@ const Login: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => validateEmail(e.target.value)}
-                  placeholder="isim@mail.com"
-                  className={`!bg-[#F9F9F9] !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all ${emailError ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}
+                  placeholder="ornek@gmail.com"
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all ${emailError ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}
                   required
                 />
                 {emailError && (
@@ -194,7 +194,7 @@ const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => validatePassword(e.target.value)}
                   placeholder="••••••••"
-                  className={`!bg-[#F9F9F9] !border-none !rounded-[20px] pl-16 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${passwordError ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${passwordError ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}
                   required
                 />
                 {passwordError && (
