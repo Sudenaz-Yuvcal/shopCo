@@ -50,7 +50,7 @@ const Wishlist = () => {
               onClick={() => navigate(`/product/${product.id}`)}
             >
               <img
-                src={product.image}
+                src={product.image || undefined}
                 alt={product.name}
                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110"
               />

@@ -104,7 +104,7 @@ const NewProduct = () => {
                 >
                   <div className="relative aspect-[3/4] bg-brand-neutral rounded-[40px] overflow-hidden transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.2)]">
                     <img
-                      src={product.image}
+                      src={product.image || undefined}
                       alt={product.name}
                       className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000"
                     />

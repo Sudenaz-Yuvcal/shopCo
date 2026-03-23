@@ -154,9 +154,12 @@ const ProductDetail = () => {
             <div className="flex gap-6 mb-10 group text-left">
               <div className="w-28 h-28 shrink-0 rounded-shop-md overflow-hidden border border-brand-gray shadow-inner">
                 <img
-                  src={product.image}
+                  src={
+                    product.image ||
+                    "https://placehold.co/400x600/F4F4F5/18181B?text=SHOP.CO"
+                  }
                   className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                  alt=""
+                  alt={product.name}
                 />
               </div>
               <div className="flex flex-col justify-center space-y-2">
@@ -285,7 +288,7 @@ const ProductDetail = () => {
                   className={`w-20 h-20 md:w-28 md:h-28 rounded-shop-md overflow-hidden cursor-pointer transition-all duration-500 border-2 ${mainImage === product.image ? "border-brand-black scale-95 shadow-lg" : "border-transparent opacity-40 hover:opacity-100"}`}
                 >
                   <img
-                    src={product.image}
+                    src={product.image || undefined}
                     className="w-full h-full object-cover"
                     alt="Angle"
                   />

@@ -64,6 +64,12 @@ const Cart = () => {
   } = useForm<ICheckoutForm>();
   const watchedCity = watch("city") || "";
 
+  const errorStyle = (isError: any) => ({
+    border: isError ? "2px solid #ef4444" : "1px solid #e4e4e7",
+    backgroundColor: isError ? "#fef2f2" : "white",
+    transition: "all 0.3s ease",
+  });
+
   useEffect(() => {
     const isRegistrant = localStorage.getItem("is_new_registrant") === "true";
     const expiry = localStorage.getItem("welcome_coupon_expiry");
@@ -109,7 +115,7 @@ const Cart = () => {
     setPromoInput("");
   };
 
-  const onCheckoutSubmit = (_data: ICheckoutForm) => {
+  const onCheckoutSubmit = (data: ICheckoutForm) => {
     if (!user) {
       showNotify("ÖNCE GİRİŞ YAPMALISIN!", "error");
       return;
@@ -156,14 +162,14 @@ const Cart = () => {
     );
 
   return (
-    <div className="min-h-screen bg-white font-satoshi">
+    <div className="min-h-screen bg-white font-satoshi text-left">
       <Helmet>
         <title>Shop.co | {showCheckout ? "Güvenli Ödeme" : "Sepetim"}</title>
       </Helmet>
 
       {notification && (
         <div
-          className={`fixed bottom-10 right-10 z-[1000] bg-black text-white rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.3)] border ${notification.type === "success" ? "border-white/10" : "border-red-500/50"} w-80 overflow-hidden animate-in slide-in-from-right-10 duration-500`}
+          className={`fixed bottom-10 right-10 z-[1000] bg-black text-white rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.3)] border ${notification.type === "success" ? "border-white/10" : "border-red-600"} w-80 overflow-hidden animate-in slide-in-from-right-10 duration-500`}
         >
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -192,7 +198,7 @@ const Cart = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-6 py-12 text-left">
+      <div className="max-w-7xl mx-auto px-6 py-12">
         <button
           onClick={() =>
             showCheckout ? setShowCheckout(false) : navigate("/shop")
@@ -211,32 +217,6 @@ const Cart = () => {
 
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-16 items-start">
           <div className="lg:col-span-7 w-full space-y-8">
-            {isCouponValid && !isPromoApplied && !showCheckout && (
-              <div className="bg-zinc-950 rounded-[40px] p-8 text-white relative overflow-hidden group border border-white/5">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-10 -mt-10 blur-3xl" />
-                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                  <div className="space-y-2 text-center md:text-left">
-                    <h3 className="text-xl font-black italic uppercase tracking-tighter leading-none">
-                      HOŞ GELDİN HEDİYESİ!
-                    </h3>
-                    <p className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase mt-2">
-                      İLK ALIŞVERİŞİNE ÖZEL $500 ÜZERİ %50 İNDİRİM
-                    </p>
-                  </div>
-                  <Button
-                    variant="white"
-                    onClick={() => handleApplyPromo("HOSGELDIN50")}
-                    disabled={rawTotalPrice < 500}
-                    className="!rounded-full !px-10 !text-[10px] shadow-xl italic"
-                  >
-                    {rawTotalPrice >= 500
-                      ? "KODU AKTİF ET"
-                      : `$${500 - rawTotalPrice} DAHA EKLE`}
-                  </Button>
-                </div>
-              </div>
-            )}
-
             {!showCheckout ? (
               <div className="space-y-6">
                 {cart.map((item) => (
@@ -246,7 +226,7 @@ const Cart = () => {
                   >
                     <div className="w-32 h-32 bg-white rounded-[30px] overflow-hidden shadow-sm shrink-0 border border-zinc-100">
                       <img
-                        src={item.image}
+                        src={item.image || undefined}
                         className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                         alt={item.name}
                       />
@@ -275,11 +255,6 @@ const Cart = () => {
                           <span className="font-heavy text-3xl tracking-tighter italic">
                             ${item.value}
                           </span>
-                          {item.oldValue && (
-                            <span className="text-zinc-300 line-through font-bold text-sm">
-                              ${item.oldValue}
-                            </span>
-                          )}
                         </div>
                         <div className="bg-white border border-zinc-100 px-6 py-3 rounded-full flex gap-8 items-center shadow-sm">
                           <button
@@ -323,63 +298,73 @@ const Cart = () => {
                     </h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-1">
-                      <Input
-                        {...register("firstName", {
-                          required: "Ad gerekli",
-                          onChange: (e) => {
-                            let value = e.target.value;
-
-                            value = value.replace(
-                              /[^A-Za-zÇĞİÖŞÜçğıöşü ]/g,
-                              "",
-                            );
-                            value = value.replace(/\s{2,}/g, " ");
-
-                            e.target.value = value;
-                          },
-                        })}
-                        placeholder="AD"
-                        className={`!rounded-3xl !py-5 font-black italic ${errors.firstName ? "!border-red-500 !ring-1 !ring-red-500" : "border-zinc-100"}`}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Input
-                        {...register("lastName", {
-                          required: "Soyad gerekli",
-                          onChange: (e) => {
-                            let value = e.target.value;
-
-                            value = value.replace(
-                              /[^A-Za-zÇĞİÖŞÜçğıöşü ]/g,
-                              "",
-                            );
-
-                            value = value.replace(/\s{2,}/g, " ");
-
-                            e.target.value = value;
-                          },
-                        })}
-                        placeholder="SOYAD"
-                        className={`!rounded-3xl !py-5 font-black italic ${errors.lastName ? "!border-red-500 !ring-1 !ring-red-500" : "border-zinc-100"}`}
-                      />
-                    </div>
                     <Input
-                      {...register("email", { required: true })}
+                      {...register("firstName", { required: true })}
+                      placeholder="AD"
+                      style={errorStyle(errors.firstName)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(
+                          /[^A-Za-zÇĞİÖŞÜçğıöşü ]/g,
+                          "",
+                        );
+                        val = val.replace(/\s{2,}/g, " ");
+                        e.target.value = val.toUpperCase();
+                      }}
+                      className="!rounded-3xl !py-5 font-black italic"
+                    />
+                    <Input
+                      {...register("lastName", { required: true })}
+                      placeholder="SOYAD"
+                      style={errorStyle(errors.lastName)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(
+                          /[^A-Za-zÇĞİÖŞÜçğıöşü ]/g,
+                          "",
+                        );
+                        val = val.replace(/\s{2,}/g, " "); 
+                        e.target.value = val.toUpperCase();
+                      }}
+                      className="!rounded-3xl !py-5 font-black italic"
+                    />
+                    <Input
+                      {...register("email", {
+                        required: true,
+                        pattern: /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/,
+                      })}
                       placeholder="E-POSTA"
-                      className={`md:col-span-2 !rounded-3xl !py-5 font-black italic ${errors.email ? "!border-red-500" : "border-zinc-100"}`}
+                      style={errorStyle(errors.email)}
+                      onChange={(e) => {
+                        e.target.value = e.target.value
+                          .toLowerCase()
+                          .replace(
+                            /[çğışüö]/g,
+                            (m) =>
+                              ({
+                                ç: "c",
+                                ğ: "g",
+                                ı: "i",
+                                ş: "s",
+                                ü: "u",
+                                ö: "o",
+                              })[m] || m,
+                          )
+                          .replace(/\s/g, ""); 
+                      }}
+                      className="md:col-span-2 !rounded-3xl !py-5 font-black italic"
                     />
                     <Input
                       {...register("address", { required: true })}
                       placeholder="ADRES"
-                      className={`md:col-span-2 !rounded-3xl !py-5 font-black italic ${errors.address ? "!border-red-500" : "border-zinc-100"}`}
+                      style={errorStyle(errors.address)}
+                      className="md:col-span-2 !rounded-3xl !py-5 font-black italic"
                     />
                     <div className="relative">
                       <Input
                         {...register("city", { required: true })}
                         placeholder="ŞEHİR"
+                        style={errorStyle(errors.city)}
                         onFocus={() => setShowCityList(true)}
-                        className={`!rounded-3xl !py-5 font-black italic ${errors.city ? "!border-red-500" : "border-zinc-100"}`}
+                        className="!rounded-3xl !py-5 font-black italic"
                       />
                       {showCityList && (
                         <div className="absolute top-full left-0 w-full mt-2 bg-white border border-zinc-100 rounded-[30px] shadow-2xl z-50 max-h-60 overflow-y-auto p-4">
@@ -414,29 +399,29 @@ const Cart = () => {
                   </div>
                   <div className="space-y-6">
                     <Input
-                      {...register("cardName", {
-                        required: true,
-                        onChange: (e) => {
-                          e.target.value = e.target.value
-                            .replace(/[0-9]/g, "")
-                            .replace(/\s{2,}/g, " ");
-                        },
-                      })}
+                      {...register("cardName", { required: true })}
                       placeholder="KART SAHİBİ"
-                      className={`!rounded-3xl !py-5 font-black italic uppercase ${errors.cardName ? "!border-red-500" : "border-zinc-100"}`}
+                      style={errorStyle(errors.cardName)}
+                      onChange={(e) =>
+                        (e.target.value = e.target.value
+                          .toUpperCase()
+                          .replace(/[0-9]/g, ""))
+                      }
+                      className="!rounded-3xl !py-5 font-black italic"
                     />
                     <div className="relative">
                       <Input
                         {...register("cardNumber", {
                           required: true,
-                          pattern: /^[1-9][0-9]{15}$/,
-                          onChange: (e) => {
-                            e.target.value = e.target.value.replace(/\D/g, "");
-                          },
+                          minLength: 16,
                         })}
                         maxLength={16}
                         placeholder="KART NUMARASI"
-                        className={`!rounded-3xl !py-5 font-black italic ${errors.cardNumber ? "!border-red-500" : "border-zinc-100"}`}
+                        style={errorStyle(errors.cardNumber)}
+                        onChange={(e) =>
+                          (e.target.value = e.target.value.replace(/\D/g, ""))
+                        }
+                        className="!rounded-3xl !py-5 font-black italic"
                       />
                       <FiCreditCard
                         className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-300"
@@ -447,39 +432,22 @@ const Cart = () => {
                       <Input
                         {...register("expiryDate", {
                           required: true,
-                          onChange: (e) => {
-                            let v = e.target.value.replace(/\D/g, "");
-                            if (v.length >= 2) {
-                              let m = parseInt(v.slice(0, 2));
-                              if (m < 3) m = 3;
-                              if (m > 12) m = 12;
-                              v = m.toString().padStart(2, "0") + v.slice(2);
-                            }
-                            if (v.length >= 4) {
-                              let y = parseInt(v.slice(2, 4));
-                              if (y < 26) y = 26;
-                              v = v.slice(0, 2) + y.toString();
-                            }
-                            if (v.length > 2)
-                              v = v.slice(0, 2) + "/" + v.slice(2, 4);
-                            e.target.value = v;
-                          },
+                          pattern: /^(0[1-9]|1[0-2])\/\d{2}$/,
                         })}
                         maxLength={5}
                         placeholder="AA/YY"
-                        className={`!rounded-3xl !py-5 text-center font-black italic ${errors.expiryDate ? "!border-red-500" : "border-zinc-100"}`}
+                        style={errorStyle(errors.expiryDate)}
+                        className="!rounded-3xl !py-5 text-center font-black italic"
                       />
                       <Input
-                        {...register("cvc", {
-                          required: true,
-                          pattern: /^[0-9]{3}$/,
-                          onChange: (e) => {
-                            e.target.value = e.target.value.replace(/\D/g, "");
-                          },
-                        })}
+                        {...register("cvc", { required: true, minLength: 3 })}
                         maxLength={3}
                         placeholder="CVC"
-                        className={`!rounded-3xl !py-5 text-center font-black italic ${errors.cvc ? "!border-red-500" : "border-zinc-100"}`}
+                        style={errorStyle(errors.cvc)}
+                        onChange={(e) =>
+                          (e.target.value = e.target.value.replace(/\D/g, ""))
+                        }
+                        className="!rounded-3xl !py-5 text-center font-black italic"
                       />
                     </div>
                   </div>
@@ -578,12 +546,6 @@ const Cart = () => {
                   SİPARİŞİ TAMAMLA
                 </Button>
               )}
-            </div>
-            <div className="mt-8 flex items-center justify-center gap-4 opacity-30 grayscale">
-              <img src="/Badge-1.png" className="h-6" alt="Secure" />
-              <p className="text-[8px] font-black uppercase tracking-[0.4em]">
-                256-BIT SSL ENCRYPTED
-              </p>
             </div>
           </div>
         </div>

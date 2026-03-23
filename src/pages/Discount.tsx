@@ -110,7 +110,7 @@ const Discount = () => {
                 >
                   <div className="relative aspect-[3/4] bg-brand-neutral rounded-[40px] overflow-hidden border border-zinc-100 shadow-sm transition-transform duration-700 group-hover:shadow-2xl">
                     <img
-                      src={product.image}
+                      src={product.image || undefined}
                       alt={product.name}
                       className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
                     />
