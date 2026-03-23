@@ -9,6 +9,8 @@ import type { Product } from "../types/product";
 import ScarcityBadge from "../components/ui/ScarcityBadge";
 import Input from "../components/ui/Input";
 import type { Review, SortOption } from "../types/review";
+import { useWishlist } from "../context/WishlistContext";
+import { RiHeartLine, RiHeartFill } from "react-icons/ri";
 import {
   RiStarFill,
   RiCheckLine,
@@ -40,6 +42,8 @@ const FAQ_DATA = [
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const isFavorite = isInWishlist(Number(id));
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { user } = useUser();
@@ -321,9 +325,29 @@ const ProductDetail = () => {
           <div className="lg:col-span-5 space-y-10 w-full pt-2 text-brand-black">
             <div className="space-y-6">
               <ScarcityBadge />
-              <h1 className="text-5xl md:text-6xl font-heavy font-integral uppercase italic tracking-tightest leading-[0.85]">
-                {product.name}
-              </h1>
+              <div className="flex items-start justify-between gap-4">
+                <h1 className="text-5xl md:text-6xl font-heavy font-integral uppercase italic tracking-tightest leading-[0.85] flex-1">
+                  {product.name}
+                </h1>
+
+                <button
+                  onClick={() => toggleWishlist(product)}
+                  className="group p-4 bg-zinc-50 rounded-full hover:bg-zinc-100 transition-all shadow-sm active:scale-90"
+                  title={isFavorite ? "Favorilerden Çıkar" : "Favorilere Ekle"}
+                >
+                  {isFavorite ? (
+                    <RiHeartFill
+                      size={32}
+                      className="text-red-500 animate-in zoom-in duration-300"
+                    />
+                  ) : (
+                    <RiHeartLine
+                      size={32}
+                      className="text-zinc-300 group-hover:text-black transition-colors"
+                    />
+                  )}
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex text-brand-black text-lg gap-0.5">

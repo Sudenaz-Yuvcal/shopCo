@@ -34,9 +34,9 @@ const Category = () => {
   const CATEGORIES = ["T-shirts", "Shorts", "Jeans"];
 
   const COLOR_OPTIONS = [
-    { name: "Kahverengi", id: "khaki", tailwind: "bg-brand-khaki" },
-    { name: "Yeşil", id: "green", tailwind: "bg-brand-green" },
-    { name: "Mavi", id: "denim", tailwind: "bg-brand-denim" },
+    { name: "Kahverengi", id: "khaki", tailwind: "bg-khaki" },
+    { name: "Yeşil", id: "green", tailwind: "bg-green" },
+    { name: "Mavi", id: "denim", tailwind: "bg-denim" },
   ];
   const filteredProducts = useMemo(() => {
     return ALL_PRODUCTS.filter((p) => {

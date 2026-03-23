@@ -10,7 +10,7 @@ export const ALL_PRODUCTS: Product[] = [
     oldValue: 180,
     image: "/Frame-10.png",
     rating: 4.5,
-    color: "brand-khaki",
+    color: "khaki",
     size: ["S", "L", "XL"],
   },
   {
@@ -21,7 +21,7 @@ export const ALL_PRODUCTS: Product[] = [
     brand: "CALVIN KLEIN",
     image: "/Frame-33.png",
     rating: 3.5,
-    color: "brand-denim",
+    color: "denim",
     size: ["M", "L", "XL"],
   },
   {
@@ -32,7 +32,7 @@ export const ALL_PRODUCTS: Product[] = [
     brand: "ZARA",
     image: "/Frame-34.png",
     rating: 4.5,
-    color: "brand-denim",
+    color: "denim",
     size: ["S", "M", "XL"],
   },
   {
@@ -43,7 +43,7 @@ export const ALL_PRODUCTS: Product[] = [
     brand: "GUCCI",
     image: "/Frame-12.png",
     rating: 4.2,
-    color: "brand-khaki",
+    color: "khaki",
     size: ["S", "M", "L", "XL"],
   },
   {
@@ -54,7 +54,7 @@ export const ALL_PRODUCTS: Product[] = [
     brand: "PRADA",
     image: "/Frame-36.png",
     rating: 5.0,
-    color: "brand-green",
+    color: "green",
   },
   {
     id: 6,
@@ -65,7 +65,7 @@ export const ALL_PRODUCTS: Product[] = [
     oldValue: 220,
     image: "/Frame-32.png",
     rating: 4.0,
-    color: "brand-khaki",
+    color: "khaki",
     size: ["S", "M", "L", "XL"],
   },
   {
@@ -77,7 +77,7 @@ export const ALL_PRODUCTS: Product[] = [
     oldValue: 120,
     image: "/Frame-38.png",
     rating: 4.0,
-    color: "brand-denim",
+    color: "denim",
     size: ["S", "M", "L", "XL"],
   },
   {
@@ -88,7 +88,7 @@ export const ALL_PRODUCTS: Product[] = [
     brand: "CALVIN KLEIN",
     image: "/Frame-39.png",
     rating: 4.7,
-    color: "brand-denim",
+    color: "denim",
     size: ["S", "M", "L", "XL"],
   },
   {
@@ -99,7 +99,7 @@ export const ALL_PRODUCTS: Product[] = [
     brand: "PRADA",
     image: "/Frame-13.png",
     rating: 4.5,
-    color: "brand-denim",
+    color: "green",
     size: ["S", "M", "L", "XL"],
   },
   {
@@ -111,7 +111,7 @@ export const ALL_PRODUCTS: Product[] = [
     oldValue: 320,
     image: "/Frame-35.png",
     rating: 4.3,
-    color: "brand-denim",
+    color: "khaki",
     size: ["S", "M", "L", "XL"],
   },
   {
@@ -123,7 +123,7 @@ export const ALL_PRODUCTS: Product[] = [
     oldValue: 320,
     image: "/Frame-11.png",
     rating: 5.0,
-    color: "brand-denim",
+    color: "green",
     size: ["S", "M", "L"],
   },
   {
@@ -135,6 +135,6 @@ export const ALL_PRODUCTS: Product[] = [
     oldValue: 220,
     image: "/Frame-37.png",
     rating: 4.0,
-    color: "brand-green",
+    color: "green",
   },
 ];

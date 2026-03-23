@@ -1,10 +1,12 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { FiPercent, FiTrendingDown, FiClock } from "react-icons/fi";
+import { RiHeartLine, RiHeartFill } from "react-icons/ri";
 import { ALL_PRODUCTS } from "../constants/Product";
 import type { Product } from "../types/product";
-
+import { useWishlist } from "../context/WishlistContext";
 const Discount = () => {
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const discountProducts = ALL_PRODUCTS.filter(
     (product: Product) => product.oldValue && product.oldValue > product.value,
   );
@@ -29,14 +31,14 @@ const Discount = () => {
               <FiPercent size={14} /> FIRSAT GÜNLERİ BAŞLADI
             </div>
 
-            <h1 className="text-5xl md:text-8xl font-[1000] text-white uppercase tracking-tighter leading-[0.85] italic">
+            <h1 className="text-5xl md:text-8xl font-[1000] text-red uppercase tracking-tighter leading-[0.85] italic">
               BÜYÜK <br /> SEZON <span className="text-red-600">İNDİRİMİ</span>
             </h1>
 
             <div className="flex flex-col md:flex-row items-center gap-6 pt-4">
               <p className="text-zinc-400 max-w-[380px] font-bold uppercase text-xs tracking-widest leading-relaxed italic">
                 Sınırlı süreliğine seçili koleksiyonlarda<br></br>
-                <span className="text-white underline underline-offset-4 decoration-red-600">
+                <span className="text-red underline underline-offset-4 decoration-red-600">
                   %50'ye varan
                 </span>
                 indirimleri keşfet
@@ -67,6 +69,7 @@ const Discount = () => {
           {discountProducts.map((product) => {
             const originalPrice = product.oldValue ?? 0;
             const currentPrice = product.value;
+            const isFav = isInWishlist(product.id);
 
             const discountPercentage =
               originalPrice > 0
@@ -76,63 +79,89 @@ const Discount = () => {
                 : 0;
 
             return (
-              <Link
+              <div
                 key={product.id}
-                to={`/product/${product.id}`}
-                className="group flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-8 duration-700"
+                className="relative group animate-in fade-in slide-in-from-bottom-8 duration-700"
               >
-                <div className="relative aspect-[3/4] bg-brand-neutral rounded-[40px] overflow-hidden border border-zinc-100 shadow-sm transition-transform duration-700 group-hover:shadow-2xl">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
-                  />
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleWishlist(product);
+                  }}
+                  className="absolute top-6 right-6 z-20 p-3 bg-white/80 backdrop-blur-md rounded-full shadow-lg transition-all active:scale-90 group/heart"
+                >
+                  {isFav ? (
+                    <RiHeartFill
+                      size={20}
+                      className="text-red-500 animate-in zoom-in"
+                    />
+                  ) : (
+                    <RiHeartLine
+                      size={20}
+                      className="text-black/40 group-hover/heart:text-black transition-colors"
+                    />
+                  )}
+                </button>
 
-                  <div className="absolute top-6 left-6 flex flex-col gap-2">
-                    <div className="bg-red-600 text-white text-[11px] font-black px-4 py-2 rounded-2xl uppercase tracking-widest shadow-2xl transform -rotate-2">
-                      -{discountPercentage}%
-                    </div>
-                    <div className="bg-black/80 backdrop-blur-md text-white text-[8px] font-black px-3 py-1.5 rounded-xl uppercase tracking-[0.2em] shadow-lg flex items-center gap-1">
-                      <FiTrendingDown className="text-red-500" /> EN DÜŞÜK FİYAT
+                <Link
+                  to={`/product/${product.id}`}
+                  className="flex flex-col gap-5"
+                >
+                  <div className="relative aspect-[3/4] bg-brand-neutral rounded-[40px] overflow-hidden border border-zinc-100 shadow-sm transition-transform duration-700 group-hover:shadow-2xl">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                    />
+
+                    <div className="absolute top-6 left-6 flex flex-col gap-2">
+                      <div className="bg-red-600 text-red text-[11px] font-black px-4 py-2 rounded-2xl uppercase tracking-widest shadow-2xl transform -rotate-2">
+                        -{discountPercentage}%
+                      </div>
+                      <div className="bg-black/80 backdrop-blur-md text-white text-[8px] font-black px-3 py-1.5 rounded-xl uppercase tracking-[0.2em] shadow-lg flex items-center gap-1">
+                        <FiTrendingDown className="text-red-500" /> EN DÜŞÜK
+                        FİYAT
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-2 px-2">
-                  <h3 className="text-sm md:text-base font-[1000] uppercase tracking-tighter truncate italic group-hover:text-red-600 transition-colors duration-300">
-                    {product.name}
-                  </h3>
+                  <div className="space-y-2 px-2">
+                    <h3 className="text-sm md:text-base font-[1000] uppercase tracking-tighter truncate italic group-hover:text-red-600 transition-colors duration-300">
+                      {product.name}
+                    </h3>
 
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl font-[1000] text-black italic tracking-tighter">
-                      ${product.value}
-                    </span>
-                    <span className="text-sm font-black text-zinc-300 line-through decoration-red-600/30 italic">
-                      ${product.oldValue}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 border-t border-zinc-50 pt-3">
-                    <div className="flex items-center text-yellow-500 gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className={
-                            i < Math.floor(product.rating)
-                              ? "opacity-100"
-                              : "opacity-20"
-                          }
-                        >
-                          ★
-                        </span>
-                      ))}
+                    <div className="flex items-center gap-4">
+                      <span className="text-2xl font-[1000] text-black italic tracking-tighter">
+                        ${product.value}
+                      </span>
+                      <span className="text-sm font-black text-zinc-300 line-through decoration-red-600/30 italic">
+                        ${product.oldValue}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic">
-                      {product.rating}/5.0
-                    </span>
+
+                    <div className="flex items-center gap-2 border-t border-zinc-50 pt-3">
+                      <div className="flex items-center text-yellow-500 gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <span
+                            key={i}
+                            className={
+                              i < Math.floor(product.rating)
+                                ? "opacity-100"
+                                : "opacity-20"
+                            }
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic">
+                        {product.rating}/5.0
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             );
           })}
         </div>

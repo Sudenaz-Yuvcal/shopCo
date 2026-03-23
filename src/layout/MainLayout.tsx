@@ -9,6 +9,8 @@ import WelcomeGift from "../components/home/WelcomeGift";
 import WheelOfFortune from "../components/WheelOfFortune";
 import CookieBanner from "../components/ui/CookieBanner";
 import type { Product } from "../types/product";
+import { useWishlist } from "../context/WishlistContext";
+import { RiHeartLine } from "react-icons/ri";
 import "../index.css";
 import { FaTwitter, FaFacebookF, FaInstagram, FaGithub } from "react-icons/fa";
 import {
@@ -54,7 +56,7 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const { cart } = useCart();
   const { user } = useUser();
-
+  const { wishlist } = useWishlist();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
@@ -308,6 +310,17 @@ const MainLayout: React.FC = () => {
                     {totalItems > 0 && (
                       <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] animate-bounce border-2 border-white shadow-lg leading-none">
                         {totalItems}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    to="/wishlist"
+                    className="relative text-2xl hover:scale-110 transition-transform"
+                  >
+                    <RiHeartLine />
+                    {wishlist.length > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-lg leading-none">
+                        {wishlist.length}
                       </span>
                     )}
                   </Link>

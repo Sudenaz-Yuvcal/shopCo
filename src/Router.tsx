@@ -14,6 +14,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Password from "./pages/Password";
 import Account from "./pages/Account";
+import Wishlist from "./pages/Wishlist";
+import { WishlistProvider } from "./context/WishlistContext";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
@@ -28,6 +30,7 @@ const AppRouter: React.FC = () => {
       children: [
         { index: true, element: <Home /> },
         { path: "cart", element: <Cart /> },
+        { path: "wishlist", element: <Wishlist /> },
         { path: "product/:id", element: <ProductDetail /> },
         { path: "newproduct", element: <NewProduct /> },
         { path: "brands", element: <Brands /> },
@@ -64,7 +67,10 @@ const AppRouter: React.FC = () => {
       ],
     },
   ];
-  return useRoutes(routes);
+
+  const element = useRoutes(routes);
+
+  return <WishlistProvider>{element}</WishlistProvider>;
 };
 
 export default AppRouter;

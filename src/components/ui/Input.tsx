@@ -18,7 +18,6 @@ const Input = ({ error, label, className, ...props }: InputProps) => {
           className={`
             w-full p-4.5 bg-[#F8F8F8] rounded-xl outline-none border transition-all duration-300
             text-[13px] font-medium tracking-wide placeholder:text-zinc-400 placeholder:italic
-            /* Focus State: Siyah bir çerçeve yerine daha sofistike bir gölge ve netlik */
             focus:bg-white focus:shadow-[0_10px_30px_rgba(0,0,0,0.05)]
             ${
               error

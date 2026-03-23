@@ -131,9 +131,6 @@ const PromoModal = () => {
             </span>
           </p>
           <br></br>
-          <p className="absolute bottom-8 text-[8px] md:text-[10px] text-zinc-500 font-black uppercase tracking-[0.5em] w-full px-4">
-            {PROMO_CAMPAIGN.FOOTNOTE}
-          </p>
         </div>
         <Button
           variant="white"
