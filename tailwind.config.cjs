@@ -1,7 +1,7 @@
 import("tailwindcss").Config;
-export default {
+module.exports = {
   content: [
-    // "./index.html",
+    "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
     "./pages/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
@@ -17,9 +17,6 @@ export default {
       },
 
       colors: {
-        // black: "#000000",
-        // white: "#FFFFFF",
-        // gray: "#F0F0F0",
         surface: "#F0EEED",
         red: "#FF3333",
         khaki: "#4F4631",
@@ -32,24 +29,24 @@ export default {
 
       animation: {
         "spin-slow": "spin 8s linear infinite",
-        "fade-in": "fadeIn 0.5s ease-out forwards",
-        "zoom-in": "zoomIn 0.5s ease-out forwards",
+        "shop-fade-in": "shopFadeIn 0.5s ease-out forwards",
+        "shop-zoom-in": "shopZoomIn 0.5s ease-out forwards",
         "bounce-gentle": "bounce 3s infinite",
-        "frisbee-in":
-          "frisbeeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        "wheel-frisbee":
+          "wheelFrisbeeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
         "attention-shake": "attentionShake 0.5s ease-in-out infinite",
       },
 
       keyframes: {
-        fadeIn: {
+        shopFadeIn: {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
-        zoomIn: {
+        shopZoomIn: {
           "0%": { opacity: "0", transform: "scale(0.95)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
-        frisbeeIn: {
+        wheelFrisbeeIn: {
           "0%": { opacity: "0", transform: "scale(0.2) rotate(-720deg)" },
           "70%": { opacity: "1", transform: "scale(1.1) rotate(10deg)" },
           "100%": { opacity: "1", transform: "scale(1) rotate(0deg)" },

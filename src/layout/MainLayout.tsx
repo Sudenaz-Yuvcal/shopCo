@@ -306,7 +306,7 @@ const MainLayout: React.FC = () => {
                   >
                     <RiShoppingCart2Line />
                     {totalItems > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] w-5.5 h-5.5 px-1.5 rounded-full flex items-center justify-center font-[1000] animate-bounce border-2 border-white shadow-lg">
+                      <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] animate-bounce border-2 border-white shadow-lg leading-none">
                         {totalItems}
                       </span>
                     )}

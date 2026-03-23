@@ -26,9 +26,6 @@ const WelcomeGift: React.FC = () => {
             70% { opacity: 1; transform: scale(1.05) rotate(15deg); }
             100% { opacity: 1; transform: scale(1) rotate(0deg); }
           }
-          .gift-frisbee-active {
-            animation: giftFrisbee 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-          }
         `}
       </style>
 

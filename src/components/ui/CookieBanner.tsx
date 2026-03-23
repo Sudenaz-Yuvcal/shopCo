@@ -10,8 +10,8 @@ const CookieBanner: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("cookie-consent-v1");
-    
+    const consent = localStorage.getItem("CookieConsent");
+
     if (!consent) {
       const timer = setTimeout(() => setIsVisible(true), 500);
       return () => clearTimeout(timer);
@@ -22,7 +22,7 @@ const CookieBanner: React.FC = () => {
     if (type === "settings") {
       console.log("Ayarlar açılıyor...");
     } else {
-      localStorage.setItem("cookie-consent-v1", type);
+      localStorage.setItem("CookieConsent", type);
       setIsVisible(false);
     }
   };
@@ -41,7 +41,10 @@ const CookieBanner: React.FC = () => {
               Online mağazamızın kullanımını iyileştirmek için birinci ve üçüncü
               taraf çerezlerini kullanıyoruz. Reddetmenizin alışveriş
               deneyiminizi etkileyebileceğini unutmayın.
-              <a href="/cookie-policy" className="text-white underline ml-2 font-black hover:text-zinc-300 transition-colors">
+              <a
+                href="/cookie-policy"
+                className="text-white underline ml-2 font-black hover:text-zinc-300 transition-colors"
+              >
                 Çerez Politikası
               </a>
             </p>

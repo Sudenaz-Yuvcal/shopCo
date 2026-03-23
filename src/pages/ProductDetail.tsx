@@ -211,7 +211,7 @@ const ProductDetail = () => {
                   ...reviews,
                 ]);
                 setIsModalOpen(false);
-                toast.dark("İncelemeniz yayına alındı.");
+                toast.dark("Yorumunuz yayına alındı.");
               }}
               className="space-y-6"
             >

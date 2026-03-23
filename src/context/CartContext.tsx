@@ -35,11 +35,11 @@ interface CartContextType {
   appliedPromoCode: string;
   totals: {
     raw: number;
-    subtotal: number; 
-    itemDiscount: number; 
-    promoDiscount: number; 
+    subtotal: number;
+    itemDiscount: number;
+    promoDiscount: number;
     delivery: number;
-    final: number; 
+    final: number;
   };
 }
 
@@ -55,7 +55,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const [appliedPromoCode, setAppliedPromoCode] = useState("");
-
   const addToCart = (
     product: Product,
     quantity: number,
@@ -69,14 +68,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       );
 
       if (index > -1) {
-        const newCart = [...prev];
-        newCart[index].quantity += quantity;
-        return newCart;
+        return prev.map((item, i) =>
+          i === index ? { ...item, quantity: item.quantity + quantity } : item,
+        );
       }
+
       return [...prev, { ...product, quantity, size, color }];
     });
   };
-
   const removeFromCart = (id: number, size: string, color: string) => {
     setCart((prev) =>
       prev.filter(
