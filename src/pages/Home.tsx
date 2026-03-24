@@ -1,8 +1,8 @@
 import Hero from "../components/home/Hero";
 import NewArrivals from "../components/home/NewArrivals";
 import TopSelling from "../components/home/TopSelling";
-import DressStyle from "../components/home/DressStyle";
-import Customers from "../components/home/Customers";
+import DressStyle from "../sections/home/dress-style";
+import Customers from "../sections/home/customers";
 import { Helmet } from "react-helmet-async";
 
 const Home = () => {

@@ -1,48 +1,8 @@
-import React, { useRef, useState, useEffect } from "react";
-import { RiArrowLeftLine, RiArrowRightLine, RiStarFill } from "react-icons/ri";
-import Button from "../ui/Button";
+import { useRef, useState, useEffect } from "react";
+import { RiArrowLeftLine, RiArrowRightLine } from "react-icons/ri";
+import Button from "../../components/ui/Button";
+import { ReviewCard } from "../../components/home/ReviewCard";
 import { CUSTOMER_REVIEWS } from "../../constants/Reviews";
-import type { Review } from "../../types/review";
-
-interface ReviewCardProps {
-  customer: Review;
-  isActive: boolean;
-}
-
-const ReviewCard = React.forwardRef<HTMLDivElement, ReviewCardProps>(
-  ({ customer, isActive }, ref) => (
-    <div
-      ref={ref}
-      data-id={customer.id}
-      className={`min-w-[280px] md:min-w-[400px] border border-gray-100 rounded-[20px] p-6 md:p-8 space-y-4 snap-center bg-white transition-all duration-500 ${
-        isActive
-          ? "blur-0 opacity-100 scale-100 shadow-md"
-          : "blur-[1px] opacity-40 scale-95"
-      }`}
-    >
-      <div className="flex text-yellow-400 gap-0.5">
-        {[...Array(customer.rating)].map((_, i) => (
-          <RiStarFill key={i} />
-        ))}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <h4 className="font-bold text-lg text-black">{customer.name}</h4>
-        {customer.verified && (
-          <span className="bg-green-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-            ✓
-          </span>
-        )}
-      </div>
-
-      <p className="text-gray-500 text-sm md:text-base italic leading-relaxed">
-        "{customer.text}"
-      </p>
-    </div>
-  ),
-);
-
-ReviewCard.displayName = "ReviewCard";
 
 const Customers = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -51,15 +11,12 @@ const Customers = () => {
 
   useEffect(() => {
     if (!scrollRef.current) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const id = Number(entry.target.getAttribute("data-id"));
-            if (!isNaN(id)) {
-              setActiveCardId(id);
-            }
+            if (!isNaN(id)) setActiveCardId(id);
           }
         });
       },
@@ -69,11 +26,9 @@ const Customers = () => {
         threshold: 0,
       },
     );
-
     cardRefs.current.forEach((ref) => {
       if (ref) observer.observe(ref);
     });
-
     return () => observer.disconnect();
   }, []);
 
@@ -92,7 +47,6 @@ const Customers = () => {
         <h2 className="text-[32px] md:text-[38px] font-[900] uppercase tracking-tighter leading-none">
           MÜŞTERİ <br className="md:hidden" /> DEĞERLENDİRMELERİ
         </h2>
-
         <div className="flex gap-2">
           {(
             [
