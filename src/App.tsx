@@ -2,6 +2,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "./context/CartContext";
 import { PromoProvider } from "./context/PromoContext";
+import {OrderProvider} from "./context/OrderContext"
 
 import AppRouter from "./Router";
 import ScrollToTop from "./components/ScrollToTop";
@@ -12,6 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 function App() {
   return (
     <UserProvider>
+      <OrderProvider>
       <HelmetProvider>
         <CartProvider>
           <PromoProvider>
@@ -37,6 +39,7 @@ function App() {
           </PromoProvider>
         </CartProvider>
       </HelmetProvider>
+      </OrderProvider>
     </UserProvider>
   );
 }

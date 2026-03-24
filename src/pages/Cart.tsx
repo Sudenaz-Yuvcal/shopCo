@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useOrder } from "../context/OrderContext";
 import {
   FiArrowLeft,
   FiX,
@@ -25,12 +26,12 @@ import type { ICheckoutForm } from "../types/checkout";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { user, addOrder } = useUser();
+  const { user } = useUser();
+  const { addOrder } = useOrder();
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const { applyPromoCode, appliedPromoCode, isPromoApplied } = usePromo();
   const totals = useCartTotals();
 
-  // State Yönetimi
   const [promoInput, setPromoInput] = useState("");
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCityList, setShowCityList] = useState(false);

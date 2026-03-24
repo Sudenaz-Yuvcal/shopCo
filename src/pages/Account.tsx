@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useUser } from "../context/UserContext";
+import { useOrder } from "../context/OrderContext";
 import { Helmet } from "react-helmet-async";
 import Button from "../components/ui/Button";
 import {
@@ -20,8 +21,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 const Account = () => {
-  const { user, orders, logout } = useUser();
-  const [activeTab, setActiveTab] = useState("siparislerim");
+const { user, logout } = useUser();
+const { orders } = useOrder();  const [activeTab, setActiveTab] = useState("siparislerim");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
 
