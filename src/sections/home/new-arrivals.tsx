@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import ProductCard from "../product/ProductCard";
-import Button from "../ui/Button";
+import ProductCard from "../../components/product/ProductCard";  
+import Button from "../../components/ui/Button"; 
 import { ALL_PRODUCTS } from "../../constants/Product";
 
 const NewArrivals = () => {

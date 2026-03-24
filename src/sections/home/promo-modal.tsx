@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RiCloseLine, RiThunderstormsFill } from "react-icons/ri";
-import Button from "../ui/Button";
+import Button from "../../components/ui/Button";
 import { PROMO_CAMPAIGN } from "../../constants/Promo";
+import { CountdownUnit } from "../../components/home/CountdownUnit";
 
 interface CountdownTime {
   hours: number;
@@ -13,7 +14,6 @@ interface CountdownTime {
 const PromoModal = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [canClose, setCanClose] = useState(false);
-
   const [timeLeft, setTimeLeft] = useState<number>(PROMO_CAMPAIGN.CLOSE_DELAY);
   const [countdown, setCountdown] = useState<CountdownTime>(
     PROMO_CAMPAIGN.INITIAL_SECONDS as CountdownTime,
@@ -33,18 +33,13 @@ const PromoModal = () => {
 
       setCountdown((prev: CountdownTime): CountdownTime => {
         let { hours, minutes, seconds } = prev;
-
-        if (seconds > 0) {
-          seconds--;
-        } else {
+        if (seconds > 0) seconds--;
+        else {
           seconds = 59;
-          if (minutes > 0) {
-            minutes--;
-          } else {
+          if (minutes > 0) minutes--;
+          else {
             minutes = 59;
-            if (hours > 0) {
-              hours--;
-            }
+            if (hours > 0) hours--;
           }
         }
         return { hours, minutes, seconds };
@@ -55,8 +50,6 @@ const PromoModal = () => {
   }, []);
 
   if (!isOpen) return null;
-
-  const formatTime = (num: number) => (num || 0).toString().padStart(2, "0");
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4 md:p-10 font-satoshi">
@@ -97,23 +90,9 @@ const PromoModal = () => {
             </div>
 
             <div className="flex gap-4 sm:gap-8">
-              {[
-                { label: "SAAT", value: countdown.hours },
-                { label: "DAKİKA", value: countdown.minutes },
-                { label: "SANİYE", value: countdown.seconds },
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex flex-col items-center min-w-[60px] md:min-w-[100px]"
-                >
-                  <span className="text-3xl md:text-5xl font-[1000] text-white tabular-nums tracking-tighter">
-                    {formatTime(item.value)}
-                  </span>
-                  <span className="text-[8px] md:text-[10px] font-black text-zinc-500 tracking-[0.3em] mt-2 uppercase">
-                    {item.label}
-                  </span>
-                </div>
-              ))}
+              <CountdownUnit label="SAAT" value={countdown.hours} />
+              <CountdownUnit label="DAKİKA" value={countdown.minutes} />
+              <CountdownUnit label="SANİYE" value={countdown.seconds} />
             </div>
           </div>
 
@@ -130,8 +109,8 @@ const PromoModal = () => {
               {PROMO_CAMPAIGN.ACTION_TEXT}
             </span>
           </p>
-          <br></br>
         </div>
+
         <Button
           variant="white"
           size="xl"
@@ -139,7 +118,7 @@ const PromoModal = () => {
             setIsOpen(false);
             navigate("/discount");
           }}
-          className="shadow-2xl shadow-white/20 hover:scale-110 italic"
+          className="mt-8 shadow-2xl shadow-white/20 hover:scale-110 italic"
         >
           KEŞFET →
         </Button>

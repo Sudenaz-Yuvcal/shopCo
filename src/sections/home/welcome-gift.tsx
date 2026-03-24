@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { RiCloseLine, RiCoupon2Line } from "react-icons/ri";
-import Button from "../ui/Button";
+import { RiCloseLine } from "react-icons/ri";
+import Button from "../../components/ui/Button";
 import { WELCOME_GIFT_DATA } from "../../constants/Gifts";
+import { GiftCoupon } from "../../components/home/GiftCoupon";
 
 const WelcomeGift: React.FC = () => {
   const location = useLocation();
@@ -31,7 +32,7 @@ const WelcomeGift: React.FC = () => {
 
       <div className="absolute inset-0" onClick={() => setShowGift(false)} />
 
-      <div className="bg-white rounded-[40px] w-full max-w-[420px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] relative z-10 gift-frisbee-active font-satoshi">
+      <div className="bg-white rounded-[40px] w-full max-w-[420px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] relative z-10 animate-[giftFrisbee_0.8s_ease-out_forwards] font-satoshi">
         <div className="bg-black p-10 text-center relative">
           <div className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-xl mx-auto mb-5 rotate-12 transition-transform hover:rotate-0 duration-500">
             <span className="text-3xl">🎁</span>
@@ -49,24 +50,16 @@ const WelcomeGift: React.FC = () => {
             <RiCloseLine size={28} />
           </Button>
         </div>
+
         <div className="p-10 text-center space-y-8">
           <p className="text-gray-500 text-sm font-medium italic leading-relaxed">
             {WELCOME_GIFT_DATA.DESCRIPTION}
           </p>
-          <div className="bg-zinc-50 border-2 border-dashed border-black/10 p-6 rounded-[25px] group hover:border-black transition-all cursor-pointer active:scale-95">
-            <div className="flex items-center justify-center gap-2 text-gray-400 mb-2 group-hover:text-black transition-colors">
-              <RiCoupon2Line />
-              <p className="text-[10px] font-black uppercase tracking-widest text-black">
-                İNDİRİM KODUN
-              </p>
-            </div>
-            <h4 className="text-4xl font-[1000] tracking-[0.2em] text-black">
-              {WELCOME_GIFT_DATA.CODE}
-            </h4>
-            <span className="text-[10px] font-black bg-black text-white px-3 py-1.5 rounded-full uppercase mt-4 inline-block italic tracking-widest">
-              {WELCOME_GIFT_DATA.LIMIT_TEXT}
-            </span>
-          </div>
+
+          <GiftCoupon
+            code={WELCOME_GIFT_DATA.CODE}
+            limitText={WELCOME_GIFT_DATA.LIMIT_TEXT}
+          />
 
           <Button
             variant="primary"

@@ -1,12 +1,8 @@
 import { Link } from "react-router-dom";
 import type { Product } from "../../types/product";
-import {
-  RiStarFill,
-  RiStarHalfFill,
-  RiHeartLine,
-  RiHeartFill,
-} from "react-icons/ri";
+import { RiHeartLine, RiHeartFill } from "react-icons/ri";
 import { useWishlist } from "../../context/WishlistContext";
+import { StarRating } from "./StarRating"; 
 
 const ProductCard = (product: Product) => {
   const { id, image, name, value, oldValue, rating = 4.5 } = product;
@@ -16,19 +12,6 @@ const ProductCard = (product: Product) => {
   const discount = oldValue
     ? Math.round(((oldValue - value) / oldValue) * 100)
     : null;
-
-  const renderStars = (rating: number) => {
-    return [...Array(5)].map((_, i) => {
-      const starValue = i + 1;
-      if (starValue <= Math.floor(rating)) {
-        return <RiStarFill key={i} className="text-yellow-400" />;
-      } else if (starValue - 0.5 <= rating) {
-        return <RiStarHalfFill key={i} className="text-yellow-400" />;
-      } else {
-        return <RiStarFill key={i} className="text-gray-200" />;
-      }
-    });
-  };
 
   return (
     <div className="relative group w-full font-satoshi">
@@ -72,19 +55,13 @@ const ProductCard = (product: Product) => {
           <h3 className="font-[1000] text-[13px] md:text-lg text-black truncate uppercase tracking-tight leading-tight group-hover:underline underline-offset-2">
             {name}
           </h3>
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <div className="flex text-xs md:text-base">
-              {renderStars(rating)}
-            </div>
-            <span className="text-[10px] md:text-sm text-black font-medium">
-              {rating}/<span className="text-gray-400">5</span>
-            </span>
-          </div>
+
+          <StarRating rating={rating} />
+
           <div className="flex flex-wrap items-center gap-1.5 md:gap-3 mt-0.5">
             <span className="font-[1000] text-lg md:text-2xl text-black">
               ${value}
             </span>
-
             {oldValue && (
               <div className="flex items-center gap-2">
                 <span className="text-gray-400 line-through text-base md:text-2xl font-bold">
