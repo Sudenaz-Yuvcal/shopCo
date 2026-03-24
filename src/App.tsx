@@ -1,6 +1,8 @@
 import { BrowserRouter as Router } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "./context/CartContext";
+import { PromoProvider } from "./context/PromoContext";
+
 import AppRouter from "./Router";
 import ScrollToTop from "./components/ScrollToTop";
 import { UserProvider } from "./context/UserContext";
@@ -12,25 +14,27 @@ function App() {
     <UserProvider>
       <HelmetProvider>
         <CartProvider>
-          <Router>
-            <ScrollToTop />
+          <PromoProvider>
+            <Router>
+              <ScrollToTop />
 
-            <AppRouter />
+              <AppRouter />
 
-            <ToastContainer
-              position="top-right"
-              autoClose={2500}
-              limit={3}
-              hideProgressBar={false}
-              newestOnTop={true}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="dark"
-            />
-          </Router>
+              <ToastContainer
+                position="top-right"
+                autoClose={2500}
+                limit={3}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="dark"
+              />
+            </Router>
+          </PromoProvider>
         </CartProvider>
       </HelmetProvider>
     </UserProvider>

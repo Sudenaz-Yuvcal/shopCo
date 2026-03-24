@@ -16,7 +16,7 @@ const ScarcityBadge = () => {
   }, []);
 
   return (
-    <div className="space-y-4 my-8 border-y border-zinc-100 py-6 transition-all duration-500">
+    <div className="space-y-4 my-8 border-y border-zinc-100 py-6 transition-all duration-500 font-satoshi">
       <div className="flex items-center gap-3 group">
         <div className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>

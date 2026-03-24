@@ -6,7 +6,7 @@ import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
 import { Helmet } from "react-helmet-async";
 import type { Product } from "../types/product";
-import ScarcityBadge from "../components/ui/ScarcityBadge";
+import ScarcityBadge from "../components/product/ScarcityBadge";
 import Input from "../components/ui/Input";
 import type { Review, SortOption } from "../types/review";
 import { useWishlist } from "../context/WishlistContext";
