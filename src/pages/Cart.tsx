@@ -53,7 +53,7 @@ const Cart = () => {
     type: "success" | "error";
   } | null>(null);
   const [progress, setProgress] = useState(100);
-  const [isCouponValid, setIsCouponValid] = useState(false);
+  const [_isCouponValid, setIsCouponValid] = useState(false);
 
   const {
     register,
@@ -115,7 +115,7 @@ const Cart = () => {
     setPromoInput("");
   };
 
-  const onCheckoutSubmit = (data: ICheckoutForm) => {
+  const onCheckoutSubmit = (_data: ICheckoutForm) => {
     if (!user) {
       showNotify("ÖNCE GİRİŞ YAPMALISIN!", "error");
       return;
