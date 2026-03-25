@@ -20,7 +20,7 @@ const Home = () => {
         <StatItemProps />
       </section>
 
-      <main className="space-y-20 md:space-y-32 py-10 md:py-20">
+      <main className="space-y-20 py-10 md:py-20">
         <section className="animate-in slide-in-from-bottom-10 duration-700">
           <NewArrivals />
         </section>

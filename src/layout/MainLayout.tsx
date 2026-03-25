@@ -3,7 +3,7 @@ import { Outlet, useLocation, Link } from "react-router-dom";
 import { RiCloseLine, RiArrowRightSLine } from "react-icons/ri";
 import PromoModal from "../sections/home/promo-modal";
 import WelcomeGift from "../sections/home/welcome-gift";
-import CookieBanner from "./cookie-banner";
+import CookieBanner from "./CookieBanner";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import Button from "../components/ui/Button";

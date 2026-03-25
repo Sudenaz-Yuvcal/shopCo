@@ -82,13 +82,12 @@ const PromoModal = () => {
 
         <div className="relative z-10 space-y-8 max-w-3xl w-full">
           <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center gap-3 text-red-500 animate-bounce">
+            <div className="flex items-center gap-3 text-red animate-bounce">
               <RiThunderstormsFill size={24} />
-              <span className="font-black uppercase tracking-[0.5em] text-[10px]">
+              <span className="uppercase tracking-[0.5em] text-[10px] font-black italic">
                 SINIRLI SÜRE
               </span>
             </div>
-
             <div className="flex gap-4 sm:gap-8">
               <CountdownUnit label="SAAT" value={countdown.hours} />
               <CountdownUnit label="DAKİKA" value={countdown.minutes} />
@@ -96,16 +95,16 @@ const PromoModal = () => {
             </div>
           </div>
 
-          <h2 className="text-5xl md:text-9xl font-[1000] text-white leading-[0.85] uppercase italic tracking-[-0.05em]">
+          <h2 className="text-5xl md:text-9xl font-[1000] text-red leading-[0.85] uppercase italic tracking-[-0.05em]">
             {PROMO_CAMPAIGN.TITLE_PART_1} <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-white to-blue-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-white ">
               {PROMO_CAMPAIGN.TITLE_PART_2}
             </span>
           </h2>
 
           <p className="text-zinc-400 text-xs md:text-xl font-medium uppercase tracking-[0.3em] italic leading-relaxed">
             {PROMO_CAMPAIGN.DISCOUNT_TEXT} <br />
-            <span className="text-white font-[1000] underline underline-offset-8 decoration-red-600">
+            <span className="text-red font-[1000] underline underline-offset-8 ">
               {PROMO_CAMPAIGN.ACTION_TEXT}
             </span>
           </p>
