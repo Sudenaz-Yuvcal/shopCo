@@ -49,11 +49,7 @@ const AppRouter: React.FC = () => {
         },
         {
           path: "success",
-          element: (
-            <ProtectedRoute>
-              <Success />
-            </ProtectedRoute>
-          ),
+          element: <Success />,
         },
         {
           path: "account",

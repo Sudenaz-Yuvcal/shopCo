@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { useForm, type FieldError } from "react-hook-form";import { FiArrowLeft } from "react-icons/fi";
+import { useForm, type FieldError } from "react-hook-form";
+import { FiArrowLeft, FiShoppingBag } from "react-icons/fi";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
 import { useOrder } from "../context/OrderContext";
@@ -19,7 +20,7 @@ const Cart = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { addOrder } = useOrder();
-  const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { cart, removeFromCart, updateQuantity } = useCart();
   const { applyPromoCode, appliedPromoCode, isPromoApplied } = usePromo();
   const totals = useCartTotals();
 
@@ -62,16 +63,22 @@ const Cart = () => {
   };
 
   const onCheckoutSubmit = (_data: ICheckoutForm) => {
-    if (!user) return showNotify("ÖNCE GİRİŞ YAPMALISIN!", "error");
-    const orderId = addOrder(
-      cart.map((item) => ({ ...item })),
-      Math.round(totals.final),
-    );
-    showNotify(`Siparişin alındı! No: ${orderId}`, "success");
-    setTimeout(() => {
-      clearCart();
-      navigate("/account");
-    }, 2000);
+    if (!user) return showNotify("LÜTFEN ÖNCE GİRİŞ YAPIN!", "error");
+
+    try {
+      const orderId = addOrder(
+        cart.map((item) => ({ ...item })),
+        Math.round(totals.final),
+      );
+
+      showNotify(`SİPARİŞİNİZ HAZIRLANIYOR! NO: ${orderId}`, "success");
+
+      setTimeout(() => {
+        navigate("/success");
+      }, 2000);
+    } catch (error) {
+      showNotify("SİPARİŞ SIRASINDA BİR HATA OLUŞTU.", "error");
+    }
   };
 
   const filteredCities = useMemo(
@@ -100,7 +107,7 @@ const Cart = () => {
   if (cart.length === 0) return <EmptyCart />;
 
   return (
-    <div className="min-h-screen bg-white font-satoshi text-left">
+    <div className="min-h-screen bg-white font-satoshi text-left overflow-x-hidden">
       <Helmet>
         <title>Shop.co | {showCheckout ? "Güvenli Ödeme" : "Sepetim"}</title>
       </Helmet>
@@ -124,9 +131,17 @@ const Cart = () => {
           </span>
         </button>
 
-        <h1 className="text-5xl md:text-7xl font-black mb-12 uppercase tracking-tighter italic border-b-[6px] border-black pb-8 inline-block leading-none">
-          {showCheckout ? "ÖDEME" : "SEPETİM"}
-        </h1>
+        <div className="flex items-end justify-between mb-12 border-b-[6px] border-black pb-8">
+          <h1 className="text-5xl md:text-8xl font-[1000] uppercase tracking-tighter italic leading-none">
+            {showCheckout ? "ÖDEME" : "SEPETİM"}
+          </h1>
+          <div className="hidden md:flex items-center gap-2 text-zinc-300">
+            <FiShoppingBag size={24} />
+            <span className="text-xs font-black italic">
+              {cart.length} PARÇA
+            </span>
+          </div>
+        </div>
 
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-16 items-start">
           <div className="lg:col-span-7 w-full space-y-8">
@@ -142,31 +157,34 @@ const Cart = () => {
                 ))}
               </div>
             ) : (
-              <CheckoutForm
-                register={register}
-                errors={errors}
-                handleSubmit={handleSubmit}
-                onCheckoutSubmit={onCheckoutSubmit}
-                setValue={setValue}
-                showCityList={showCityList}
-                setShowCityList={setShowCityList}
-                filteredCities={filteredCities}
-                errorStyle={errorStyle}
-              />
+              <div className="animate-in fade-in slide-in-from-left duration-500">
+                <CheckoutForm
+                  register={register}
+                  errors={errors}
+                  handleSubmit={handleSubmit}
+                  onCheckoutSubmit={onCheckoutSubmit}
+                  setValue={setValue}
+                  showCityList={showCityList}
+                  setShowCityList={setShowCityList}
+                  filteredCities={filteredCities}
+                  errorStyle={errorStyle}
+                />
+              </div>
             )}
           </div>
-
           <div className="lg:col-span-5 w-full sticky top-32">
-            <OrderSummary
-              totals={totals}
-              promoInput={promoInput}
-              setPromoInput={setPromoInput}
-              handleApplyPromo={handleApplyPromo}
-              isPromoApplied={isPromoApplied}
-              appliedPromoCode={appliedPromoCode}
-              showCheckout={showCheckout}
-              setShowCheckout={setShowCheckout}
-            />
+            <div className="bg-white border-2 border-zinc-100 rounded-[32px] p-2">
+              <OrderSummary
+                totals={totals}
+                promoInput={promoInput}
+                setPromoInput={setPromoInput}
+                handleApplyPromo={handleApplyPromo}
+                isPromoApplied={isPromoApplied}
+                appliedPromoCode={appliedPromoCode}
+                showCheckout={showCheckout}
+                setShowCheckout={setShowCheckout}
+              />
+            </div>
           </div>
         </div>
       </div>

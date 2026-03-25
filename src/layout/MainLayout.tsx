@@ -20,7 +20,7 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative font-satoshi bg-white overflow-x-hidden">
-      <PromoModal />
+       <PromoModal />
       <WelcomeGift />
 
       {!shouldHideLayout && (
