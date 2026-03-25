@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -11,13 +11,13 @@ import {
 } from "react-icons/ri";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import { getEmailError, getPhoneError } from "../utils/validation";
 
 type Method = "email" | "phone";
 
 const Password: React.FC = () => {
   const [method, setMethod] = useState<Method>("email");
   const [inputValue, setInputValue] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const navigate = useNavigate();
 
@@ -28,26 +28,12 @@ const Password: React.FC = () => {
     }
   }, [cooldown]);
 
-  const validate = (value: string) => {
-    if (!value.trim()) {
-      setError(null);
-      return;
-    }
-
-    if (method === "email") {
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      if (/[çığöşüİĞÖŞÜ]/.test(value))
-        setError("TÜRKÇE KARAKTER KULLANILAMAZ.");
-      else if (!value.includes("@")) setError("'@' İŞARETİ EKSİK.");
-      else if (!emailRegex.test(value))
-        setError("GEÇERSİZ FORMAT (örn: ad@mail.com)");
-      else setError(null);
-    } else {
-      if (value.length !== 10)
-        setError("TELEFON 10 HANE OLMALIDIR (5XXXXXXXXX).");
-      else setError(null);
-    }
-  };
+  const error = useMemo(() => {
+    if (!inputValue) return null;
+    return method === "email"
+      ? getEmailError(inputValue)
+      : getPhoneError(inputValue);
+  }, [inputValue, method]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\s/g, "");
@@ -55,15 +41,16 @@ const Password: React.FC = () => {
       val = val.replace(/\D/g, "").slice(0, 10);
     }
     setInputValue(val);
-    validate(val);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleMethodChange = (newMethod: Method) => {
+    setMethod(newMethod);
+    setInputValue("");
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!inputValue) {
-      setError("BU ALAN BOŞ BIRAKILAMAZ.");
-      return;
-    }
+    if (!inputValue) return;
 
     if (!error && cooldown === 0) {
       toast.info(
@@ -96,7 +83,6 @@ const Password: React.FC = () => {
       <div className="max-w-[1000px] w-full grid md:grid-cols-2 bg-white rounded-[48px] shadow-[0_40px_120px_rgba(0,0,0,0.08)] border border-zinc-50 overflow-hidden z-10 relative">
         <div className="bg-zinc-950 p-12 hidden md:flex flex-col justify-between items-start text-left relative overflow-hidden">
           <RiShieldKeyholeLine className="absolute -right-16 -bottom-16 text-[300px] text-white/[0.02] -rotate-12 select-none" />
-
           <div className="relative z-10 space-y-4">
             <div className="w-12 h-1 bg-zinc-800" />
             <h2 className="text-6xl font-[1000] text-white uppercase italic leading-[0.85] tracking-tighter">
@@ -106,7 +92,6 @@ const Password: React.FC = () => {
               </span>
             </h2>
           </div>
-
           <div className="relative z-10 space-y-4">
             <p className="text-zinc-600 text-sm font-bold leading-relaxed max-w-[220px]">
               Hesabınızı kurtarmak için kayıtlı doğrulama yöntemini seçiniz.
@@ -133,36 +118,20 @@ const Password: React.FC = () => {
           </div>
 
           <div className="flex bg-zinc-50 p-1.5 rounded-2xl mb-10 border border-zinc-100 relative">
-            <Button
-              variant={method === "email" ? "primary" : "white"}
-              onClick={() => {
-                setMethod("email");
-                setInputValue("");
-                setError(null);
-              }}
-              className={`flex-1 !py-4 !rounded-xl !text-[10px] !border-none tracking-widest italic transition-all duration-500 ${
-                method === "email"
-                  ? "shadow-2xl scale-[1.02] z-10"
-                  : "!bg-transparent !text-zinc-400 opacity-60 hover:opacity-100"
-              }`}
-            >
-              E-POSTA
-            </Button>
-            <Button
-              variant={method === "phone" ? "primary" : "white"}
-              onClick={() => {
-                setMethod("phone");
-                setInputValue("");
-                setError(null);
-              }}
-              className={`flex-1 !py-4 !rounded-xl !text-[10px] !border-none tracking-widest italic transition-all duration-500 ${
-                method === "phone"
-                  ? "shadow-2xl scale-[1.02] z-10"
-                  : "!bg-transparent !text-zinc-400 opacity-60 hover:opacity-100"
-              }`}
-            >
-              TELEFON
-            </Button>
+            {(["email", "phone"] as Method[]).map((m) => (
+              <Button
+                key={m}
+                variant={method === m ? "primary" : "white"}
+                onClick={() => handleMethodChange(m)}
+                className={`flex-1 !py-4 !rounded-xl !text-[10px] !border-none tracking-widest italic transition-all duration-500 ${
+                  method === m
+                    ? "shadow-2xl scale-[1.02] z-10"
+                    : "!bg-transparent !text-zinc-400 opacity-60 hover:opacity-100"
+                }`}
+              >
+                {m === "email" ? "E-POSTA" : "TELEFON"}
+              </Button>
+            ))}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-10">
@@ -208,7 +177,12 @@ const Password: React.FC = () => {
                   placeholder={
                     method === "email" ? "ornek@mail.com" : "5XX XXX XX XX"
                   }
-                  className={`!bg-brand-soft !border-none !rounded-[24px] ${method === "phone" ? "pl-24" : "pl-16"} py-6 font-black text-sm transition-all focus:ring-2 focus:ring-black ${error ? "ring-2 ring-red-500 !bg-red-50/20" : ""}`}
+                  className={`!bg-brand-soft !border-none !rounded-[24px] ${
+                    method === "phone" ? "pl-24" : "pl-16"
+                  } py-6 font-black text-sm focus:ring-2 focus:ring-black ${
+                    error ? "ring-2 ring-red-500 !bg-red-50/20" : ""
+                  }`}
+                  required
                 />
 
                 {error && (
@@ -235,7 +209,7 @@ const Password: React.FC = () => {
               >
                 {cooldown > 0 ? (
                   <span className="tabular-nums flex items-center justify-center gap-2">
-                    <RiShieldKeyholeLine className="animate-pulse" /> {cooldown}
+                    <RiShieldKeyholeLine className="animate-pulse" /> {cooldown}{" "}
                     S BEKLEYİN
                   </span>
                 ) : (
