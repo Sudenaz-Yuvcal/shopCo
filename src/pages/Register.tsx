@@ -6,12 +6,13 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { useUser } from "../context/UserContext";
 import LoadingOverlay from "../components/ui/LoadingOverlay";
+import { getEmailError, getPasswordError } from "../utils/validation";
 import {
   RiMailLine,
-  RiLockPasswordLine,
   RiUserLine,
   RiArrowRightSLine,
   RiSparklingLine,
+  RiShieldCheckLine,
 } from "react-icons/ri";
 
 const Register: React.FC = () => {
@@ -22,80 +23,77 @@ const Register: React.FC = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    acceptTerms: false,
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const validate = (name: string, value: string) => {
-    let error = "";
-    const cleanValue = value.trim();
+  const errors = useMemo(() => {
+    return {
+      email: getEmailError(formData.email),
+      password: getPasswordError(formData.password),
+      confirmPassword:
+        formData.confirmPassword &&
+        formData.confirmPassword !== formData.password
+          ? "ŞİFRELER EŞLEŞMİYOR."
+          : "",
+      fullName:
+        formData.fullName &&
+        (!formData.fullName.trim().includes(" ") ||
+          formData.fullName.trim().length < 5)
+          ? "AD VE SOYADINIZI TAM GİRİNİZ."
+          : "",
+    };
+  }, [formData]);
 
-    if (name === "email") {
-      if (cleanValue.includes(" ")) error = "BOŞLUK BIRAKILAMAZ.";
-      else if (/[çğıöşüÇĞİÖŞÜ]/.test(cleanValue))
-        error = "TÜRKÇE KARAKTER KULLANILAMAZ.";
-      else if (/[A-Z]/.test(cleanValue)) error = "SADECE KÜÇÜK HARF KULLANIN.";
-      else if (
-        cleanValue &&
-        !/@(gmail\.com|hotmail\.com|outlook\.com|yahoo\.com)$/.test(cleanValue)
-      )
-        error = "GEÇERLİ BİR KURUMSAL UZANTI GİRİN.";
-    } else if (name === "password") {
-      if (cleanValue.length < 8) error = "EN AZ 8 KARAKTER OLMALI.";
-      else if (!/[A-Z]/.test(cleanValue)) error = "BİR BÜYÜK HARF İÇERMELİ.";
-      else if (!/[0-9]/.test(cleanValue)) error = "BİR SAYI İÇERMELİ.";
-    } else if (name === "confirmPassword") {
-      if (cleanValue !== formData.password) error = "ŞİFRELER EŞLEŞMİYOR.";
-    }
-    setErrors((prev) => ({ ...prev, [name]: error }));
-  };
+  const passwordStrength = useMemo(() => {
+    if (!formData.password) return 0;
+    let strength = 0;
+    if (formData.password.length >= 8) strength += 33;
+    if (/[A-Z]/.test(formData.password)) strength += 33;
+    if (/[0-9]/.test(formData.password)) strength += 34;
+    return strength;
+  }, [formData.password]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    validate(name, value);
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const isFormValid = useMemo(() => {
-    const isNameValid =
-      formData.fullName.trim().length > 0 &&
-      formData.fullName.trim().includes(" ");
-    const isEmailValid = formData.email.trim() !== "" && !errors.email;
-    const isPasswordValid = formData.password !== "" && !errors.password;
-    const isConfirmValid =
-      formData.confirmPassword === formData.password && !errors.confirmPassword;
-
-    return isNameValid && isEmailValid && isPasswordValid && isConfirmValid;
+    return (
+      formData.fullName.trim().includes(" ") &&
+      formData.email &&
+      !errors.email &&
+      formData.password &&
+      !errors.password &&
+      formData.confirmPassword === formData.password &&
+      formData.acceptTerms
+    );
   }, [formData, errors]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isFormValid) {
       setIsLoading(true);
-
-      const nameParts = formData.fullName.trim().split(" ");
-      const firstName = nameParts[0].toUpperCase();
-      const lastName = nameParts.slice(1).join(" ").toUpperCase() || "ÜYE";
+      const [firstName, ...lastNameParts] = formData.fullName.trim().split(" ");
+      const lastName = lastNameParts.join(" ") || "ÜYE";
 
       setTimeout(() => {
         login({
-          name: firstName,
-          surname: lastName,
+          name: firstName.toUpperCase(),
+          surname: lastName.toUpperCase(),
           email: formData.email.toLowerCase(),
-          address: "",
           membership: "Elite",
         });
 
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 2);
         localStorage.setItem("is_new_registrant", "true");
-        localStorage.setItem("welcome_coupon_expiry", expiryDate.toISOString());
-
-        toast.success("HOŞ GELDİN! %50 İNDİRİMİN SEPETİNDE.", {
+        toast.success("HOŞ GELDİN! %50 İNDİRİMİN TANIMLANDI.", {
           theme: "dark",
           icon: <RiSparklingLine className="text-yellow-400" />,
         });
-
         navigate("/", { state: { isNewUser: true } });
       }, 2000);
     }
@@ -104,67 +102,49 @@ const Register: React.FC = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-white relative font-satoshi overflow-hidden px-4">
       <Helmet>
-        <title>Yeni Üyelik | SHOP.CO</title>
+        <title>Elite Üyelik | SHOP.CO</title>
       </Helmet>
-
-      {isLoading && <LoadingOverlay message="HESABINIZ OLUŞTURULUYOR..." />}
+      {isLoading && <LoadingOverlay message="HESABINIZ HAZIRLANIYOR..." />}
 
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-zinc-50 rounded-full blur-[120px] -mr-40 -mt-40 opacity-60" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-zinc-100 rounded-full blur-[100px] -ml-20 -mb-20 opacity-40" />
-
-      <div className="absolute top-8 md:top-12 left-1/2 -translate-x-1/2 md:left-12 md:translate-x-0 z-20">
-        <Link
-          to="/"
-          className="text-3xl font-[1000] tracking-tighter text-black uppercase italic leading-none hover:opacity-60 transition-opacity"
-        >
-          SHOP.CO
-        </Link>
-      </div>
 
       <div className="max-w-[1100px] w-full grid md:grid-cols-2 bg-white rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.12)] border border-zinc-100 overflow-hidden z-10 my-12 relative">
-        <div className="relative bg-black p-12 hidden md:flex flex-col justify-between items-start text-left">
-          <div className="absolute inset-0 opacity-10" />
+        <div className="relative bg-black p-12 hidden md:flex flex-col justify-between text-left">
           <div className="relative z-10">
-            <span className="text-[10px] font-black text-zinc-500 tracking-[0.4em] uppercase">
-              ELITE KATILIN
-            </span>
-            <h2 className="text-5xl lg:text-7xl font-[1000] text-white leading-[0.85] uppercase tracking-tighter italic mt-6">
-              TARZINI <br />
-              <span className="text-zinc-700">DÜNYAYA</span> <br />
-              KONUŞTUR.
+            <RiShieldCheckLine className="text-zinc-600 mb-6" size={32} />
+            <h2 className="text-5xl lg:text-7xl font-[1000] text-white leading-[0.85] uppercase tracking-tighter italic">
+              TARZINI <br /> <span className="text-zinc-700">DÜNYAYA</span>{" "}
+              <br /> KONUŞTUR.
             </h2>
           </div>
           <div className="relative z-10 space-y-6">
-            <p className="text-zinc-500 text-sm font-bold leading-relaxed max-w-[280px] uppercase tracking-wider italic">
-              İlk alışverişine özel sürpriz hediyeler ve VIP koleksiyonlar için
-              yerini al.
+            <p className="text-zinc-500 text-sm font-bold uppercase tracking-wider italic leading-relaxed">
+              Elite üyelik ile kişiselleştirilmiş koleksiyonlar ve erken erişim
+              fırsatlarını yakala.
             </p>
             <div className="w-16 h-[2px] bg-zinc-800" />
           </div>
         </div>
 
-        <div className="p-8 md:p-14 lg:p-20 text-left bg-white overflow-y-auto max-h-[90vh] md:max-h-none">
+        <div className="p-8 md:p-14 text-left bg-white overflow-y-auto">
           <div className="mb-10 flex justify-between items-end">
             <div>
-              <h1 className="text-4xl font-[1000] uppercase tracking-tighter text-black italic leading-none">
+              <h1 className="text-4xl font-[1000] uppercase tracking-tighter italic">
                 ÜYE OL
               </h1>
-              <p className="text-zinc-400 text-[10px] mt-4 uppercase tracking-[0.2em] font-black italic">
+              <p className="text-zinc-400 text-[10px] mt-2 uppercase tracking-[0.2em] font-black italic">
                 MODA DÜNYAMIZA KATIL
               </p>
             </div>
-            <Link
-              to="/login"
-              className="flex items-center gap-2 text-black hover:opacity-50 transition-all group pb-1"
-            >
-              <span className="text-[10px] font-black uppercase tracking-widest border-b-2 border-black">
+            <Link to="/login" className="flex items-center gap-1 group">
+              <span className="text-[10px] font-black uppercase border-b-2 border-black">
                 GİRİŞ YAP
               </span>
-              <RiArrowRightSLine className="text-xl group-hover:translate-x-1 transition-transform" />
+              <RiArrowRightSLine className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-2 italic">
                 AD SOYAD
@@ -173,9 +153,9 @@ const Register: React.FC = () => {
                 <RiUserLine className="absolute left-6 top-1/2 -translate-y-1/2 text-xl text-zinc-300 group-focus-within:text-black transition-colors" />
                 <Input
                   name="fullName"
-                  placeholder="ADINIZ VE SOYADINIZ"
+                  placeholder="AD SOYAD"
                   onChange={handleChange}
-                  className="!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all"
+                  className="!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase"
                   required
                 />
               </div>
@@ -192,30 +172,29 @@ const Register: React.FC = () => {
                   type="email"
                   placeholder="ornek@mail.com"
                   onChange={handleChange}
-                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all ${errors.email ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase ${errors.email ? "ring-2 ring-red-500" : ""}`}
                   required
                 />
                 {errors.email && (
-                  <span className="absolute -bottom-5 left-2 text-[9px] font-black text-red-600 uppercase tracking-widest">
+                  <span className="absolute -bottom-5 left-2 text-[8px] font-black text-red-600">
                     {errors.email}
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-2 italic">
                   ŞİFRE
                 </label>
                 <div className="relative group">
-                  <RiLockPasswordLine className="absolute left-5 top-1/2 -translate-y-1/2 text-lg text-zinc-300 group-focus-within:text-black transition-colors" />
                   <Input
                     name="password"
                     type="password"
                     placeholder="••••••••"
                     onChange={handleChange}
-                    className={`!bg-brand-soft !border-none !rounded-[20px] pl-14 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${errors.password ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}
+                    className="!bg-brand-soft !border-none !rounded-[20px] pl-6 py-5 font-black text-xs tracking-widest"
                     required
                   />
                 </div>
@@ -225,35 +204,69 @@ const Register: React.FC = () => {
                   TEKRAR
                 </label>
                 <div className="relative group">
-                  <RiLockPasswordLine className="absolute left-5 top-1/2 -translate-y-1/2 text-lg text-zinc-300 group-focus-within:text-black transition-colors" />
                   <Input
                     name="confirmPassword"
                     type="password"
                     placeholder="••••••••"
                     onChange={handleChange}
-                    className={`!bg-brand-soft !border-none !rounded-[20px] pl-14 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${errors.confirmPassword ? "ring-2 ring-red-500 bg-red-50/20" : ""}`}
+                    className="!bg-brand-soft !border-none !rounded-[20px] pl-6 py-5 font-black text-xs tracking-widest"
                     required
                   />
                 </div>
               </div>
             </div>
 
-            {(errors.password || errors.confirmPassword) && (
-              <span className="text-[9px] font-black text-red-600 uppercase tracking-widest block text-center mt-2">
-                {errors.password || errors.confirmPassword}
-              </span>
+            {formData.password && (
+              <div className="px-2 space-y-2">
+                <div className="flex justify-between text-[8px] font-black text-zinc-400 uppercase italic">
+                  <span>Şifre Gücü</span>
+                  <span>
+                    {passwordStrength < 66
+                      ? "Zayıf"
+                      : passwordStrength < 100
+                        ? "Orta"
+                        : "Güçlü"}
+                  </span>
+                </div>
+                <div className="h-1 w-full bg-zinc-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${passwordStrength < 66 ? "bg-red-500" : passwordStrength < 100 ? "bg-yellow-500" : "bg-green-500"}`}
+                    style={{ width: `${passwordStrength}%` }}
+                  />
+                </div>
+              </div>
             )}
 
-            <div className="pt-6">
+            <div className="flex items-start gap-3 px-2 pt-2">
+              <input
+                type="checkbox"
+                name="acceptTerms"
+                id="acceptTerms"
+                checked={formData.acceptTerms}
+                onChange={handleChange}
+                className="mt-1 accent-black w-4 h-4 cursor-pointer"
+                required
+              />
+              <label
+                htmlFor="acceptTerms"
+                className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider leading-relaxed cursor-pointer"
+              >
+                <span className="text-black">Kullanım Şartları</span> ve{" "}
+                <span className="text-black">KVKK</span> aydınlatma metnini
+                okudum, onaylıyorum.
+              </label>
+            </div>
+
+            <div className="pt-4">
               <Button
                 type="submit"
                 variant="primary"
                 size="xl"
                 disabled={!isFormValid || isLoading}
-                className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all ${
+                className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic transition-all ${
                   !isFormValid || isLoading
-                    ? "opacity-30 grayscale cursor-not-allowed pointer-events-none"
-                    : "hover:scale-[1.02] hover:bg-zinc-900 active:scale-95"
+                    ? "opacity-30 grayscale cursor-not-allowed"
+                    : "hover:scale-[1.02] active:scale-95 shadow-xl"
                 }`}
               >
                 {isLoading ? "İŞLENİYOR..." : "KAYIT OL VE KEŞFET →"}
