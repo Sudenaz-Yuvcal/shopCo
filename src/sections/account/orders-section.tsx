@@ -1,7 +1,23 @@
 import { FiPackage, FiShoppingBag } from "react-icons/fi";
 
+interface OrderItem {
+  image: string;
+  name: string;
+  size: string;
+  color: string;
+  quantity: number;
+}
+
+interface Order {
+  id: string | number;
+  date: string;
+  status: string;
+  total: number;
+  items: OrderItem[];
+}
+
 interface OrdersSectionProps {
-  orders: any[];
+  orders: Order[];
 }
 
 const OrdersSection = ({ orders }: OrdersSectionProps) => (
@@ -50,16 +66,23 @@ const OrdersSection = ({ orders }: OrdersSectionProps) => (
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {order.items?.map((item: any, idx: number) => (
+              {order.items?.map((item, idx) => (
                 <div
                   key={idx}
                   className="flex items-center gap-4 bg-zinc-50 p-4 rounded-3xl border border-transparent hover:border-zinc-200 transition-all"
                 >
-                  <img
-                    src={item.image}
-                    className="w-14 h-14 object-cover rounded-2xl grayscale hover:grayscale-0 transition-all shadow-md"
-                    alt={item.name}
-                  />
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      className="w-14 h-14 object-cover rounded-2xl grayscale hover:grayscale-0 transition-all shadow-md"
+                      alt={item.name}
+                    />
+                  ) : (
+                    <div className="w-14 h-14 bg-zinc-200 rounded-2xl flex items-center justify-center text-[8px] font-black italic text-zinc-400 text-center px-1">
+                      NO IMAGE
+                    </div>
+                  )}
+
                   <div className="flex-1 min-w-0">
                     <h4 className="text-[11px] font-[1000] uppercase italic truncate leading-none mb-2">
                       {item.name}

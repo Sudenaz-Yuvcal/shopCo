@@ -1,16 +1,25 @@
 import { FiCreditCard } from "react-icons/fi";
 import Input from "../ui/Input";
+import type {
+  UseFormRegister,
+  FieldErrors,
+  UseFormSetValue,
+  UseFormHandleSubmit,
+} from "react-hook-form";
+import type { ICheckoutForm } from "../../types/checkout";
 
 interface CheckoutFormProps {
-  register: any;
-  errors: any;
-  handleSubmit: any;
-  onCheckoutSubmit: any;
-  setValue: any;
+  register: UseFormRegister<ICheckoutForm>;
+  errors: FieldErrors<ICheckoutForm>;
+  handleSubmit: UseFormHandleSubmit<ICheckoutForm>;
+  onCheckoutSubmit: (data: ICheckoutForm) => void;
+  setValue: UseFormSetValue<ICheckoutForm>;
   showCityList: boolean;
   setShowCityList: (val: boolean) => void;
   filteredCities: string[];
-  errorStyle: (err: any) => any;
+  errorStyle: (
+    err: FieldErrors<ICheckoutForm>[keyof ICheckoutForm],
+  ) => React.CSSProperties;
 }
 
 const CheckoutForm = ({
@@ -27,27 +36,33 @@ const CheckoutForm = ({
 
   const handleNameChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    fieldName: string,
+    fieldName: keyof ICheckoutForm,
   ) => {
     let val = e.target.value.replace(/[0-9]/g, "");
     val = val.replace(/\s\s+/g, " ");
-    setValue(fieldName, val, { shouldValidate: true }); 
+    setValue(fieldName, (val || "") as any, {
+      shouldValidate: true,
+    });
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
       .replace(/\s/g, "")
       .replace(/[ğĞüÜşŞİıöÖçÇ]/g, "");
-    setValue("email", val.toLowerCase(), { shouldValidate: true });
+    setValue("email", (val.toLowerCase() || "") as any, {
+      shouldValidate: true,
+    });
   };
 
   const handleNumberOnlyChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    fieldName: string,
+    fieldName: keyof ICheckoutForm,
     maxLen: number,
   ) => {
     const val = e.target.value.replace(/\D/g, "").substring(0, maxLen);
-    setValue(fieldName, val, { shouldValidate: true });
+    setValue(fieldName, (val || "") as any, {
+      shouldValidate: true,
+    });
   };
 
   const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +70,9 @@ const CheckoutForm = ({
     if (val.length > 2) {
       val = val.substring(0, 2) + "/" + val.substring(2, 4);
     }
-    setValue("expiryDate", val.substring(0, 5), { shouldValidate: true });
+    setValue("expiryDate", (val.substring(0, 5) || "") as any, {
+      shouldValidate: true,
+    });
   };
 
   return (
@@ -76,14 +93,18 @@ const CheckoutForm = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
             {...register("firstName", { required: true })}
-            onChange={(e: any) => handleNameChange(e, "firstName")}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handleNameChange(e, "firstName")
+            }
             placeholder="AD"
             style={errorStyle(errors.firstName)}
             className="!rounded-3xl !py-5 font-black italic"
           />
           <Input
             {...register("lastName", { required: true })}
-            onChange={(e: any) => handleNameChange(e, "lastName")}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handleNameChange(e, "lastName")
+            }
             placeholder="SOYAD"
             style={errorStyle(errors.lastName)}
             className="!rounded-3xl !py-5 font-black italic"
@@ -115,7 +136,9 @@ const CheckoutForm = ({
                   <div
                     key={city}
                     onClick={() => {
-                      setValue("city", city, { shouldValidate: true });
+                      setValue("city", (city || "") as any, {
+                        shouldValidate: true,
+                      });
                       setShowCityList(false);
                     }}
                     className="p-4 hover:bg-black hover:text-white rounded-2xl cursor-pointer text-[11px] font-black italic uppercase tracking-widest"
@@ -141,7 +164,9 @@ const CheckoutForm = ({
         <div className="space-y-6">
           <Input
             {...register("cardName", { required: true })}
-            onChange={(e: any) => handleNameChange(e, "cardName")}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handleNameChange(e, "cardName")
+            }
             placeholder="KART SAHİBİ"
             style={errorStyle(errors.cardName)}
             className="!rounded-3xl !py-5 font-black italic"
@@ -149,7 +174,9 @@ const CheckoutForm = ({
           <div className="relative">
             <Input
               {...register("cardNumber", { required: true, minLength: 16 })}
-              onChange={(e: any) => handleNumberOnlyChange(e, "cardNumber", 16)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleNumberOnlyChange(e, "cardNumber", 16)
+              }
               placeholder="KART NUMARASI"
               style={errorStyle(errors.cardNumber)}
               className="!rounded-3xl !py-5 font-black italic"
@@ -169,7 +196,9 @@ const CheckoutForm = ({
             />
             <Input
               {...register("cvc", { required: true })}
-              onChange={(e: any) => handleNumberOnlyChange(e, "cvc", 3)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleNumberOnlyChange(e, "cvc", 3)
+              }
               placeholder="CVC"
               style={errorStyle(errors.cvc)}
               className="!rounded-3xl !py-5 text-center font-black italic"

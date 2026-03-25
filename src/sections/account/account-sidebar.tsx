@@ -1,12 +1,25 @@
 import { FiChevronRight, FiLogOut } from "react-icons/fi";
 import Button from "../../components/ui/Button";
+import type { ReactNode } from "react";
+
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: ReactNode;
+}
+
+interface UserData {
+  name: string;
+  surname: string;
+  email: string;
+}
 
 interface AccountSidebarProps {
-  user: any;
+  user: UserData;
   activeTab: string;
   setActiveTab: (id: string) => void;
   setShowLogoutModal: (val: boolean) => void;
-  menuItems: any[];
+  menuItems: MenuItem[];
 }
 
 const AccountSidebar = ({
@@ -50,7 +63,11 @@ const AccountSidebar = ({
             {item.label}
           </div>
           <FiChevronRight
-            className={`transition-all duration-300 ${activeTab === item.id ? "opacity-100" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"}`}
+            className={`transition-all duration-300 ${
+              activeTab === item.id
+                ? "opacity-100"
+                : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
+            }`}
           />
         </Button>
       ))}

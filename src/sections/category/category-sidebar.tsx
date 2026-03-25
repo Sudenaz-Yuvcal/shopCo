@@ -1,16 +1,28 @@
 import { RiRestartLine, RiCheckLine } from "react-icons/ri";
 import Button from "../../components/ui/Button";
+interface ColorOption {
+  name: string;
+  id: string;
+  tailwind: string;
+}
+interface FilterState {
+  color: string | null;
+  price: number;
+  selectedCategories: string[];
+  selectedBrands: string[];
+  size?: string | null; 
+}
 
 interface CategorySidebarProps {
-  tempFilters: any;
-  setTempFilters: React.Dispatch<React.SetStateAction<any>>;
+  tempFilters: FilterState;
+  setTempFilters: React.Dispatch<React.SetStateAction<FilterState>>; // Dispatch tipi güncellendi
   handleApplyFilter: () => void;
   handleResetFilters: () => void;
   handleBrandToggle: (brand: string) => void;
   handleCategoryToggle: (cat: string) => void;
   BRANDS: string[];
   CATEGORIES: string[];
-  COLOR_OPTIONS: any[];
+  COLOR_OPTIONS: ColorOption[];
 }
 
 const CategorySidebar = ({
@@ -54,14 +66,22 @@ const CategorySidebar = ({
               onChange={() => handleBrandToggle(brand)}
             />
             <div
-              className={`w-5 h-5 border-2 rounded-lg flex items-center justify-center transition-all ${tempFilters.selectedBrands.includes(brand) ? "bg-black border-black shadow-lg" : "border-zinc-200 group-hover:border-black"}`}
+              className={`w-5 h-5 border-2 rounded-lg flex items-center justify-center transition-all ${
+                tempFilters.selectedBrands.includes(brand)
+                  ? "bg-black border-black shadow-lg"
+                  : "border-zinc-200 group-hover:border-black"
+              }`}
             >
               {tempFilters.selectedBrands.includes(brand) && (
                 <RiCheckLine className="text-white" size={14} />
               )}
             </div>
             <span
-              className={`text-[11px] font-black uppercase italic tracking-wide transition-colors ${tempFilters.selectedBrands.includes(brand) ? "text-black" : "text-zinc-400"}`}
+              className={`text-[11px] font-black uppercase italic tracking-wide transition-colors ${
+                tempFilters.selectedBrands.includes(brand)
+                  ? "text-black"
+                  : "text-zinc-400"
+              }`}
             >
               {brand}
             </span>
@@ -87,14 +107,22 @@ const CategorySidebar = ({
               onChange={() => handleCategoryToggle(cat)}
             />
             <div
-              className={`w-5 h-5 border-2 rounded-lg flex items-center justify-center transition-all ${tempFilters.selectedCategories.includes(cat) ? "bg-black border-black shadow-lg" : "border-zinc-200 group-hover:border-black"}`}
+              className={`w-5 h-5 border-2 rounded-lg flex items-center justify-center transition-all ${
+                tempFilters.selectedCategories.includes(cat)
+                  ? "bg-black border-black shadow-lg"
+                  : "border-zinc-200 group-hover:border-black"
+              }`}
             >
               {tempFilters.selectedCategories.includes(cat) && (
                 <RiCheckLine className="text-white" size={14} />
               )}
             </div>
             <span
-              className={`text-[11px] font-black uppercase italic tracking-wide transition-colors ${tempFilters.selectedCategories.includes(cat) ? "text-black" : "text-zinc-400"}`}
+              className={`text-[11px] font-black uppercase italic tracking-wide transition-colors ${
+                tempFilters.selectedCategories.includes(cat)
+                  ? "text-black"
+                  : "text-zinc-400"
+              }`}
             >
               {cat}
             </span>
@@ -118,8 +146,8 @@ const CategorySidebar = ({
         max="500"
         step="10"
         value={tempFilters.price}
-        onChange={(e) =>
-          setTempFilters((prev: any) => ({
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setTempFilters((prev) => ({
             ...prev,
             price: Number(e.target.value),
           }))
@@ -137,12 +165,18 @@ const CategorySidebar = ({
           <button
             key={color.id}
             onClick={() =>
-              setTempFilters((prev: any) => ({
+              setTempFilters((prev) => ({
                 ...prev,
                 color: prev.color === color.id ? null : color.id,
               }))
             }
-            className={`w-8 h-8 rounded-full border-2 transition-all duration-300 hover:scale-110 shadow-sm ${color.tailwind} ${tempFilters.color === color.id ? "border-black ring-2 ring-zinc-200 scale-110" : "border-transparent opacity-80"}`}
+            className={`w-8 h-8 rounded-full border-2 transition-all duration-300 hover:scale-110 shadow-sm ${
+              color.tailwind
+            } ${
+              tempFilters.color === color.id
+                ? "border-black ring-2 ring-zinc-200 scale-110"
+                : "border-transparent opacity-80"
+            }`}
             title={color.name}
           />
         ))}

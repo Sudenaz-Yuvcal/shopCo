@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { FiArrowLeft } from "react-icons/fi";
+import { useForm, type FieldError } from "react-hook-form";import { FiArrowLeft } from "react-icons/fi";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
 import { useOrder } from "../context/OrderContext";
@@ -42,7 +41,9 @@ const Cart = () => {
   } = useForm<ICheckoutForm>();
   const watchedCity = watch("city") || "";
 
-  const errorStyle = (isError: any) => ({
+  const errorStyle = (
+    isError: FieldError | undefined,
+  ): React.CSSProperties => ({
     border: isError ? "2px solid #ef4444" : "1px solid #e4e4e7",
     backgroundColor: isError ? "#fef2f2" : "white",
     transition: "all 0.3s ease",
