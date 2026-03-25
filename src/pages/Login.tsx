@@ -6,6 +6,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { useUser } from "../context/UserContext";
 import LoadingOverlay from "../components/ui/LoadingOverlay";
+import { getEmailError, getPasswordError } from "../utils/validation";
 import {
   RiMailLine,
   RiLockPasswordLine,
@@ -18,48 +19,16 @@ const Login: React.FC = () => {
   const { login } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateEmail = (value: string) => {
-    const cleanValue = value.trim();
-    setEmail(cleanValue);
-    setEmailError("");
-
-    if (cleanValue.includes(" ")) setEmailError("BOŞLUK BIRAKILAMAZ.");
-    else if (/[çğıöşüÇĞİÖŞÜ]/.test(cleanValue))
-      setEmailError("TÜRKÇE KARAKTER KULLANILAMAZ.");
-    else if (/[A-Z]/.test(cleanValue))
-      setEmailError("E-POSTA KÜÇÜK HARF OLMALI.");
-    else if (cleanValue.length > 0 && !cleanValue.includes("@"))
-      setEmailError("'@' İŞARETİ GEREKLİDİR.");
-    else if (
-      cleanValue.includes("@") &&
-      !/@(gmail\.com|hotmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/.test(
-        cleanValue,
-      )
-    ) {
-      setEmailError("GEÇERLİ BİR KURUMSAL UZANTI KULLANIN.");
-    }
-  };
-
-  const validatePassword = (value: string) => {
-    setPassword(value);
-    setPasswordError("");
-    if (value.length > 0 && value.length < 8)
-      setPasswordError("ŞİFRE EN AZ 8 KARAKTER OLMALI.");
-    else if (value.length >= 8 && !/[A-Z]/.test(value))
-      setPasswordError("EN AZ BİR BÜYÜK HARF GEREKLİ.");
-    else if (value.length >= 8 && !/[0-9]/.test(value))
-      setPasswordError("EN AZ BİR SAYI GEREKLİ.");
-  };
+  const emailError = useMemo(() => getEmailError(email), [email]);
+  const passwordError = useMemo(() => getPasswordError(password), [password]);
 
   const isFormValid = useMemo(() => {
     return email && password && !emailError && !passwordError;
   }, [email, password, emailError, passwordError]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isFormValid) {
       setIsLoading(true);
@@ -107,7 +76,6 @@ const Login: React.FC = () => {
 
       <div className="max-w-[1100px] w-full grid md:grid-cols-2 bg-white rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.12)] border border-zinc-100 overflow-hidden z-10 my-12 relative">
         <div className="relative bg-black p-12 hidden md:flex flex-col justify-between items-start text-left">
-          <div className="absolute inset-0 opacity-10" />
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-6">
               <RiShieldCheckLine className="text-zinc-500" size={20} />
@@ -162,7 +130,7 @@ const Login: React.FC = () => {
                 <Input
                   type="email"
                   value={email}
-                  onChange={(e) => validateEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.trim())}
                   placeholder="ornek@gmail.com"
                   className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all ${emailError ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}
                   required
@@ -192,7 +160,7 @@ const Login: React.FC = () => {
                 <Input
                   type="password"
                   value={password}
-                  onChange={(e) => validatePassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${passwordError ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}
                   required
@@ -211,7 +179,11 @@ const Login: React.FC = () => {
                 variant="primary"
                 size="xl"
                 disabled={!isFormValid || isLoading}
-                className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all ${!isFormValid || isLoading ? "opacity-30 grayscale cursor-not-allowed" : "hover:scale-[1.02] hover:bg-zinc-900 active:scale-95"}`}
+                className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all ${
+                  !isFormValid || isLoading
+                    ? "opacity-30 grayscale cursor-not-allowed"
+                    : "hover:scale-[1.02] hover:bg-zinc-900 active:scale-95"
+                }`}
               >
                 GİRİŞ YAP VE KEŞFET →
               </Button>

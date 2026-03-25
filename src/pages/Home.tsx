@@ -1,9 +1,9 @@
-import StatItemProps from "../sections/home/hero";
+import { Helmet } from "react-helmet-async";
+import Hero from "../sections/home/hero";
 import NewArrivals from "../sections/home/new-arrivals";
 import TopSelling from "../sections/home/top-selling";
 import DressStyle from "../sections/home/dress-style";
 import Customers from "../sections/home/customers";
-import { Helmet } from "react-helmet-async";
 
 const Home = () => {
   return (
@@ -17,7 +17,7 @@ const Home = () => {
       </Helmet>
 
       <section className="animate-in fade-in duration-1000">
-        <StatItemProps />
+        <Hero />
       </section>
 
       <main className="space-y-20 py-10 md:py-20">

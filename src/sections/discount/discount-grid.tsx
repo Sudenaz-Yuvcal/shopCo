@@ -51,7 +51,7 @@ const DiscountGrid = ({
                 className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
               />
               <div className="absolute top-6 left-6 flex flex-col gap-2">
-                <div className="bg-red-600 text-white text-[11px] font-black px-4 py-2 rounded-2xl uppercase tracking-widest transform -rotate-2">
+                <div className="bg-red-600 text-red text-[11px] font-black px-4 py-2 rounded-2xl uppercase tracking-widest transform -rotate-2">
                   -{discountPercentage}%
                 </div>
               </div>

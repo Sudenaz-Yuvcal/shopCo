@@ -7,14 +7,7 @@ import Button from "../components/ui/Button";
 import CategorySidebar from "../sections/category/category-sidebar";
 import ProductGrid from "../sections/category/product-grid";
 import type { Product } from "../types/product";
-
-interface FilterState {
-  color: string | null;
-  price: number;
-  selectedCategories: string[];
-  size: string | null;
-  selectedBrands: string[];
-}
+import type { FilterState } from "../types/filter";
 
 const Category = () => {
   const [searchParams, setSearchParams] = useSearchParams();

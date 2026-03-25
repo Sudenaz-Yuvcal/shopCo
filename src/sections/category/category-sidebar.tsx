@@ -1,21 +1,14 @@
 import { RiRestartLine, RiCheckLine } from "react-icons/ri";
 import Button from "../../components/ui/Button";
+import type { FilterState } from "../../types/filter";
 interface ColorOption {
   name: string;
   id: string;
   tailwind: string;
 }
-interface FilterState {
-  color: string | null;
-  price: number;
-  selectedCategories: string[];
-  selectedBrands: string[];
-  size?: string | null; 
-}
-
 interface CategorySidebarProps {
   tempFilters: FilterState;
-  setTempFilters: React.Dispatch<React.SetStateAction<FilterState>>; // Dispatch tipi güncellendi
+  setTempFilters: React.Dispatch<React.SetStateAction<FilterState>>;
   handleApplyFilter: () => void;
   handleResetFilters: () => void;
   handleBrandToggle: (brand: string) => void;
