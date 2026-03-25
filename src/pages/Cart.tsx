@@ -2,25 +2,17 @@ import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useOrder } from "../context/OrderContext";
-import {
-  FiArrowLeft,
-  FiX,
-  FiCheckCircle,
-  FiShoppingBag,
-  FiAlertCircle,
-} from "react-icons/fi";
-
+import { FiArrowLeft } from "react-icons/fi";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
+import { useOrder } from "../context/OrderContext";
 import { usePromo } from "../context/PromoContext";
 import { useCartTotals } from "../hooks/useCartTotals";
-
-import Button from "../components/ui/Button";
 import CartItemCard from "../components/cart/CartItemCard";
 import OrderSummary from "../components/cart/OrderSummary";
 import CheckoutForm from "../components/cart/CheckoutForm";
-
+import EmptyCart from "../sections/cart/empty-cart";
+import CartNotification from "../sections/cart/cart-notification";
 import { TURKISH_CITIES } from "../constants/Cities";
 import type { ICheckoutForm } from "../types/checkout";
 
@@ -63,21 +55,13 @@ const Cart = () => {
     const targetCode =
       typeof code === "string" ? code : promoInput.trim().toUpperCase();
     if (!targetCode && !isPromoApplied) return;
-
     const result = applyPromoCode(targetCode, totals.subtotal);
-    if (result.success) {
-      showNotify(result.message, "success");
-    } else {
-      showNotify(result.message, "error");
-    }
+    showNotify(result.message, result.success ? "success" : "error");
     setPromoInput("");
   };
 
   const onCheckoutSubmit = (_data: ICheckoutForm) => {
-    if (!user) {
-      showNotify("ÖNCE GİRİŞ YAPMALISIN!", "error");
-      return;
-    }
+    if (!user) return showNotify("ÖNCE GİRİŞ YAPMALISIN!", "error");
     const orderId = addOrder(
       cart.map((item) => ({ ...item })),
       Math.round(totals.final),
@@ -112,25 +96,7 @@ const Cart = () => {
     }
   }, [notification]);
 
-  if (cart.length === 0)
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-32 text-center animate-in fade-in duration-700">
-        <div className="w-32 h-32 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-          <FiShoppingBag size={48} className="text-zinc-200" />
-        </div>
-        <h2 className="text-4xl font-black uppercase tracking-tighter mb-4 italic text-zinc-300">
-          SEPETİN ŞU AN BOŞ
-        </h2>
-        <Button
-          variant="primary"
-          size="xl"
-          onClick={() => navigate("/shop")}
-          className="px-16 !rounded-full italic"
-        >
-          KEŞFETMEYE BAŞLA
-        </Button>
-      </div>
-    );
+  if (cart.length === 0) return <EmptyCart />;
 
   return (
     <div className="min-h-screen bg-white font-satoshi text-left">
@@ -138,36 +104,11 @@ const Cart = () => {
         <title>Shop.co | {showCheckout ? "Güvenli Ödeme" : "Sepetim"}</title>
       </Helmet>
 
-      {notification && (
-        <div
-          className={`fixed bottom-10 right-10 z-[1000] bg-black text-white rounded-3xl shadow-2xl border ${notification.type === "success" ? "border-white/10" : "border-red-600"} w-80 overflow-hidden animate-in slide-in-from-right-10`}
-        >
-          <div className="p-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {notification.type === "success" ? (
-                <FiCheckCircle className="text-green-500" size={24} />
-              ) : (
-                <FiAlertCircle className="text-red-500" size={24} />
-              )}
-              <p className="text-[10px] font-black uppercase italic tracking-widest">
-                {notification.msg}
-              </p>
-            </div>
-            <button
-              onClick={() => setNotification(null)}
-              className="text-zinc-500 hover:text-white"
-            >
-              <FiX />
-            </button>
-          </div>
-          <div className="h-1 bg-zinc-800">
-            <div
-              className={`h-full transition-all duration-[50ms] ${notification.type === "success" ? "bg-white" : "bg-red-500"}`}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      )}
+      <CartNotification
+        notification={notification}
+        setNotification={setNotification}
+        progress={progress}
+      />
 
       <div className="max-w-7xl mx-auto px-6 py-12">
         <button

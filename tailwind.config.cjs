@@ -22,6 +22,7 @@ module.exports = {
         khaki: "#4F4631",
         denim: "#31344F",
         green: "#314F4A",
+        lightgreen: "#54d518",
         offwhite: "#FAFAFA",
         soft: "#F9F9F9",
         neutral: "#F5F5F5",

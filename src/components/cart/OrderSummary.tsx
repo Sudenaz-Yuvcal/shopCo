@@ -37,13 +37,13 @@ const OrderSummary = ({
       {totals.raw > totals.subtotal && (
         <div className="flex justify-between text-zinc-400">
           <span>ÜRÜN İNDİRİMİ</span>
-          <span className="text-lg font-black">
+          <span className="text-lg text-red">
             -${Math.round(totals.itemDiscount)}
           </span>
         </div>
       )}
       {isPromoApplied && (
-        <div className="flex justify-between text-red-600 animate-pulse">
+        <div className="flex justify-between text-red animate-pulse">
           <span>{appliedPromoCode} KODU</span>
           <span className="text-lg font-black">
             -${Math.round(totals.promoDiscount)}
@@ -52,7 +52,11 @@ const OrderSummary = ({
       )}
       <div className="flex justify-between">
         <span>KARGO</span>
-        <span className="text-black text-lg font-black">
+        <span
+          className={`text-lg font-black ${
+            totals.delivery === 0 ? "text-lightgreen" : "text-black"
+          }`}
+        >
           {totals.delivery === 0 ? "FREE" : `$${totals.delivery}`}
         </span>
       </div>
