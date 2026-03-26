@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useForm, type SubmitHandler, type Resolver } from "react-hook-form"; 
+import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { registerSchema } from "../utils/schemas";
 import Button from "../components/ui/Button";
@@ -255,5 +255,4 @@ const Register: React.FC = () => {
     </div>
   );
 };
-
 export default Register;

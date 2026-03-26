@@ -7,6 +7,7 @@ import Input from "../../components/ui/Input";
 import type { Review, SortOption } from "../../types/review";
 import type { Product } from "../../types/product";
 
+
 const FAQ_DATA = [
   {
     question: "KUMAŞ VE MATERYAL KALİTESİ NEDİR?",
