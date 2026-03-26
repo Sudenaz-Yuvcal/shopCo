@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import type { Review, SortOption } from "../../types/review";
+import type { Product } from "../../types/product";
 
 const FAQ_DATA = [
   {
@@ -19,7 +20,7 @@ const FAQ_DATA = [
   },
 ];
 
-const ProductTabs = () => {
+const ProductTabs = ({ product }: { product: Product }) => {
   const [activeTab, setActiveTab] = useState("Yorumlar & Değerlendirmeler");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("latest");

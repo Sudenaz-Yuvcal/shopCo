@@ -6,12 +6,9 @@ import { useUser } from "../context/UserContext";
 import { useWishlist } from "../context/WishlistContext";
 import { Helmet } from "react-helmet-async";
 import type { Product } from "../types/product";
-
-// Bileşenleri doğru yollardan import ettiğinden emin ol
 import ProductInfo from "../sections/product-detail/product-info";
 import ProductTabs from "../sections/product-detail/product-tabs";
 import ProductCard from "../components/product/ProductCard";
-
 import { RiCheckLine, RiArrowRightUpLine } from "react-icons/ri";
 import Button from "../components/ui/Button";
 
@@ -25,11 +22,9 @@ const ProductDetail = () => {
   const product = ALL_PRODUCTS.find((p: Product) => p.id === Number(id));
   const isFavorite = isInWishlist(Number(id));
 
-  // Modal ve Ürün Detay Stateleri
   const [showAddedModal, setShowAddedModal] = useState(false);
   const [addedDetails, setAddedDetails] = useState({ qty: 1, size: "" });
 
-  // Sayfa değiştiğinde en üste çık
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
@@ -41,14 +36,12 @@ const ProductDetail = () => {
       </div>
     );
 
-  // Sepete ekle butonuna basıldığında çalışacak fonksiyon
   const handleAddToCart = (qty: number, size: string, color: string) => {
     addToCart(product, qty, size, color);
     setAddedDetails({ qty, size });
-    setShowAddedModal(true); // Modal burada tetikleniyor
+    setShowAddedModal(true); 
   };
 
-  // Önerilen ürünler: Şu anki ürün hariç aynı kategoridekileri veya rastgele 4 ürünü getir
   const relatedProducts = ALL_PRODUCTS.filter((p) => p.id !== product.id).slice(
     0,
     4,
@@ -60,7 +53,6 @@ const ProductDetail = () => {
         <title>{product.name} | SHOP.CO</title>
       </Helmet>
 
-      {/* --- SEPETE EKLENDİ MODALI --- */}
       {showAddedModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
           <div
@@ -119,7 +111,6 @@ const ProductDetail = () => {
       )}
 
       <div className="max-w-7xl mx-auto px-6 py-12 text-left">
-        {/* Breadcrumb */}
         <div className="flex items-center gap-3 text-zinc-300 text-[10px] font-black uppercase mb-12 italic">
           <Link to="/" className="hover:text-black transition-colors">
             ANA SAYFA
@@ -134,7 +125,6 @@ const ProductDetail = () => {
           </span>
         </div>
 
-        {/* Üst Kısım: Görsel ve Bilgi */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-12 mb-32 items-start">
           <div className="lg:col-span-7 w-full rounded-[40px] overflow-hidden bg-zinc-50 border border-zinc-100">
             <img
@@ -153,10 +143,8 @@ const ProductDetail = () => {
           />
         </div>
 
-        {/* Orta Kısım: Yorumlar ve SSS */}
         <ProductTabs product={product} />
 
-        {/* Alt Kısım: Önerilen Ürünler (Burası Geri Geldi!) */}
         <div className="mt-40 mb-20">
           <div className="flex items-end justify-between mb-20 border-b-[6px] border-black pb-8">
             <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-none text-black">
