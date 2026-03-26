@@ -33,14 +33,13 @@ const CheckoutForm = ({
   filteredCities,
   errorStyle,
 }: CheckoutFormProps) => {
-
   const handleNameChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     fieldName: keyof ICheckoutForm,
   ) => {
     let val = e.target.value.replace(/[0-9]/g, "");
     val = val.replace(/\s\s+/g, " ");
-    setValue(fieldName, (val || "") as any, {
+    setValue(fieldName, (val || "") as ICheckoutForm[keyof ICheckoutForm], {
       shouldValidate: true,
     });
   };
@@ -49,7 +48,8 @@ const CheckoutForm = ({
     const val = e.target.value
       .replace(/\s/g, "")
       .replace(/[ğĞüÜşŞİıöÖçÇ]/g, "");
-    setValue("email", (val.toLowerCase() || "") as any, {
+
+    setValue("email", (val.toLowerCase() || "") as ICheckoutForm["email"], {
       shouldValidate: true,
     });
   };
@@ -60,21 +60,24 @@ const CheckoutForm = ({
     maxLen: number,
   ) => {
     const val = e.target.value.replace(/\D/g, "").substring(0, maxLen);
-    setValue(fieldName, (val || "") as any, {
+
+    setValue(fieldName, (val || "") as ICheckoutForm[keyof ICheckoutForm], {
       shouldValidate: true,
     });
   };
-
   const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, "");
     if (val.length > 2) {
       val = val.substring(0, 2) + "/" + val.substring(2, 4);
     }
-    setValue("expiryDate", (val.substring(0, 5) || "") as any, {
-      shouldValidate: true,
-    });
+    setValue(
+      "expiryDate",
+      (val.substring(0, 5) || "") as ICheckoutForm["expiryDate"],
+      {
+        shouldValidate: true,
+      },
+    );
   };
-
   return (
     <form
       id="checkout-form"
@@ -136,7 +139,7 @@ const CheckoutForm = ({
                   <div
                     key={city}
                     onClick={() => {
-                      setValue("city", (city || "") as any, {
+                      setValue("city", (city || "") as ICheckoutForm["city"], {
                         shouldValidate: true,
                       });
                       setShowCityList(false);

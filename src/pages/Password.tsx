@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { recoverySchema } from "../utils/schemas";
 import {
   RiMailSendLine,
   RiPhoneLine,
@@ -11,15 +14,34 @@ import {
 } from "react-icons/ri";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
-import { getEmailError, getPhoneError } from "../utils/validation";
 
-type Method = "email" | "phone";
+interface RecoveryFormInput {
+  method: "email" | "phone";
+  inputValue: string;
+}
 
 const Password: React.FC = () => {
-  const [method, setMethod] = useState<Method>("email");
-  const [inputValue, setInputValue] = useState("");
-  const [cooldown, setCooldown] = useState(0);
   const navigate = useNavigate();
+  const [cooldown, setCooldown] = useState(0);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isValid },
+  } = useForm<RecoveryFormInput>({
+    resolver: yupResolver(
+      recoverySchema,
+    ) as unknown as Resolver<RecoveryFormInput>,
+    mode: "onChange",
+    defaultValues: {
+      method: "email",
+      inputValue: "",
+    },
+  });
+
+  const currentMethod = watch("method");
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -28,41 +50,10 @@ const Password: React.FC = () => {
     }
   }, [cooldown]);
 
-  const error = useMemo(() => {
-    if (!inputValue) return null;
-    return method === "email"
-      ? getEmailError(inputValue)
-      : getPhoneError(inputValue);
-  }, [inputValue, method]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\s/g, "");
-    if (method === "phone") {
-      val = val.replace(/\D/g, "").slice(0, 10);
-    }
-    setInputValue(val);
-  };
-
-  const handleMethodChange = (newMethod: Method) => {
-    setMethod(newMethod);
-    setInputValue("");
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!inputValue) return;
-
-    if (!error && cooldown === 0) {
-      toast.info(
-        `BAĞLANTI GÖNDERİLDİ: ${method === "phone" ? "+90 " : ""}${inputValue}`,
-        {
-          theme: "dark",
-          icon: <RiShieldKeyholeLine className="text-blue-400" />,
-        },
-      );
-      setCooldown(60);
-      setTimeout(() => navigate("/login"), 3500);
-    }
+  const onSubmit: SubmitHandler<RecoveryFormInput> = (data) => {
+    toast.info(`BAĞLANTI GÖNDERİLDİ: ${data.inputValue}`, { theme: "dark" });
+    setCooldown(60);
+    setTimeout(() => navigate("/login"), 3500);
   };
 
   return (
@@ -86,17 +77,15 @@ const Password: React.FC = () => {
           <div className="relative z-10 space-y-4">
             <div className="w-12 h-1 bg-zinc-800" />
             <h2 className="text-6xl font-[1000] text-white uppercase italic leading-[0.85] tracking-tighter">
-              GÜVENLİ <br />
+              GÜVENLİ <br />{" "}
               <span className="text-zinc-800 underline decoration-zinc-900 underline-offset-8">
                 ERİŞİM
               </span>
             </h2>
           </div>
-          <div className="relative z-10 space-y-4">
-            <p className="text-zinc-600 text-sm font-bold leading-relaxed max-w-[220px]">
-              Hesabınızı kurtarmak için kayıtlı doğrulama yöntemini seçiniz.
-            </p>
-          </div>
+          <p className="text-zinc-600 text-sm font-bold leading-relaxed max-w-[220px] relative z-10">
+            Hesabınızı kurtarmak için kayıtlı doğrulama yöntemini seçiniz.
+          </p>
         </div>
 
         <div className="p-8 md:p-16 lg:p-20 text-left bg-white">
@@ -118,15 +107,18 @@ const Password: React.FC = () => {
           </div>
 
           <div className="flex bg-zinc-50 p-1.5 rounded-2xl mb-10 border border-zinc-100 relative">
-            {(["email", "phone"] as Method[]).map((m) => (
+            {(["email", "phone"] as const).map((m) => (
               <Button
                 key={m}
-                variant={method === m ? "primary" : "white"}
-                onClick={() => handleMethodChange(m)}
+                variant={currentMethod === m ? "primary" : "white"}
+                onClick={() => {
+                  setValue("method", m);
+                  setValue("inputValue", "");
+                }}
                 className={`flex-1 !py-4 !rounded-xl !text-[10px] !border-none tracking-widest italic transition-all duration-500 ${
-                  method === m
+                  currentMethod === m
                     ? "shadow-2xl scale-[1.02] z-10"
-                    : "!bg-transparent !text-zinc-400 opacity-60 hover:opacity-100"
+                    : "!bg-transparent !text-zinc-400 opacity-60"
                 }`}
               >
                 {m === "email" ? "E-POSTA" : "TELEFON"}
@@ -134,21 +126,21 @@ const Password: React.FC = () => {
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-10">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
             <div className="space-y-4">
               <label className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 ml-2 italic">
-                {method === "email" ? "KİMLİK (E-POSTA)" : "İLETİŞİM (TELEFON)"}
+                {currentMethod === "email"
+                  ? "KİMLİK (E-POSTA)"
+                  : "İLETİŞİM (TELEFON)"}
               </label>
 
-              <div
-                className={`relative group transition-all duration-500 ${error ? "translate-x-1" : ""}`}
-              >
+              <div className="relative group">
                 <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3 z-20">
-                  {method === "email" ? (
+                  {currentMethod === "email" ? (
                     <RiMailSendLine
                       size={20}
                       className={
-                        error
+                        errors.inputValue
                           ? "text-red-500"
                           : "text-zinc-300 group-focus-within:text-black"
                       }
@@ -158,7 +150,7 @@ const Password: React.FC = () => {
                       <RiPhoneLine
                         size={20}
                         className={
-                          error
+                          errors.inputValue
                             ? "text-red-500"
                             : "text-zinc-300 group-focus-within:text-black"
                         }
@@ -171,25 +163,30 @@ const Password: React.FC = () => {
                 </div>
 
                 <Input
-                  type={method === "email" ? "email" : "tel"}
-                  value={inputValue}
-                  onChange={handleInputChange}
+                  {...register("inputValue")}
+                  onChange={(e) => {
+                    let val = e.target.value;
+
+                    if (currentMethod === "email")
+                      val = val.toLowerCase().replace(/\s/g, "");
+                    if (currentMethod === "phone")
+                      val = val.replace(/\D/g, "").slice(0, 10);
+                    e.target.value = val;
+                    register("inputValue").onChange(e);
+                  }}
                   placeholder={
-                    method === "email" ? "ornek@mail.com" : "5XX XXX XX XX"
+                    currentMethod === "email"
+                      ? "ornek@mail.com"
+                      : "5XX XXX XX XX"
                   }
-                  className={`!bg-brand-soft !border-none !rounded-[24px] ${
-                    method === "phone" ? "pl-24" : "pl-16"
-                  } py-6 font-black text-sm focus:ring-2 focus:ring-black ${
-                    error ? "ring-2 ring-red-500 !bg-red-50/20" : ""
-                  }`}
-                  required
+                  className={`!bg-brand-soft !border-none !rounded-[24px] ${currentMethod === "phone" ? "pl-24" : "pl-16"} py-6 font-black text-sm focus:ring-2 focus:ring-black ${errors.inputValue ? "ring-2 ring-red-500 !bg-red-50/20" : ""}`}
                 />
 
-                {error && (
+                {errors.inputValue && (
                   <div className="absolute -bottom-7 left-2 flex items-center gap-1.5 text-red-600 animate-in slide-in-from-top-1">
                     <RiErrorWarningLine size={14} />
                     <span className="text-[9px] font-black uppercase tracking-tighter italic">
-                      {error}
+                      {errors.inputValue.message}
                     </span>
                   </div>
                 )}
@@ -200,21 +197,14 @@ const Password: React.FC = () => {
               <Button
                 type="submit"
                 size="xl"
-                disabled={cooldown > 0 || !!error || !inputValue}
+                disabled={cooldown > 0 || !isValid}
                 className={`w-full !rounded-[24px] !py-6 !text-[11px] tracking-[0.4em] italic shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all ${
-                  cooldown > 0 || !!error || !inputValue
-                    ? "!bg-zinc-100 !text-zinc-300 !shadow-none opacity-50 grayscale"
+                  cooldown > 0 || !isValid
+                    ? "opacity-30 grayscale cursor-not-allowed"
                     : "hover:scale-[1.02] hover:bg-zinc-900 active:scale-95"
                 }`}
               >
-                {cooldown > 0 ? (
-                  <span className="tabular-nums flex items-center justify-center gap-2">
-                    <RiShieldKeyholeLine className="animate-pulse" /> {cooldown}{" "}
-                    S BEKLEYİN
-                  </span>
-                ) : (
-                  "KODU GÖNDER →"
-                )}
+                {cooldown > 0 ? `${cooldown} S BEKLEYİN` : "KODU GÖNDER →"}
               </Button>
             </div>
           </form>

@@ -2,11 +2,13 @@ import React, { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { registerSchema } from "../utils/schemas";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { useUser } from "../context/UserContext";
 import LoadingOverlay from "../components/ui/LoadingOverlay";
-import { getEmailError, getPasswordError } from "../utils/validation";
 import {
   RiMailLine,
   RiUserLine,
@@ -18,85 +20,48 @@ import {
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useUser();
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    acceptTerms: false,
-  });
   const [isLoading, setIsLoading] = useState(false);
 
-  const errors = useMemo(() => {
-    return {
-      email: getEmailError(formData.email),
-      password: getPasswordError(formData.password),
-      confirmPassword:
-        formData.confirmPassword &&
-        formData.confirmPassword !== formData.password
-          ? "ŞİFRELER EŞLEŞMİYOR."
-          : "",
-      fullName:
-        formData.fullName &&
-        (!formData.fullName.trim().includes(" ") ||
-          formData.fullName.trim().length < 5)
-          ? "AD VE SOYADINIZI TAM GİRİNİZ."
-          : "",
-    };
-  }, [formData]);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: yupResolver(registerSchema),
+    mode: "onChange",
+  });
+  const passwordValue = watch("password", "");
 
   const passwordStrength = useMemo(() => {
-    if (!formData.password) return 0;
+    if (!passwordValue) return 0;
     let strength = 0;
-    if (formData.password.length >= 8) strength += 33;
-    if (/[A-Z]/.test(formData.password)) strength += 33;
-    if (/[0-9]/.test(formData.password)) strength += 34;
+    if (passwordValue.length >= 8) strength += 33;
+    if (/[A-Z]/.test(passwordValue)) strength += 33;
+    if (/[0-9]/.test(passwordValue)) strength += 34;
     return strength;
-  }, [formData.password]);
+  }, [passwordValue]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  const onSubmit = (data: any) => {
+    setIsLoading(true);
+    const [firstName, ...lastNameParts] = data.fullName.trim().split(" ");
+    const lastName = lastNameParts.join(" ") || "ÜYE";
 
-  const isFormValid = useMemo(() => {
-    return (
-      formData.fullName.trim().includes(" ") &&
-      formData.email &&
-      !errors.email &&
-      formData.password &&
-      !errors.password &&
-      formData.confirmPassword === formData.password &&
-      formData.acceptTerms
-    );
-  }, [formData, errors]);
+    setTimeout(() => {
+      login({
+        name: firstName.toUpperCase(),
+        surname: lastName.toUpperCase(),
+        email: data.email.toLowerCase(),
+        membership: "Elite",
+      });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (isFormValid) {
-      setIsLoading(true);
-      const [firstName, ...lastNameParts] = formData.fullName.trim().split(" ");
-      const lastName = lastNameParts.join(" ") || "ÜYE";
-
-      setTimeout(() => {
-        login({
-          name: firstName.toUpperCase(),
-          surname: lastName.toUpperCase(),
-          email: formData.email.toLowerCase(),
-          membership: "Elite",
-        });
-
-        localStorage.setItem("is_new_registrant", "true");
-        toast.success("HOŞ GELDİN! %50 İNDİRİMİN TANIMLANDI.", {
-          theme: "dark",
-          icon: <RiSparklingLine className="text-yellow-400" />,
-        });
-        navigate("/", { state: { isNewUser: true } });
-      }, 2000);
-    }
+      localStorage.setItem("is_new_registrant", "true");
+      toast.success("HOŞ GELDİN! %50 İNDİRİMİN TANIMLANDI.", {
+        theme: "dark",
+        icon: <RiSparklingLine className="text-yellow-400" />,
+      });
+      navigate("/", { state: { isNewUser: true } });
+    }, 2000);
   };
 
   return (
@@ -117,15 +82,11 @@ const Register: React.FC = () => {
               <br /> KONUŞTUR.
             </h2>
           </div>
-          <div className="relative z-10 space-y-6">
-            <p className="text-zinc-500 text-sm font-bold uppercase tracking-wider italic leading-relaxed">
-              Elite üyelik ile kişiselleştirilmiş koleksiyonlar ve erken erişim
-              fırsatlarını yakala.
-            </p>
-            <div className="w-16 h-[2px] bg-zinc-800" />
-          </div>
+          <p className="text-zinc-500 text-sm font-bold uppercase tracking-wider italic leading-relaxed relative z-10">
+            Elite üyelik ile kişiselleştirilmiş koleksiyonlar ve erken erişim
+            fırsatlarını yakala.
+          </p>
         </div>
-
         <div className="p-8 md:p-14 text-left bg-white overflow-y-auto">
           <div className="mb-10 flex justify-between items-end">
             <div>
@@ -144,7 +105,7 @@ const Register: React.FC = () => {
             </Link>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-2 italic">
                 AD SOYAD
@@ -152,12 +113,15 @@ const Register: React.FC = () => {
               <div className="relative group">
                 <RiUserLine className="absolute left-6 top-1/2 -translate-y-1/2 text-xl text-zinc-300 group-focus-within:text-black transition-colors" />
                 <Input
-                  name="fullName"
+                  {...register("fullName")}
                   placeholder="AD SOYAD"
-                  onChange={handleChange}
-                  className="!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase"
-                  required
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase ${errors.fullName ? "ring-2 ring-red-500" : ""}`}
                 />
+                {errors.fullName && (
+                  <span className="absolute -bottom-5 left-2 text-[8px] font-black text-red-600 uppercase">
+                    {errors.fullName.message}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -168,16 +132,20 @@ const Register: React.FC = () => {
               <div className="relative group">
                 <RiMailLine className="absolute left-6 top-1/2 -translate-y-1/2 text-xl text-zinc-300 group-focus-within:text-black transition-colors" />
                 <Input
-                  name="email"
+                  {...register("email")}
                   type="email"
                   placeholder="ornek@mail.com"
-                  onChange={handleChange}
-                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase ${errors.email ? "ring-2 ring-red-500" : ""}`}
-                  required
+                  onChange={(e) => {
+                    e.target.value = e.target.value.toLowerCase();
+                    register("email").onChange(e);
+                  }}
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs ${
+                    errors.email ? "ring-2 ring-red-500" : ""
+                  }`}
                 />
                 {errors.email && (
-                  <span className="absolute -bottom-5 left-2 text-[8px] font-black text-red-600">
-                    {errors.email}
+                  <span className="absolute -bottom-5 left-2 text-[8px] font-black text-red-600 uppercase">
+                    {errors.email.message}
                   </span>
                 )}
               </div>
@@ -188,35 +156,31 @@ const Register: React.FC = () => {
                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-2 italic">
                   ŞİFRE
                 </label>
-                <div className="relative group">
-                  <Input
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    onChange={handleChange}
-                    className="!bg-brand-soft !border-none !rounded-[20px] pl-6 py-5 font-black text-xs tracking-widest"
-                    required
-                  />
-                </div>
+                <Input
+                  {...register("password")}
+                  type="password"
+                  placeholder="••••••••"
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-6 py-5 font-black text-xs tracking-widest ${errors.password ? "ring-2 ring-red-500" : ""}`}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-2 italic">
                   TEKRAR
                 </label>
-                <div className="relative group">
-                  <Input
-                    name="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    onChange={handleChange}
-                    className="!bg-brand-soft !border-none !rounded-[20px] pl-6 py-5 font-black text-xs tracking-widest"
-                    required
-                  />
-                </div>
+                <Input
+                  {...register("confirmPassword")}
+                  type="password"
+                  placeholder="••••••••"
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-6 py-5 font-black text-xs tracking-widest ${errors.confirmPassword ? "ring-2 ring-red-500" : ""}`}
+                />
               </div>
             </div>
-
-            {formData.password && (
+            {(errors.password || errors.confirmPassword) && (
+              <span className="text-[8px] font-black text-red-600 uppercase ml-2">
+                {errors.password?.message || errors.confirmPassword?.message}
+              </span>
+            )}
+            {passwordValue && (
               <div className="px-2 space-y-2">
                 <div className="flex justify-between text-[8px] font-black text-zinc-400 uppercase italic">
                   <span>Şifre Gücü</span>
@@ -236,24 +200,24 @@ const Register: React.FC = () => {
                 </div>
               </div>
             )}
-
             <div className="flex items-start gap-3 px-2 pt-2">
               <input
                 type="checkbox"
-                name="acceptTerms"
+                {...register("acceptTerms")}
                 id="acceptTerms"
-                checked={formData.acceptTerms}
-                onChange={handleChange}
                 className="mt-1 accent-black w-4 h-4 cursor-pointer"
-                required
               />
               <label
                 htmlFor="acceptTerms"
                 className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider leading-relaxed cursor-pointer"
               >
                 <span className="text-black">Kullanım Şartları</span> ve{" "}
-                <span className="text-black">KVKK</span> aydınlatma metnini
-                okudum, onaylıyorum.
+                <span className="text-black">KVKK</span> onaylıyorum.
+                {errors.acceptTerms && (
+                  <p className="text-red-600 text-[8px] mt-1 italic">
+                    {errors.acceptTerms.message}
+                  </p>
+                )}
               </label>
             </div>
 
@@ -262,9 +226,9 @@ const Register: React.FC = () => {
                 type="submit"
                 variant="primary"
                 size="xl"
-                disabled={!isFormValid || isLoading}
+                disabled={!isValid || isLoading}
                 className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic transition-all ${
-                  !isFormValid || isLoading
+                  !isValid || isLoading
                     ? "opacity-30 grayscale cursor-not-allowed"
                     : "hover:scale-[1.02] active:scale-95 shadow-xl"
                 }`}

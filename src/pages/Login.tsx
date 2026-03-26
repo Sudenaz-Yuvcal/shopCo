@@ -1,12 +1,15 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { loginSchema } from "../utils/schemas";
+
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { useUser } from "../context/UserContext";
 import LoadingOverlay from "../components/ui/LoadingOverlay";
-import { getEmailError, getPasswordError } from "../utils/validation";
 import {
   RiMailLine,
   RiLockPasswordLine,
@@ -14,44 +17,40 @@ import {
   RiShieldCheckLine,
 } from "react-icons/ri";
 
+interface ILoginForm {
+  email: string;
+  password: string;
+}
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useUser();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<ILoginForm>({
+    resolver: yupResolver(loginSchema) as unknown as Resolver<ILoginForm>,
+    mode: "onChange",
+  });
 
-  const emailError = useMemo(() => getEmailError(email), [email]);
-  const passwordError = useMemo(() => getPasswordError(password), [password]);
+  const onSubmit: SubmitHandler<ILoginForm> = (data) => {
+    setIsLoading(true);
+    localStorage.removeItem("is_new_registrant");
+    localStorage.removeItem("welcome_coupon_expiry");
 
-  const isFormValid = useMemo(() => {
-    return email && password && !emailError && !passwordError;
-  }, [email, password, emailError, passwordError]);
+    setTimeout(() => {
+      login({
+        name: data.email.split("@")[0].toUpperCase(),
+        surname: "ÜYE",
+        email: data.email,
+        membership: "Standard",
+      });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (isFormValid) {
-      setIsLoading(true);
-
-      localStorage.removeItem("is_new_registrant");
-      localStorage.removeItem("welcome_coupon_expiry");
-
-      setTimeout(() => {
-        login({
-          name: email.split("@")[0].toUpperCase(),
-          surname: "ÜYE",
-          email: email,
-          membership: "Standard",
-        });
-
-        toast.success("OTURUM AÇILDI, HESABIN YÜKLENİYOR...", {
-          theme: "dark",
-        });
-        navigate("/account");
-      }, 1500);
-    } else {
-      toast.error("LÜTFEN BİLGİLERİ KONTROL EDİN.", { theme: "dark" });
-    }
+      toast.success("OTURUM AÇILDI, HESABIN YÜKLENİYOR...", { theme: "dark" });
+      navigate("/account");
+    }, 1500);
   };
 
   return (
@@ -59,7 +58,6 @@ const Login: React.FC = () => {
       <Helmet>
         <title>Giriş Yap | SHOP.CO</title>
       </Helmet>
-
       {isLoading && <LoadingOverlay message="KİMLİK DOĞRULANIYOR..." />}
 
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-zinc-50 rounded-full blur-[120px] -mr-40 -mt-40 opacity-60" />
@@ -84,19 +82,16 @@ const Login: React.FC = () => {
               </span>
             </div>
             <h2 className="text-5xl lg:text-7xl font-[1000] text-white leading-[0.85] uppercase tracking-tighter italic">
-              STİLİNE <br />
+              STİLİNE <br />{" "}
               <span className="text-zinc-700 underline decoration-zinc-800 underline-offset-8">
                 GERİ DÖN.
               </span>
             </h2>
           </div>
-          <div className="relative z-10 space-y-6">
-            <p className="text-zinc-500 text-sm font-bold leading-relaxed max-w-[280px] uppercase tracking-wider italic">
-              Kürate edilmiş koleksiyonlar ve Elite üyelik ayrıcalıkları seni
-              bekliyor.
-            </p>
-            <div className="w-16 h-[2px] bg-zinc-800" />
-          </div>
+          <p className="text-zinc-500 text-sm font-bold leading-relaxed max-w-[280px] uppercase tracking-wider italic relative z-10">
+            Kürate edilmiş koleksiyonlar ve Elite üyelik ayrıcalıkları seni
+            bekliyor.
+          </p>
         </div>
 
         <div className="p-8 md:p-16 lg:p-24 text-left bg-white">
@@ -120,24 +115,28 @@ const Login: React.FC = () => {
             </Link>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-2">
                 E-POSTA (MAİL)
               </label>
               <div className="relative group">
                 <RiMailLine className="absolute left-6 top-1/2 -translate-y-1/2 text-xl text-zinc-300 group-focus-within:text-black transition-colors" />
+
                 <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value.trim())}
+                  {...register("email")}
+                  onChange={(e) => {
+                    e.target.value = e.target.value.toLowerCase();
+                    register("email").onChange(e);
+                  }}
                   placeholder="ornek@gmail.com"
-                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase tracking-[0.1em] focus:ring-2 focus:ring-black transition-all ${emailError ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}
-                  required
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs tracking-[0.1em] focus:ring-2 focus:ring-black transition-all ${
+                    errors.email ? "ring-2 ring-red-500 bg-red-50/30" : ""
+                  }`}
                 />
-                {emailError && (
+                {errors.email && (
                   <span className="absolute -bottom-6 left-2 text-[9px] font-black text-red-600 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
-                    {emailError}
+                    {errors.email.message}
                   </span>
                 )}
               </div>
@@ -159,15 +158,15 @@ const Login: React.FC = () => {
                 <RiLockPasswordLine className="absolute left-6 top-1/2 -translate-y-1/2 text-xl text-zinc-300 group-focus-within:text-black transition-colors" />
                 <Input
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register("password")}
                   placeholder="••••••••"
-                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${passwordError ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}
-                  required
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${
+                    errors.password ? "ring-2 ring-red-500 bg-red-50/30" : ""
+                  }`}
                 />
-                {passwordError && (
+                {errors.password && (
                   <span className="absolute -bottom-6 left-2 text-[9px] font-black text-red-600 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
-                    {passwordError}
+                    {errors.password.message}
                   </span>
                 )}
               </div>
@@ -178,9 +177,9 @@ const Login: React.FC = () => {
                 type="submit"
                 variant="primary"
                 size="xl"
-                disabled={!isFormValid || isLoading}
+                disabled={!isValid || isLoading}
                 className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all ${
-                  !isFormValid || isLoading
+                  !isValid || isLoading
                     ? "opacity-30 grayscale cursor-not-allowed"
                     : "hover:scale-[1.02] hover:bg-zinc-900 active:scale-95"
                 }`}

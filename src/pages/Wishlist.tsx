@@ -19,7 +19,7 @@ const Wishlist = () => {
         <RiHeartFill size={80} className="text-zinc-100 mb-6" />
         <h2 className="text-4xl font-[1000] italic uppercase tracking-tighter mb-4">
           Favori Listen Boş
-        </h2>
+        </h2> 
         <p className="text-zinc-500 text-xs font-black uppercase tracking-widest mb-8">
           Henüz hiçbir ürünü favorilerine eklemedin.
         </p>
