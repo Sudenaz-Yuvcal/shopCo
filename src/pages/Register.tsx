@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler, type Resolver } from "react-hook-form"; 
 import { yupResolver } from "@hookform/resolvers/yup";
 import { registerSchema } from "../utils/schemas";
 import Button from "../components/ui/Button";
@@ -17,6 +17,14 @@ import {
   RiShieldCheckLine,
 } from "react-icons/ri";
 
+interface IRegisterForm {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword?: string;
+  acceptTerms: boolean;
+}
+
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useUser();
@@ -27,10 +35,11 @@ const Register: React.FC = () => {
     handleSubmit,
     watch,
     formState: { errors, isValid },
-  } = useForm({
-    resolver: yupResolver(registerSchema),
+  } = useForm<IRegisterForm>({
+    resolver: yupResolver(registerSchema) as unknown as Resolver<IRegisterForm>,
     mode: "onChange",
   });
+
   const passwordValue = watch("password", "");
 
   const passwordStrength = useMemo(() => {
@@ -42,10 +51,12 @@ const Register: React.FC = () => {
     return strength;
   }, [passwordValue]);
 
-  const onSubmit = (data: any) => {
+  const onSubmit: SubmitHandler<IRegisterForm> = (data) => {
     setIsLoading(true);
-    const [firstName, ...lastNameParts] = data.fullName.trim().split(" ");
-    const lastName = lastNameParts.join(" ") || "ÜYE";
+    const nameParts = data.fullName.trim().split(" ");
+    const firstName = nameParts[0];
+    const lastName =
+      nameParts.length > 1 ? nameParts.slice(1).join(" ") : "ÜYE";
 
     setTimeout(() => {
       login({
@@ -87,6 +98,7 @@ const Register: React.FC = () => {
             fırsatlarını yakala.
           </p>
         </div>
+
         <div className="p-8 md:p-14 text-left bg-white overflow-y-auto">
           <div className="mb-10 flex justify-between items-end">
             <div>
@@ -139,9 +151,7 @@ const Register: React.FC = () => {
                     e.target.value = e.target.value.toLowerCase();
                     register("email").onChange(e);
                   }}
-                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs ${
-                    errors.email ? "ring-2 ring-red-500" : ""
-                  }`}
+                  className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs ${errors.email ? "ring-2 ring-red-500" : ""}`}
                 />
                 {errors.email && (
                   <span className="absolute -bottom-5 left-2 text-[8px] font-black text-red-600 uppercase">
@@ -175,11 +185,13 @@ const Register: React.FC = () => {
                 />
               </div>
             </div>
+
             {(errors.password || errors.confirmPassword) && (
               <span className="text-[8px] font-black text-red-600 uppercase ml-2">
                 {errors.password?.message || errors.confirmPassword?.message}
               </span>
             )}
+
             {passwordValue && (
               <div className="px-2 space-y-2">
                 <div className="flex justify-between text-[8px] font-black text-zinc-400 uppercase italic">
@@ -200,6 +212,7 @@ const Register: React.FC = () => {
                 </div>
               </div>
             )}
+
             <div className="flex items-start gap-3 px-2 pt-2">
               <input
                 type="checkbox"
