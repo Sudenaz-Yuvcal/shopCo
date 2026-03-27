@@ -7,7 +7,7 @@ import type {
   UseFormHandleSubmit,
 } from "react-hook-form";
 import type { ICheckoutForm } from "../../types/checkout";
-
+import type { PathValue } from "react-hook-form";
 interface CheckoutFormProps {
   register: UseFormRegister<ICheckoutForm>;
   errors: FieldErrors<ICheckoutForm>;
@@ -139,9 +139,13 @@ const CheckoutForm = ({
                   <div
                     key={city}
                     onClick={() => {
-                      setValue("city", (city || "") as ICheckoutForm["city"], {
-                        shouldValidate: true,
-                      });
+                      setValue(
+                        "city",
+                        (city || "") as PathValue<ICheckoutForm, "city">,
+                        {
+                          shouldValidate: true,
+                        },
+                      );
                       setShowCityList(false);
                     }}
                     className="p-4 hover:bg-black hover:text-white rounded-2xl cursor-pointer text-[11px] font-black italic uppercase tracking-widest"

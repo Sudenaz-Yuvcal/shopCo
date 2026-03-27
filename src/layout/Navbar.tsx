@@ -21,7 +21,7 @@ const normalizeString = (str: string) => {
   if (!str) return "";
   return str
     .trim()
-    .toLocaleLowerCase("tr-TR")
+    .toLocaleLowerCase("tr-TR")   
     .replace(/İ/g, "i")
     .replace(/I/g, "i")
     .replace(/ı/g, "i")

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiCheckCircle, FiShoppingBag } from "react-icons/fi";
+import { FiCheckCircle } from "react-icons/fi";
 import { Helmet } from "react-helmet-async";
 import { useCart } from "../context/CartContext";
 import Button from "../components/ui/Button";

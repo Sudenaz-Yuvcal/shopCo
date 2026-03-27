@@ -17,17 +17,17 @@ const NewProductBanner = () => (
         YENİ <br />{" "}
         <span className="text-zinc-300 underline decoration-black decoration-8 underline-offset-[12px]">
           NESİL
-        </span>{" "}
+        </span>
         <br /> STİL
       </h1>
 
       <p className="text-zinc-400 max-w-[450px] font-bold uppercase text-xs leading-relaxed tracking-widest italic">
         Tasarım dilimizi en baştan kurguladık. En yeni kesimler ve rafine
-        detaylar{" "}
+        detaylar
         <span className="text-black underline underline-offset-4 decoration-zinc-200">
           Shop.co Elite
-        </span>{" "}
-        seçkisiyle yayında.
+        </span>
+        yayında.
       </p>
     </div>
   </div>

@@ -145,7 +145,7 @@ const Login: React.FC = () => {
             <div className="space-y-3 pt-2">
               <div className="flex justify-between items-center px-2">
                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
-                  GÜVENLİK (ŞİFRE)
+                  ŞİFRE
                 </label>
                 <Link
                   to="/password"

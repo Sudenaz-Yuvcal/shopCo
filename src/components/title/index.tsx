@@ -1,6 +1,6 @@
 type Props = {
   title: string;
-  className?:string;
+  className:string;
 };
 
 const Title = ({ title,className }: Props) => {

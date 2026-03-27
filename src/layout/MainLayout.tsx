@@ -20,7 +20,7 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative font-satoshi bg-white overflow-x-hidden">
-       <PromoModal />
+      <PromoModal />
       <WelcomeGift />
 
       {!shouldHideLayout && (
@@ -73,7 +73,7 @@ const MainLayout: React.FC = () => {
                 onClick={() => setIsMenuOpen(false)}
                 className="w-full bg-black text-white py-5 rounded-full font-[1000] uppercase text-center block tracking-[0.3em] text-[11px] shadow-xl italic"
               >
-                {user ? "KONTROL PANELİ" : "GİRİŞ YAP"}
+                {user ? "HESABIM " : "GİRİŞ YAP"}
               </Link>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import * as yup from "yup";
-import { allowedDomains, noTurkishChars } from "./validation";
+import { noTurkishChars } from "./validation";
 
 const baseEmail = yup
   .string()
@@ -15,8 +15,10 @@ const baseEmail = yup
     "E-POSTA KÜÇÜK HARF OLMALI.",
     (val) => !/[A-Z]/.test(val || ""),
   )
-  .test("allowed-domains", "DESTEKLENEN BİR E-POSTA SERVİSİ KULLANIN.", (val) =>
-    allowedDomains.test(val || ""),
+  .test("allowed-domains", "GEÇERLİ BİR E-POSTA ADRESİ KULLANIN.", (val) =>
+    /@(gmail\.com|hotmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/.test(
+      val || "",
+    ),
   );
 
 const basePassword = yup
@@ -28,7 +30,7 @@ const basePassword = yup
 
 export const loginSchema = yup.object().shape({
   email: baseEmail,
-  password: yup.string().required("ŞİFRE GEREKLİ."),
+  password: basePassword,
 });
 
 export const registerSchema = yup.object().shape({
@@ -51,25 +53,30 @@ export const registerSchema = yup.object().shape({
 });
 
 export const checkoutSchema = yup.object().shape({
-  fullName: yup
-    .string()
-    .required("AD SOYAD GEREKLİ.")
-    .min(3, "AD SOYAD ÇOK KISA."),
-  email: baseEmail,
+  firstName: yup.string().required("AD GEREKLİ."),
+  lastName: yup.string().required("SOYAD GEREKLİ."),
+  email: yup.string().email("GEÇERSİZ E-POSTA.").required("E-POSTA GEREKLİ."),
   address: yup
     .string()
     .required("ADRES GEREKLİ.")
-    .min(10, "LÜTFEN DETAYLI BİR ADRES GİRİN."),
-  phone: yup
+    .min(10, "DETAYLI ADRES GİRİN."),
+  city: yup.string().required("ŞEHİR SEÇİN."),
+  zipCode: yup
     .string()
-    .required("TELEFON GEREKLİ.")
-    .test(
-      "len",
-      "TELEFON 10 HANE OLMALIDIR.",
-      (val) => val?.replace(/\D/g, "").length === 10,
-    ),
+    .required("POSTA KODU GEREKLİ.")
+    .length(5, "5 HANE OLMALI."),
+  phone: yup.string().required("TELEFON GEREKLİ."),
+  cardName: yup.string().required("KART İSMİ GEREKLİ."),
+  cardNumber: yup
+    .string()
+    .required("KART NO GEREKLİ.")
+    .length(16, "16 HANE OLMALI."),
+  expiryDate: yup
+    .string()
+    .required("SKT GEREKLİ.")
+    .matches(/^(0[1-9]|1[0-2])\/(2[6-9]|[3-9][0-9])$/, "GEÇERLİ TARİH (AA/YY)"),
+  cvc: yup.string().required("CVC GEREKLİ.").length(3, "3 HANE."),
 });
-
 export const recoverySchema = yup.object().shape({
   method: yup.string().oneOf(["email", "phone"]).required(),
   inputValue: yup
@@ -92,7 +99,7 @@ export const recoverySchema = yup.object().shape({
           )
           .test(
             "allowed-domains",
-            "DESTEKLENEN BİR E-POSTA SERVİSİ KULLANIN.",
+            "GEÇERLİ BİR E-POSTA ADRESİ KULLANIN.",
             (val) =>
               /@(gmail\.com|hotmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/.test(
                 val || "",

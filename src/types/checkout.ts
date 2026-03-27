@@ -5,11 +5,10 @@ export interface ICheckoutForm {
   address: string;
   city: string;
   zipCode: string;
-
+  phone: string;
+  expiryDate: string;
   cardName: string;
   cardNumber: string;
-  expiryDate: string;
   cvc: string;
-
   saveAddress?: boolean;
 }

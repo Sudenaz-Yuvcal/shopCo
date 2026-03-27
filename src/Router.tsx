@@ -14,7 +14,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Password from "./pages/Password";
 import Account from "./pages/Account";
-import Wishlist from "./pages/Wishlist";
+import Wishlist from "./pages/Favorite";
 import { WishlistProvider } from "./context/WishlistContext";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {

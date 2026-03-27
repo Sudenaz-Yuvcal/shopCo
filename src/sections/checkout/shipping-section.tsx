@@ -9,7 +9,7 @@ interface ShippingSectionProps {
 }
 
 const ShippingSection = ({ register, errors }: ShippingSectionProps) => (
-  <section className="space-y-8 animate-in slide-in-from-left duration-500">
+  <section className="space-y-8 animate-in slide-in-from-left duration-500 text-left">
     <div className="flex items-center gap-4 border-b-2 border-zinc-100 pb-4">
       <span className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-black italic">
         01
@@ -18,38 +18,40 @@ const ShippingSection = ({ register, errors }: ShippingSectionProps) => (
         TESLİMAT ADRESİ
       </h2>
     </div>
+
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Input
-        {...register("firstName", { required: "Ad zorunlu" })}
+        {...register("firstName")}
         placeholder="AD"
         error={errors.firstName?.message}
         className="!rounded-3xl !py-5 font-black italic uppercase"
       />
+
       <Input
-        {...register("lastName", { required: "Soyad zorunlu" })}
+        {...register("lastName")}
         placeholder="SOYAD"
         error={errors.lastName?.message}
         className="!rounded-3xl !py-5 font-black italic uppercase"
       />
+
       <Input
-        {...register("email", {
-          required: "E-posta zorunlu",
-          pattern: { value: /^\S+@\S+$/i, message: "Geçersiz e-posta" },
-        })}
+        {...register("email")}
         type="email"
         placeholder="E-POSTA"
         error={errors.email?.message}
         className="md:col-span-2 !rounded-3xl !py-5 font-black"
       />
+
       <Input
-        {...register("address", { required: "Adres zorunlu" })}
+        {...register("address")}
         placeholder="ADRES DETAYI"
         error={errors.address?.message}
         className="md:col-span-2 !rounded-3xl !py-5 font-black italic uppercase"
       />
+
       <div className="relative">
         <Input
-          {...register("city", { required: "Şehir zorunlu" })}
+          {...register("city")}
           list="city-list"
           placeholder="ŞEHİR"
           error={errors.city?.message}
@@ -61,8 +63,9 @@ const ShippingSection = ({ register, errors }: ShippingSectionProps) => (
           ))}
         </datalist>
       </div>
+
       <Input
-        {...register("zipCode", { required: "Posta kodu zorunlu" })}
+        {...register("zipCode")}
         placeholder="POSTA KODU"
         maxLength={5}
         error={errors.zipCode?.message}
