@@ -11,6 +11,7 @@ export interface CartItem extends Omit<Product, "size"> {
   size: string;
   quantity: number;
   color: string;
+  price: number;
 }
 
 interface CartContextType {
@@ -21,7 +22,6 @@ interface CartContextType {
     size: string,
     color: string,
   ) => void;
-
   totals: {
     subtotal: number;
     delivery: number;
@@ -68,14 +68,24 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           i === index ? { ...item, quantity: item.quantity + quantity } : item,
         );
       }
-      return [...prev, { ...product, quantity, size, color }];
+      return [
+        ...prev,
+        {
+          ...product,
+          quantity,
+          size,
+          color,
+          price:
+            product.price ||
+            ("value" in product ? (product as { value: number }).value : 0),
+        },
+      ];
     });
   };
-
   const removeFromCart = (id: number, size: string, color: string) => {
     setCart((prev) =>
       prev.filter(
-        (item) =>
+        (item: CartItem) =>
           !(item.id === id && item.size === size && item.color === color),
       ),
     );
@@ -88,18 +98,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     delta: number,
   ) => {
     setCart((prev) =>
-      prev.map((item) =>
-        item.id === id && item.size === size && item.color === color
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item,
-      ),
+      prev
+        .map((item: CartItem) =>
+          item.id === id && item.size === size && item.color === color
+            ? { ...item, quantity: item.quantity + delta }
+            : item,
+        )
+        .filter((item: CartItem) => item.quantity > 0),
     );
   };
 
   const clearCart = () => setCart([]);
 
   const subtotal = cart.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item: CartItem) => acc + (item.price || 0) * item.quantity,
     0,
   );
 

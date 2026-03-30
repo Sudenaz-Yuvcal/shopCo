@@ -1,12 +1,12 @@
 import { Helmet } from "react-helmet-async";
 import { ALL_PRODUCTS } from "../constants/Product";
-import { useWishlist } from "../context/WishlistContext";
+import { useFavorite } from "../context/FavoriteContext";
 import DiscountBanner from "../sections/discount/discount-banner";
 import DiscountHeader from "../sections/discount/discount-header";
 import DiscountGrid from "../sections/discount/discount-grid";
 
 const Discount = () => {
-  const { toggleWishlist, isInWishlist } = useWishlist();
+  const { toggleFavorite, isInFavorites } = useFavorite();
 
   const discountProducts = ALL_PRODUCTS.filter(
     (p) => p.oldValue && p.oldValue > p.value,
@@ -23,8 +23,8 @@ const Discount = () => {
         <DiscountHeader count={discountProducts.length} />
         <DiscountGrid
           products={discountProducts}
-          toggleWishlist={toggleWishlist}
-          isInWishlist={isInWishlist}
+          toggleFavorite={toggleFavorite}
+          isInFavorites={isInFavorites}
         />
       </div>
     </div>

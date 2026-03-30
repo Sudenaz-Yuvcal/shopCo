@@ -7,19 +7,24 @@ import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
 import { useOrder } from "../context/OrderContext";
 import { usePromo } from "../context/PromoContext";
+import { useFavorite } from "../context/FavoriteContext";
 import { useCartTotals } from "../hooks/useCartTotals";
 import CartItemCard from "../components/Cart/CartItemCard";
 import OrderSummary from "../components/Cart/OrderSummary";
 import CheckoutForm from "../components/Cart/CheckoutForm";
 import EmptyCart from "../sections/cart/cart-empty";
 import CartNotification from "../sections/cart/cart-notification";
+import CartDeleteModal from "../components/Cart/CartDeleteModal";
 import { TURKISH_CITIES } from "../constants/Cities";
 import type { ICheckoutForm } from "../types/checkout";
+import type { CartItem } from "../context/CartContext";
+import type { Product } from "../types/product";
 
 const Cart = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { addOrder } = useOrder();
+  const { toggleFavorite } = useFavorite();
   const { cart, removeFromCart, updateQuantity } = useCart();
   const { applyPromoCode, appliedPromoCode, isPromoApplied } = usePromo();
   const totals = useCartTotals();
@@ -32,6 +37,42 @@ const Cart = () => {
     type: "success" | "error";
   } | null>(null);
   const [progress, setProgress] = useState(100);
+
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    item: CartItem | null;
+  }>({
+    isOpen: false,
+    item: null,
+  });
+  const handleOpenDeleteModal = (item: CartItem) => {
+    setDeleteModal({
+      isOpen: true,
+      item,
+    });
+  };
+  const handleConfirmDelete = () => {
+    if (deleteModal.item) {
+      removeFromCart(
+        deleteModal.item.id,
+        deleteModal.item.size,
+        deleteModal.item.color,
+      );
+      setDeleteModal({ isOpen: false, item: null });
+      showNotify("ÜRÜN SEPETTEN SİLİNDİ", "error");
+    }
+  };
+  const handleMoveToFavorites = () => {
+    const item = deleteModal.item;
+
+    if (item) {
+      const { quantity, size, color, ...productData } = item;
+      toggleFavorite(productData as unknown as Product);
+      removeFromCart(item.id, item.size, item.color);
+      setDeleteModal({ isOpen: false, item: null });
+      showNotify("FAVORİLERE EKLENDİ VE SEPETTEN ÇIKARILDI 🖤", "success");
+    }
+  };
 
   const {
     register,
@@ -107,10 +148,17 @@ const Cart = () => {
   if (cart.length === 0) return <EmptyCart />;
 
   return (
-    <div className="min-h-screen bg-white font-satoshi text-left overflow-x-hidden">
+    <div className="min-h-screen bg-white font-satoshi text-left overflow-x-hidden relative">
       <Helmet>
         <title>Shop.co | {showCheckout ? "Güvenli Ödeme" : "Sepetim"}</title>
       </Helmet>
+
+      <CartDeleteModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, item: null })}
+        onConfirmDelete={handleConfirmDelete}
+        onMoveToFavorites={handleMoveToFavorites}
+      />
 
       <CartNotification
         notification={notification}
@@ -151,7 +199,7 @@ const Cart = () => {
                   <CartItemCard
                     key={`${item.id}-${item.size}-${item.color}`}
                     item={item}
-                    removeFromCart={removeFromCart}
+                    onRemoveClick={() => handleOpenDeleteModal(item)}
                     updateQuantity={updateQuantity}
                   />
                 ))}

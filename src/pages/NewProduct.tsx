@@ -5,11 +5,11 @@ import { RiHeartLine, RiHeartFill } from "react-icons/ri";
 import { ALL_PRODUCTS } from "../constants/Product";
 import type { Product } from "../types/product";
 import { useMemo } from "react";
-import { useWishlist } from "../context/WishlistContext";
+import { useFavorite} from "../context/FavoriteContext";
 import NewProductBanner from "../sections/new-product/new-product-banner";
 
 const NewProduct = () => {
-  const { toggleWishlist, isInWishlist } = useWishlist();
+  const { toggleFavorite, isInFavorites} = useFavorite();
 
   const newArrivals = useMemo(() => {
     return [...ALL_PRODUCTS].sort((a, b) => {
@@ -41,7 +41,7 @@ const NewProduct = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-20">
           {newArrivals.map((product: Product) => {
-            const isFav = isInWishlist(Number(product.id));
+            const isFav = isInFavorites(Number(product.id));
 
             return (
               <div
@@ -52,7 +52,7 @@ const NewProduct = () => {
                   onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    toggleWishlist(product);
+                    toggleFavorite(product);
                   }}
                   className="absolute top-6 right-6 z-20 p-3 bg-white/90 backdrop-blur-md rounded-full shadow-lg transition-all active:scale-90 group/heart"
                 >

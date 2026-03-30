@@ -4,20 +4,20 @@ import type { Product } from "../../types/product";
 
 interface DiscountGridProps {
   products: Product[];
-  toggleWishlist: (product: Product) => void;
-  isInWishlist: (id: number) => boolean;
+  toggleFavorite: (product: Product) => void;
+  isInFavorites: (id: number) => boolean;
 }
 
 const DiscountGrid = ({
   products,
-  toggleWishlist,
-  isInWishlist,
+  toggleFavorite,
+  isInFavorites,
 }: DiscountGridProps) => (
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-16">
     {products.map((product) => {
       const originalPrice = product.oldValue ?? 0;
       const currentPrice = product.value;
-      const isFav = isInWishlist(product.id);
+      const isFav = isInFavorites(product.id);
       const discountPercentage =
         originalPrice > 0
           ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
@@ -32,7 +32,7 @@ const DiscountGrid = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              toggleWishlist(product);
+              toggleFavorite(product);
             }}
             className="absolute top-6 right-6 z-20 p-3 bg-white/80 backdrop-blur-md rounded-full shadow-lg active:scale-90"
           >

@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import type { Product } from "../../types/product";
 import { RiHeartLine, RiHeartFill } from "react-icons/ri";
-import { useWishlist } from "../../context/WishlistContext";
+import { useFavorite } from "../../context/FavoriteContext";
 import { StarRating } from "./StarRating";
 
 const ProductCard = (product: Product) => {
   const { id, image, name, value, oldValue, rating = 4.5 } = product;
-  const { toggleWishlist, isInWishlist } = useWishlist();
-  const isFavorite = isInWishlist(id);
+  const { toggleFavorite, isInFavorites } = useFavorite();
+  const isFavorite = isInFavorites(id);
 
   const discount = oldValue
     ? Math.round(((oldValue - value) / oldValue) * 100)
@@ -19,7 +19,7 @@ const ProductCard = (product: Product) => {
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          toggleWishlist(product);
+          toggleFavorite(product);
         }}
         className="absolute top-3 right-3 z-20 p-2.5 bg-white/80 backdrop-blur-md rounded-full shadow-lg transition-all active:scale-90"
       >

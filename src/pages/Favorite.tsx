@@ -1,4 +1,4 @@
-import { useWishlist } from "../context/WishlistContext";
+import { useFavorite } from "../context/FavoriteContext";
 import { useCart } from "../context/CartContext";
 import {
   RiHeartFill,
@@ -8,12 +8,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const Wishlist = () => {
-  const { wishlist, toggleWishlist } = useWishlist();
+const Favorite = () => {
+  const { favorites, toggleFavorite } = useFavorite();
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
-  if (wishlist.length === 0) {
+  if (favorites.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
         <RiHeartFill size={80} className="text-zinc-100 mb-6" />
@@ -40,7 +40,7 @@ const Wishlist = () => {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {wishlist.map((product) => (
+        {favorites.map((product) => (
           <div
             key={product.id}
             className="group relative bg-zinc-50 rounded-[40px] overflow-hidden border border-zinc-100 hover:shadow-xl transition-all duration-500"
@@ -68,7 +68,7 @@ const Wishlist = () => {
                 </div>
                 <button
                   onClick={() => {
-                    toggleWishlist(product);
+                    toggleFavorite(product);
                     toast.info("Ürün listeden kaldırıldı.");
                   }}
                   className="text-red hover:scale-125 transition-transform"
@@ -104,4 +104,4 @@ const Wishlist = () => {
   );
 };
 
-export default Wishlist;
+export default Favorite;

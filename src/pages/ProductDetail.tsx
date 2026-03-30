@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { ALL_PRODUCTS } from "../constants/Product";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
-import { useWishlist } from "../context/WishlistContext";
+import { useFavorite } from "../context/FavoriteContext";
 import { Helmet } from "react-helmet-async";
 import type { Product } from "../types/product";
 import ProductInfo from "../sections/product-detail/product-info";
@@ -15,12 +15,12 @@ import Button from "../components/Ui/Button";
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toggleWishlist, isInWishlist } = useWishlist();
+  const { toggleFavorite, isInFavorites } = useFavorite();
   const { addToCart } = useCart();
   const { user } = useUser();
 
   const product = ALL_PRODUCTS.find((p: Product) => p.id === Number(id));
-  const isFavorite = isInWishlist(Number(id));
+  const isFavorite = isInFavorites(Number(id));
 
   const [showAddedModal, setShowAddedModal] = useState(false);
   const [addedDetails, setAddedDetails] = useState({ qty: 1, size: "" });
@@ -137,7 +137,7 @@ const ProductDetail = () => {
           <ProductInfo
             product={product}
             isFavorite={isFavorite}
-            onToggleWishlist={toggleWishlist}
+            onToggleFavorite={toggleFavorite}
             onAddToCart={handleAddToCart}
             userAddress={user?.address}
           />

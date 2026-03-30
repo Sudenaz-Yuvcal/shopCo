@@ -9,14 +9,14 @@ import {
   RiHeartLine,
 } from "react-icons/ri";
 import { HiMenuAlt1 } from "react-icons/hi";
-import { useCart } from "../../context/CartContext";
-import { useUser } from "../../context/UserContext";
-import { useWishlist } from "../../context/WishlistContext";
-import { ALL_PRODUCTS } from "../../constants/Product";
-import type { Product } from "../../types/product";
-import Input from "../Ui/Input";
-import Button from "../Ui/Button";
-import WheelOfFortune from "../../sections/home/home-wheel-of-fortune";
+import { useCart } from "../context/CartContext";
+import { useUser } from "../context/UserContext";
+import { useFavorite} from "../context/FavoriteContext";
+import { ALL_PRODUCTS } from "../constants/Product";
+import type { Product } from "../types/product";
+import Input from "../components/Ui/Input";
+import Button from "../components/Ui/Button";
+import WheelOfFortune from "../sections/home/home-wheel-of-fortune";
 const normalizeString = (str: string) => {
   if (!str) return "";
   return str
@@ -48,7 +48,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const navigate = useNavigate();
   const { cart } = useCart();
   const { user } = useUser();
-  const { wishlist } = useWishlist();
+  const { favorites } = useFavorite();
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -255,13 +255,13 @@ const Navbar: React.FC<NavbarProps> = ({
               )}
             </Link>
             <Link
-              to="/wishlist"
+              to="/favorite"
               className="relative text-2xl hover:scale-110 transition-transform"
             >
               <RiHeartLine />
-              {wishlist.length > 0 && (
+              {favorites.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-lg leading-none">
-                  {wishlist.length}
+                  {favorites.length}
                 </span>
               )}
             </Link>

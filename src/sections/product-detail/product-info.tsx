@@ -8,7 +8,7 @@ import type { Product } from "../../types/product";
 interface ProductInfoProps {
   product: Product;
   isFavorite: boolean;
-  onToggleWishlist: (product: Product) => void;
+  onToggleFavorite: (product: Product) => void;
   onAddToCart: (qty: number, size: string, color: string) => void;
   userAddress?: string;
 }
@@ -22,7 +22,7 @@ const COLOR_OPTIONS = [
 const ProductInfo = ({
   product,
   isFavorite,
-  onToggleWishlist,
+  onToggleFavorite,
   onAddToCart,
   userAddress,
 }: ProductInfoProps) => {
@@ -43,7 +43,7 @@ const ProductInfo = ({
             {product.name}
           </h1>
           <button
-            onClick={() => onToggleWishlist(product)}
+            onClick={() => onToggleFavorite(product)}
             className="p-4 bg-zinc-50 rounded-full active:scale-90 shadow-sm transition-all hover:bg-zinc-100"
           >
             {isFavorite ? (
