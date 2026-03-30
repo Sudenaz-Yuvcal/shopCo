@@ -8,9 +8,9 @@ import { Helmet } from "react-helmet-async";
 import type { Product } from "../types/product";
 import ProductInfo from "../sections/product-detail/product-info";
 import ProductTabs from "../sections/product-detail/product-tabs";
-import ProductCard from "../components/product/ProductCard";
+import ProductCard from "../components/Product/ProductCard";
 import { RiCheckLine, RiArrowRightUpLine } from "react-icons/ri";
-import Button from "../components/ui/Button";
+import Button from "../components/Ui/Button";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -39,7 +39,7 @@ const ProductDetail = () => {
   const handleAddToCart = (qty: number, size: string, color: string) => {
     addToCart(product, qty, size, color);
     setAddedDetails({ qty, size });
-    setShowAddedModal(true); 
+    setShowAddedModal(true);
   };
 
   const relatedProducts = ALL_PRODUCTS.filter((p) => p.id !== product.id).slice(

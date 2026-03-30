@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import type { Product } from "../../types/product";
 import { RiHeartLine, RiHeartFill } from "react-icons/ri";
 import { useWishlist } from "../../context/WishlistContext";
-import { StarRating } from "./StarRating"; 
+import { StarRating } from "./StarRating";
 
 const ProductCard = (product: Product) => {
   const { id, image, name, value, oldValue, rating = 4.5 } = product;

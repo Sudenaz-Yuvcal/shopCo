@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { RiEqualizerLine, RiArrowDownSLine } from "react-icons/ri";
-import Button from "../../components/ui/Button";
+import Button from "../../components/Ui/Button";
 import { CUSTOMER_REVIEWS, PRODUCT_TABS } from "../../constants/Reviews";
 import type { Review } from "../../types/review";
-import { ReviewItem } from "../../components/product/ReviewItem";
+import { ReviewItem } from "../../components/Product/ReviewItem";
 
 const ProductReviews = () => {
   const [activeTab, setActiveTab] = useState<string>("Değerlendirmeler");

@@ -9,19 +9,19 @@ import {
   RiHeartLine,
 } from "react-icons/ri";
 import { HiMenuAlt1 } from "react-icons/hi";
-import { useCart } from "../context/CartContext";
-import { useUser } from "../context/UserContext";
-import { useWishlist } from "../context/WishlistContext";
-import { ALL_PRODUCTS } from "../constants/Product";
-import type { Product } from "../types/product";
-import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
-import WheelOfFortune from "../sections/home/wheel-of-fortune";
+import { useCart } from "../../context/CartContext";
+import { useUser } from "../../context/UserContext";
+import { useWishlist } from "../../context/WishlistContext";
+import { ALL_PRODUCTS } from "../../constants/Product";
+import type { Product } from "../../types/product";
+import Input from "../Ui/Input";
+import Button from "../Ui/Button";
+import WheelOfFortune from "../../sections/home/home-wheel-of-fortune";
 const normalizeString = (str: string) => {
   if (!str) return "";
   return str
     .trim()
-    .toLocaleLowerCase("tr-TR")   
+    .toLocaleLowerCase("tr-TR")
     .replace(/İ/g, "i")
     .replace(/I/g, "i")
     .replace(/ı/g, "i")

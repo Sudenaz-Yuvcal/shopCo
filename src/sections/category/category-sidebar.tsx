@@ -1,5 +1,5 @@
 import { RiRestartLine, RiCheckLine } from "react-icons/ri";
-import Button from "../../components/ui/Button";
+import Button from "../../components/Ui/Button";
 import type { FilterState } from "../../types/filter";
 interface ColorOption {
   name: string;

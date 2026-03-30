@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { RiCloseLine } from "react-icons/ri";
-import Button from "../../components/ui/Button";
+import Button from "../../components/Ui/Button";
 import { WELCOME_GIFT_DATA } from "../../constants/Gifts";
-import { GiftCoupon } from "../../components/home/GiftCoupon";
+import { GiftCoupon } from "../../components/Home/GiftCoupon";
 
 const WelcomeGift: React.FC = () => {
   const location = useLocation();

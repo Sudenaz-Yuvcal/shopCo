@@ -1,6 +1,6 @@
 import { FiShoppingBag } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import Button from "../../components/ui/Button";
+import Button from "../../components/Ui/Button";
 
 const EmptyCart = () => {
   const navigate = useNavigate();

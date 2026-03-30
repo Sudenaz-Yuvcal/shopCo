@@ -6,10 +6,10 @@ import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { loginSchema } from "../utils/schemas";
 
-import Button from "../components/ui/Button";
-import Input from "../components/ui/Input";
+import Button from "../components/Ui/Button";
+import Input from "../components/Ui/Input";
 import { useUser } from "../context/UserContext";
-import LoadingOverlay from "../components/ui/LoadingOverlay";
+import LoadingOverlay from "../components/Ui/LoadingOverlay";
 import {
   RiMailLine,
   RiLockPasswordLine,

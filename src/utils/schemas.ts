@@ -15,10 +15,8 @@ const baseEmail = yup
     "E-POSTA KÜÇÜK HARF OLMALI.",
     (val) => !/[A-Z]/.test(val || ""),
   )
-  .test("allowed-domains", "GEÇERLİ BİR E-POSTA ADRESİ KULLANIN.", (val) =>
-    /@(gmail\.com|hotmail\.com|outlook\.com|yahoo\.com|icloud\.com)$/.test(
-      val || "",
-    ),
+  .test("valid-format", "GEÇERLİ BİR E-POSTA ADRESİ KULLANIN.", (val) =>
+    /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(val || ""),
   );
 
 const basePassword = yup

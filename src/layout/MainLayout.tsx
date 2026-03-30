@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { RiCloseLine, RiArrowRightSLine } from "react-icons/ri";
-import PromoModal from "../sections/home/promo-modal";
-import WelcomeGift from "../sections/home/welcome-gift";
-import CookieBanner from "./CookieBanner";
-import Navbar from "./Navbar";
-import Footer from "./Footer";
-import Button from "../components/ui/Button";
+import PromoModal from "../sections/home/home-promo-modal";
+import WelcomeGift from "../sections/home/home-welcome-gift";
+import CookieBanner from "../components/Layout/CookieBanner";
+import Navbar from "../components/Layout/Navbar";
+import Footer from "../components/Layout/Footer";
+import Button from "../components/Ui/Button";
 import { useUser } from "../context/UserContext";
 
 const MainLayout: React.FC = () => {

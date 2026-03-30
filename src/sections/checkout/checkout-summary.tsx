@@ -1,5 +1,5 @@
 import { FiLock } from "react-icons/fi";
-import Button from "../../components/ui/Button";
+import Button from "../../components/Ui/Button";
 import type { CartItem } from "../../types/cart";
 
 interface CheckoutSummaryProps {

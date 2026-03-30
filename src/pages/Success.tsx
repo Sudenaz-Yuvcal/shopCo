@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiCheckCircle } from "react-icons/fi";
 import { Helmet } from "react-helmet-async";
 import { useCart } from "../context/CartContext";
-import Button from "../components/ui/Button";
+import Button from "../components/Ui/Button";
 
 const Success = () => {
   const { clearCart } = useCart();

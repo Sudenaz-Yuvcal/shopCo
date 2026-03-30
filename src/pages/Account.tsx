@@ -13,10 +13,10 @@ import {
   FiPlus,
 } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
-import Button from "../components/ui/Button";
+import Button from "../components/Ui/Button";
 import AccountSidebar from "../sections/account/account-sidebar";
-import OrdersSection from "../sections/account/orders-section";
-import LogoutModal from "../sections/account/logout-modal";
+import OrdersSection from "../sections/account/account-orders-section";
+import LogoutModal from "../sections/account/account-logout-modal";
 
 const Account = () => {
   const { user, logout } = useUser();

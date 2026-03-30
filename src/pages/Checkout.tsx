@@ -6,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 import type { ICheckoutForm } from "../types/checkout";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { checkoutSchema } from "../utils/schemas";
-import ShippingSection from "../sections/checkout/shipping-section";
-import PaymentSection from "../sections/checkout/payment-section";
+import ShippingSection from "../sections/checkout/checkout-shipping-section";
+import PaymentSection from "../sections/checkout/checkout-payment-section";
 import CheckoutSummary from "../sections/checkout/checkout-summary";
 import type { FieldErrors } from "react-hook-form";
 

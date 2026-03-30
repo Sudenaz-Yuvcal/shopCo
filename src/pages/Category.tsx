@@ -3,9 +3,9 @@ import { Helmet } from "react-helmet-async";
 import { useSearchParams, Link } from "react-router-dom";
 import { ALL_PRODUCTS } from "../constants/Product";
 import { RiEqualizerLine, RiCloseLine } from "react-icons/ri";
-import Button from "../components/ui/Button";
+import Button from "../components/Ui/Button";
 import CategorySidebar from "../sections/category/category-sidebar";
-import ProductGrid from "../sections/category/product-grid";
+import ProductGrid from "../sections/category/category-product-grid";
 import type { Product } from "../types/product";
 import type { FilterState } from "../types/filter";
 

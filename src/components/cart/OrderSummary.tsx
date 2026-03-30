@@ -1,6 +1,6 @@
 import { FiTag, FiRotateCcw } from "react-icons/fi";
-import Input from "../ui/Input";
-import Button from "../ui/Button";
+import Input from "../Ui/Input";
+import Button from "../Ui/Button";
 interface CartTotals {
   raw: number;
   subtotal: number;
@@ -11,7 +11,7 @@ interface CartTotals {
 }
 
 interface OrderSummaryProps {
-  totals: CartTotals; 
+  totals: CartTotals;
   promoInput: string;
   setPromoInput: (val: string) => void;
   handleApplyPromo: (code?: string) => void;

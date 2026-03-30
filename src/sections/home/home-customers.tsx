@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { RiArrowLeftLine, RiArrowRightLine } from "react-icons/ri";
-import Button from "../../components/ui/Button";
-import { ReviewCard } from "../../components/home/ReviewCard";
+import Button from "../../components/Ui/Button";
+import { ReviewCard } from "../../components/Home/ReviewCard";
 import { CUSTOMER_REVIEWS } from "../../constants/Reviews";
 
 const Customers = () => {

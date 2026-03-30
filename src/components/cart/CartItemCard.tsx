@@ -4,10 +4,19 @@ import type { CartItem } from "../../context/CartContext";
 interface CartItemCardProps {
   item: CartItem;
   removeFromCart: (id: number, size: string, color: string) => void;
-  updateQuantity: (id: number, size: string, color: string, delta: number) => void;
+  updateQuantity: (
+    id: number,
+    size: string,
+    color: string,
+    delta: number,
+  ) => void;
 }
 
-const CartItemCard = ({ item, removeFromCart, updateQuantity }: CartItemCardProps) => (
+const CartItemCard = ({
+  item,
+  removeFromCart,
+  updateQuantity,
+}: CartItemCardProps) => (
   <div className="flex gap-8 p-6 bg-zinc-50 rounded-[40px] border border-transparent hover:border-zinc-200 transition-all group">
     <div className="w-32 h-32 bg-white rounded-[30px] overflow-hidden shadow-sm shrink-0 border border-zinc-100">
       <img
@@ -44,7 +53,9 @@ const CartItemCard = ({ item, removeFromCart, updateQuantity }: CartItemCardProp
           >
             <FiMinus />
           </button>
-          <span className="font-black text-sm tabular-nums">{item.quantity}</span>
+          <span className="font-black text-sm tabular-nums">
+            {item.quantity}
+          </span>
           <button
             onClick={() => updateQuantity(item.id, item.size, item.color, 1)}
             className="text-zinc-400 hover:text-black"

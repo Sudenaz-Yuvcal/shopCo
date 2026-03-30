@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { FiX, FiZap, FiClock } from "react-icons/fi";
 import { toast } from "react-toastify";
-import Button from "../../components/ui/Button";
-import { PrizeOverlay } from "../../components/home/PrizeOverlay";
+import Button from "../../components/Ui/Button";
+import { PrizeOverlay } from "../../components/Home/PrizeOverlay";
 const PRIZES = [
   { text: "KARGO BEDAVA", color: "#FFD700" },
   { text: "SUDE30 KODU", color: "#FF8C00" },

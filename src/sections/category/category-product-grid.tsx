@@ -1,4 +1,4 @@
-import ProductCard from "../../components/product/ProductCard";
+import ProductCard from "../../components/Product/ProductCard";
 import { RiEqualizerLine } from "react-icons/ri";
 import type { Product } from "../../types/product";
 
@@ -21,7 +21,12 @@ const ProductGrid = ({ products, handleResetFilters }: ProductGridProps) => (
         <p className="font-black uppercase text-[11px] tracking-[0.4em] italic text-zinc-400 text-center leading-relaxed">
           KRİTERLERE UYGUN <br /> BİR TASARIM BULUNAMADI
         </p>
-        <button onClick={handleResetFilters} className="mt-8 text-[10px] font-black underline uppercase tracking-widest hover:text-black">SIFIRLA</button>
+        <button
+          onClick={handleResetFilters}
+          className="mt-8 text-[10px] font-black underline uppercase tracking-widest hover:text-black"
+        >
+          SIFIRLA
+        </button>
       </div>
     )}
   </div>

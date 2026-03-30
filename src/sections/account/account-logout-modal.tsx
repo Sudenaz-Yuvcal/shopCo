@@ -1,5 +1,5 @@
 import { FiX, FiAlertCircle } from "react-icons/fi";
-import Button from "../../components/ui/Button";
+import Button from "../../components/Ui/Button";
 
 interface LogoutModalProps {
   onClose: () => void;

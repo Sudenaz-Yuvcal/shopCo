@@ -1,9 +1,9 @@
 import { Helmet } from "react-helmet-async";
-import Hero from "../sections/home/hero";
-import NewArrivals from "../sections/home/new-arrivals";
-import TopSelling from "../sections/home/top-selling";
-import DressStyle from "../sections/home/dress-style";
-import Customers from "../sections/home/customers";
+import Hero from "../sections/home/home-hero";
+import NewArrivals from "../sections/home/home-new-arrivals";
+import TopSelling from "../sections/home/home-top-selling";
+import DressStyle from "../sections/home/home-dress-style";
+import Customers from "../sections/home/home-customers";
 
 const Home = () => {
   return (

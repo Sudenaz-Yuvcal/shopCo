@@ -1,5 +1,5 @@
 import type { UseFormRegister, FieldErrors } from "react-hook-form";
-import Input from "../../components/ui/Input";
+import Input from "../../components/Ui/Input";
 import { TURKISH_CITIES } from "../../constants/Cities";
 import type { ICheckoutForm } from "../../types/checkout";
 

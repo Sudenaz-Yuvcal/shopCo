@@ -5,8 +5,8 @@ import * as yup from "yup";
 import { toast } from "react-toastify";
 import { FaTwitter, FaFacebookF, FaInstagram, FaGithub } from "react-icons/fa";
 import { RiMailLine } from "react-icons/ri";
-import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
+import Input from "../Ui/Input";
+import Button from "../Ui/Button";
 
 const footerSchema = yup
   .object({

@@ -1,4 +1,4 @@
-import DressStyleCard from "../../components/home/DressStyleCard";
+import DressStyleCard from "../../components/Home/DressStyleCard";
 
 interface IDressStyle {
   name: string;

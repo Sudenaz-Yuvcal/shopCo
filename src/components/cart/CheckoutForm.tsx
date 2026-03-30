@@ -1,5 +1,5 @@
 import { FiCreditCard } from "react-icons/fi";
-import Input from "../ui/Input";
+import Input from "../Ui/Input";
 import type {
   UseFormRegister,
   FieldErrors,

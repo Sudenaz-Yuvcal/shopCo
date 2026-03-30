@@ -1,10 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Button from "../../components/ui/Button";
+import Button from "../../components/Ui/Button";
 import HeroImage from "../../assets/Rectangle-2.png";
 import StarImage from "/Vector.png";
 import { HERO_STATS, HERO_BRANDS } from "../../constants/Hero";
-import { StatItem } from "../../components/home/StatItem";
+import { StatItem } from "../../components/Home/StatItem";
 
 const starPulseStyle = `
   @keyframes starPulse {

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { RiHeartLine, RiHeartFill, RiCheckLine } from "react-icons/ri";
 import { FiMinus, FiPlus, FiMapPin } from "react-icons/fi";
-import Button from "../../components/ui/Button";
-import ScarcityBadge from "../../components/product/ScarcityBadge";
+import Button from "../../components/Ui/Button";
+import ScarcityBadge from "../../components/Product/ScarcityBadge";
 import type { Product } from "../../types/product";
 
 interface ProductInfoProps {

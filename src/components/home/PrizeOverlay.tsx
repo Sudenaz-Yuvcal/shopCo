@@ -1,5 +1,5 @@
 import { FiGift } from "react-icons/fi";
-import Button from "../ui/Button";
+import Button from "../Ui/Button";
 
 interface PrizeOverlayProps {
   wonPrize: string;

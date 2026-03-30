@@ -1,5 +1,5 @@
 import { RiStarFill } from "react-icons/ri";
-import Button from "../ui/Button";
+import Button from "../Ui/Button";
 import type { Review } from "../../types/review";
 
 export const ReviewItem = ({ review }: { review: Review }) => (

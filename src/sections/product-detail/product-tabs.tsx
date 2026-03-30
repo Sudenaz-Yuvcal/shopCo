@@ -2,8 +2,8 @@ import { useState, useMemo } from "react";
 import { RiStarFill, RiCheckLine } from "react-icons/ri";
 import { FiPlus, FiMinus } from "react-icons/fi";
 import { toast } from "react-toastify";
-import Button from "../../components/ui/Button";
-import Input from "../../components/ui/Input";
+import Button from "../../components/Ui/Button";
+import Input from "../../components/Ui/Input";
 import type { Review, SortOption } from "../../types/review";
 import type { Product } from "../../types/product";
 

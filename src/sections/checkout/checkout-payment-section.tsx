@@ -4,7 +4,7 @@ import type {
   FieldErrors,
   UseFormSetValue,
 } from "react-hook-form";
-import Input from "../../components/ui/Input";
+import Input from "../../components/Ui/Input";
 import type { ICheckoutForm } from "../../types/checkout";
 
 interface PaymentSectionProps {

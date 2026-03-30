@@ -12,8 +12,8 @@ import {
   RiErrorWarningLine,
   RiArrowLeftSLine,
 } from "react-icons/ri";
-import Button from "../components/ui/Button";
-import Input from "../components/ui/Input";
+import Button from "../components/Ui/Button";
+import Input from "../components/Ui/Input";
 
 interface RecoveryFormInput {
   method: "email" | "phone";

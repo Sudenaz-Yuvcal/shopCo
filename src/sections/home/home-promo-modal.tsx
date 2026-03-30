@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RiCloseLine, RiThunderstormsFill } from "react-icons/ri";
-import Button from "../../components/ui/Button";
+import Button from "../../components/Ui/Button";
 import { PROMO_CAMPAIGN } from "../../constants/Promo";
-import { CountdownUnit } from "../../components/home/CountdownUnit";
+import { CountdownUnit } from "../../components/Home/CountdownUnit";
 
 interface CountdownTime {
   hours: number;

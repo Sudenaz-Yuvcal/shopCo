@@ -1,5 +1,5 @@
 import { FiChevronRight, FiLogOut } from "react-icons/fi";
-import Button from "../../components/ui/Button";
+import Button from "../../components/Ui/Button";
 import type { ReactNode } from "react";
 
 interface MenuItem {
