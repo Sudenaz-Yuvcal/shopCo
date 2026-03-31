@@ -8,7 +8,7 @@ interface IDressStyle {
   description: string;
 }
 
- const DressStyleCard = ({ style }: { style: IDressStyle }) => {
+const DressStyleCard = ({ style }: { style: IDressStyle }) => {
   return (
     <Link
       to={`/shop?category=${style.category}`}

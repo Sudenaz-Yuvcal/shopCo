@@ -32,9 +32,7 @@ const OrderSummary = ({
   setShowCheckout,
 }: OrderSummaryProps) => (
   <div className="bg-zinc-50 rounded-[50px] p-10 space-y-10 border border-zinc-100 shadow-sm">
-    <h2 className="text-3xl font-black uppercase italic tracking-tighter border-b-4 border-black pb-6 leading-none">
-      SİPARİŞ ÖZETİ
-    </h2>
+    <h2 className="text-3xl font-black ">SİPARİŞ ÖZETİ</h2>
     <div className="space-y-6 text-[11px] font-black tracking-[0.2em] uppercase italic text-zinc-400">
       <div className="flex justify-between">
         <span>ARA TOPLAM</span>

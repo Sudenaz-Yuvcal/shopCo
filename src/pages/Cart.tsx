@@ -179,10 +179,11 @@ const Cart = () => {
           </span>
         </button>
 
-        <div className="flex items-end justify-between mb-12 border-b-[6px] border-black pb-8">
-          <h1 className="text-5xl md:text-8xl font-[1000] uppercase tracking-tighter italic leading-none">
+        <div className="">
+          <h1 className="text-5xl md:text-4xl font-[1000]  font-satoshi">
             {showCheckout ? "ÖDEME" : "SEPETİM"}
           </h1>
+
           <div className="hidden md:flex items-center gap-2 text-zinc-300">
             <FiShoppingBag size={24} />
             <span className="text-xs font-black italic">
@@ -190,6 +191,8 @@ const Cart = () => {
             </span>
           </div>
         </div>
+        
+        <br></br>
 
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-16 items-start">
           <div className="lg:col-span-7 w-full space-y-8">

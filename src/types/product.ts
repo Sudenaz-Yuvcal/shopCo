@@ -11,8 +11,8 @@ export interface Product {
   size?: string[];
   inStock?: boolean;
   price: number;
-  description: string;
-  images: string[];
+  description?: string;
+  images?: string[];
 }
 
 export type CategoryType = "T-shirts" | "Shorts" | "Jeans";
