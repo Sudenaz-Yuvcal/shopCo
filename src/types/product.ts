@@ -10,8 +10,9 @@ export interface Product {
   brand?: string;
   size?: string[];
   inStock?: boolean;
-  price: number; 
-
+  price: number;
+  description: string;
+  images: string[];
 }
 
 export type CategoryType = "T-shirts" | "Shorts" | "Jeans";

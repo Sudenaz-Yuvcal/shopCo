@@ -9,14 +9,14 @@ import {
   RiHeartLine,
 } from "react-icons/ri";
 import { HiMenuAlt1 } from "react-icons/hi";
-import { useCart } from "../context/CartContext";
-import { useUser } from "../context/UserContext";
-import { useFavorite} from "../context/FavoriteContext";
-import { ALL_PRODUCTS } from "../constants/Product";
-import type { Product } from "../types/product";
-import Input from "../components/Ui/Input";
-import Button from "../components/Ui/Button";
-import WheelOfFortune from "../sections/home/home-wheel-of-fortune";
+import { useCart } from "../../context/CartContext";
+import { useUser } from "../../context/UserContext";
+import { useFavorite } from "../../context/FavoriteContext";
+import { ALL_PRODUCTS } from "../../constants/Product";
+import type { Product } from "../../types/product";
+import Input from "../Ui/Input";
+import Button from "../Ui/Button";
+import WheelOfFortune from "../../sections/home/home-wheel-of-fortune";
 const normalizeString = (str: string) => {
   if (!str) return "";
   return str

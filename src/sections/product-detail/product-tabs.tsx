@@ -6,6 +6,7 @@ import Button from "../../components/Ui/Button";
 import Input from "../../components/Ui/Input";
 import type { Review, SortOption } from "../../types/review";
 import type { Product } from "../../types/product";
+import { SlidersHorizontal } from "lucide-react";
 
 const FAQ_DATA = [
   {
@@ -16,31 +17,38 @@ const FAQ_DATA = [
   {
     question: "BAKIM VE YIKAMA TALİMATLARI",
     answer:
-      "Maksimum 30 derecede, benzer renklerle ve tersten yıkamanız tavsiye edilir.",
+      "Maksimum 30 derecede, benzer renklerle ve tersten yıkamanız tavsiye edilir. Kurutma makinesi önerilmez.",
   },
 ];
 
 const ProductTabs = ({ product }: { product: Product }) => {
-  const [activeTab, setActiveTab] = useState("Yorumlar & Değerlendirmeler");
+  const [activeTab, setActiveTab] = useState("Reviews");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("latest");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [visibleReviews, setVisibleReviews] = useState(4);
+  const [visibleReviews] = useState(6);
 
   const [reviews, setReviews] = useState<Review[]>([
     {
       id: 1,
-      name: "Melike E.",
-      rating: 3,
-      date: "2025-03-31",
-      text: "Kalıbı ve kumaşı harika.",
+      name: "Samantha D.",
+      rating: 5,
+      date: "August 14, 2023",
+      text: "I absolutely love this t-shirt! The design is unique and the fabric feels so comfortable.",
     },
     {
       id: 2,
-      name: "Sudenaz Y.",
+      name: "Alex M.",
       rating: 4,
-      date: "2025-07-05",
-      text: "Minimalist tarzımı tamamlıyor.",
+      date: "August 15, 2023",
+      text: "The shirt is great, but I wish the sizing was a bit more consistent.",
+    },
+    {
+      id: 3,
+      name: "Sudenaz Y.",
+      rating: 5,
+      date: "March 30, 2026",
+      text: "Elite bir parça, tam istediğim gibi!",
     },
   ]);
 
@@ -64,7 +72,11 @@ const ProductTabs = ({ product }: { product: Product }) => {
       id: Date.now(),
       name: newReview.author || "Anonim",
       rating: newReview.rating,
-      date: new Date().toISOString().split("T")[0],
+      date: new Date().toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
       text: newReview.text,
     };
     setReviews([reviewToAdd, ...reviews]);
@@ -74,185 +86,212 @@ const ProductTabs = ({ product }: { product: Product }) => {
   };
 
   return (
-    <div className="mt-32">
-      <div className="flex border-b-2 border-brand-gray mb-20 overflow-x-auto scrollbar-hide">
-        {["Yorumlar & Değerlendirmeler", "SSS"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 min-w-[220px] pb-8 pt-4 text-[11px] font-black uppercase tracking-widest-premium transition-all relative ${
-              activeTab === tab
-                ? "text-brand-black italic"
-                : "text-zinc-300 hover:text-zinc-500"
-            }`}
-          >
-            {tab}
-            {activeTab === tab && (
-              <div className="absolute bottom-[-2px] left-0 w-full h-[4px] bg-brand-black animate-in slide-in-from-left" />
-            )}
-          </button>
-        ))}
-      </div>
-      <div className="min-h-[500px]">
-        {activeTab === "Yorumlar & Değerlendirmeler" ? (
-          <div className="space-y-12">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-16">
-              <h2 className="text-4xl md:text-5xl font-heavy font-integral uppercase italic tracking-tightest">
-                MÜŞTERİ <span className="text-zinc-200">YORUMLARI</span>
-              </h2>
-              <div className="flex items-center gap-4">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="bg-brand-gray px-8 py-3 rounded-full text-[10px] font-black uppercase outline-none focus:border-brand-black border-2 border-transparent transition-all"
-                >
-                  <option value="latest">YENİDEN ESKİYE</option>
-                  <option value="oldest">ESKİDEN YENİYE</option>
-                </select>
-                <Button
-                  onClick={() => setIsModalOpen(true)}
-                  className="!bg-brand-black !text-brand-white !rounded-full !px-10 !py-3 !text-[10px] italic"
-                >
-                  YORUM YAP
-                </Button>
+    <div className="mt-32 w-full scale-[0.9] origin-top">
+      <div className="mt-32 w-full">
+        <div className="flex border-b border-zinc-100 mb-12">
+          {["Product Details", "Reviews", "FAQs"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 min-w-[150px] pb-6 text-sm font-bold uppercase tracking-widest transition-all relative ${
+                activeTab.includes(tab.split(" ")[0])
+                  ? "text-black italic"
+                  : "text-zinc-300 hover:text-zinc-500"
+              }`}
+            >
+              {tab}
+              {activeTab.includes(tab.split(" ")[0]) && (
+                <div className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-black animate-in fade-in" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="min-h-[400px] text-left">
+          {activeTab === "Product Details" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h3 className="text-2xl font-black italic uppercase mb-6 tracking-tight">
+                Ürün Özellikleri
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <p className="text-zinc-500 font-medium leading-relaxed">
+                  {product.description ||
+                    "Bu özel tasarım parça, modern stil ile konforu birleştiriyor. Yüksek kaliteli kumaşı ve özenle işlenmiş detaylarıyla gardırobunuzun vazgeçilmezi olacak."}
+                </p>
+                <ul className="space-y-4">
+                  {[
+                    "%100 Premium Pamuk",
+                    "Nefes Alan Doku",
+                    "Dayanıklı Baskı",
+                    "Modern Fit Kesim",
+                  ].map((item, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-3 text-sm font-bold uppercase italic"
+                    >
+                      <RiCheckLine className="text-green-500" size={20} />{" "}
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {sortedReviews.slice(0, visibleReviews).map((review) => (
-                <div
-                  key={review.id}
-                  className="bg-brand-gray rounded-shop-lg p-10 space-y-6 group border border-transparent hover:border-brand-black transition-all"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex text-brand-black gap-0.5 text-xs">
+          {activeTab === "Reviews" && (
+            <div className="space-y-12 animate-in fade-in duration-500">
+              <div className="flex justify-between items-center mb-10">
+                <h2 className="text-3xl font-[1000] uppercase italic tracking-tight">
+                  Tüm Yorumlar{" "}
+                  <span className="text-zinc-300 text-xl ml-2">
+                    ({reviews.length})
+                  </span>
+                </h2>
+
+                <div className="flex items-center gap-4">
+                  <button className="p-3 bg-[#F0F0F0] rounded-full border-none cursor-pointer hover:bg-black/5">
+                    <SlidersHorizontal size={18} />
+                  </button>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="bg-[#F0F0F0] px-6 py-3 rounded-full text-[10px] font-black uppercase outline-none"
+                  >
+                    <option value="latest">Latest</option>
+                    <option value="oldest">Oldest</option>
+                  </select>
+                  <Button
+                    onClick={() => setIsModalOpen(true)}
+                    className="!bg-black !text-white !rounded-full !px-10 !py-3 !text-[11px] font-black italic uppercase"
+                  >
+                    Write a Review
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {sortedReviews.slice(0, visibleReviews).map((review) => (
+                  <div
+                    key={review.id}
+                    className="bg-white border border-zinc-100 rounded-[32px] p-8 space-y-4 hover:border-black transition-all group"
+                  >
+                    <div className="flex text-yellow-400 gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <RiStarFill
                           key={i}
-                          className={i >= review.rating ? "opacity-10" : ""}
+                          className={i >= review.rating ? "text-zinc-100" : ""}
                         />
                       ))}
                     </div>
-                    <span className="text-[9px] font-black text-zinc-300 uppercase tracking-widest">
-                      {review.date}
-                    </span>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-heavy text-sm uppercase italic">
-                        {review.name}
-                      </h4>
-                      <RiCheckLine
-                        className="bg-green-500 text-brand-white rounded-full p-0.5"
-                        size={14}
-                      />
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-black text-lg uppercase italic">
+                          {review.name}
+                        </h4>
+                        <RiCheckLine
+                          className="bg-green-500 text-white rounded-full p-0.5"
+                          size={16}
+                        />
+                      </div>
+                      <p className="text-zinc-500 text-[15px] font-medium leading-relaxed italic">
+                        "{review.text}"
+                      </p>
                     </div>
-                    <p className="text-zinc-500 text-sm font-bold uppercase italic leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
-                      "{review.text}"
+                    <p className="text-[11px] font-black text-zinc-300 uppercase tracking-widest pt-2">
+                      Posted on {review.date}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "FAQs" && (
+            <div className="max-w-3xl mx-auto space-y-4 animate-in fade-in duration-500">
+              {FAQ_DATA.map((faq, index) => (
+                <div
+                  key={index}
+                  className="border-2 border-zinc-100 rounded-[24px] overflow-hidden transition-all"
+                >
+                  <button
+                    onClick={() =>
+                      setOpenFaqIndex(openFaqIndex === index ? null : index)
+                    }
+                    className="w-full flex justify-between items-center p-6 text-left hover:bg-zinc-50 transition-colors"
+                  >
+                    <span className="font-black text-sm uppercase italic tracking-wider">
+                      {faq.question}
+                    </span>
+                    {openFaqIndex === index ? (
+                      <FiMinus size={20} />
+                    ) : (
+                      <FiPlus size={20} />
+                    )}
+                  </button>
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${openFaqIndex === index ? "max-h-40" : "max-h-0"}`}
+                  >
+                    <p className="p-6 pt-0 text-zinc-500 text-sm font-medium leading-relaxed border-t border-zinc-50 italic">
+                      {faq.answer}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
+          )}
+        </div>
 
-            {visibleReviews < sortedReviews.length && (
-              <div className="text-center pt-16">
-                <Button
-                  variant="outline"
-                  onClick={() => setVisibleReviews((p) => p + 2)}
-                  className="!px-16 !py-5 !rounded-full !text-[11px] italic tracking-widest-premium"
-                >
-                  DAHA FAZLA YÜKLE
-                </Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="max-w-3xl mx-auto py-10 space-y-4">
-            {FAQ_DATA.map((faq, index) => (
-              <div
-                key={index}
-                className="bg-brand-white border-2 border-brand-gray rounded-shop-md overflow-hidden"
-              >
-                <button
-                  onClick={() =>
-                    setOpenFaqIndex(openFaqIndex === index ? null : index)
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-6">
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setIsModalOpen(false)}
+            />
+            <div className="relative bg-white rounded-[40px] w-full max-w-md p-10 shadow-2xl animate-in zoom-in">
+              <h2 className="text-2xl font-black italic uppercase mb-6 text-center">
+                Yorum Yap
+              </h2>
+              <form onSubmit={handleReviewSubmit} className="space-y-4">
+                <Input
+                  required
+                  value={newReview.author}
+                  onChange={(e) =>
+                    setNewReview({ ...newReview, author: e.target.value })
                   }
-                  className="w-full flex justify-between items-center p-8 text-left group"
-                >
-                  <span className="text-[11px] font-black uppercase tracking-widest-premium italic text-zinc-400 group-hover:text-brand-black transition-colors">
-                    {faq.question}
-                  </span>
-                  {openFaqIndex === index ? (
-                    <FiMinus size={20} />
-                  ) : (
-                    <FiPlus size={20} />
-                  )}
-                </button>
-                <div
-                  className={`overflow-hidden transition-all duration-500 ${openFaqIndex === index ? "max-h-96" : "max-h-0"}`}
-                >
-                  <p className="p-8 pt-0 text-zinc-400 text-[11px] font-bold uppercase tracking-widest-premium italic border-t border-brand-gray">
-                    {faq.answer}
-                  </p>
+                  placeholder="İSMİNİZ"
+                  className="!rounded-2xl font-black italic"
+                />
+                <div className="flex justify-center gap-2 mb-4">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <RiStarFill
+                      key={star}
+                      className={`text-2xl cursor-pointer transition-all ${star <= newReview.rating ? "text-yellow-400 scale-110" : "text-zinc-200"}`}
+                      onClick={() =>
+                        setNewReview({ ...newReview, rating: star })
+                      }
+                    />
+                  ))}
                 </div>
-              </div>
-            ))}
+                <textarea
+                  required
+                  value={newReview.text}
+                  onChange={(e) =>
+                    setNewReview({ ...newReview, text: e.target.value })
+                  }
+                  className="w-full bg-[#F0F0F0] rounded-2xl p-4 text-sm font-bold uppercase outline-none focus:ring-2 ring-black h-32"
+                  placeholder="YORUMUNUZ..."
+                />
+                <Button
+                  type="submit"
+                  className="w-full !bg-black !text-white !rounded-full italic font-black"
+                >
+                  YAYINLA
+                </Button>
+              </form>
+            </div>
           </div>
         )}
       </div>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-6">
-          <div
-            className="absolute inset-0 bg-brand-black/60 backdrop-blur-md"
-            onClick={() => setIsModalOpen(false)}
-          />
-          <div className="relative bg-brand-white rounded-shop-lg w-full max-w-[400px] p-10 shadow-premium animate-in zoom-in-95">
-            <h2 className="text-3xl font-heavy font-integral uppercase italic tracking-tightest mb-8 text-center text-brand-black">
-              DENEYİMİNİ PAYLAŞ
-            </h2>
-            <form onSubmit={handleReviewSubmit} className="space-y-6">
-              <Input
-                required
-                value={newReview.author}
-                onChange={(e) =>
-                  setNewReview({ ...newReview, author: e.target.value })
-                }
-                placeholder="İSMİNİZ"
-                className="!rounded-2xl !py-4 font-black italic"
-              />
-              <div className="flex justify-center gap-2 text-2xl text-brand-black">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <RiStarFill
-                    key={s}
-                    className={`cursor-pointer transition-all ${s > newReview.rating ? "opacity-10 text-zinc-300" : "scale-110"}`}
-                    onClick={() => setNewReview({ ...newReview, rating: s })}
-                  />
-                ))}
-              </div>
-              <textarea
-                required
-                value={newReview.text}
-                onChange={(e) =>
-                  setNewReview({ ...newReview, text: e.target.value })
-                }
-                rows={4}
-                className="w-full bg-brand-gray border-2 border-brand-gray rounded-shop-md p-6 text-sm font-bold uppercase placeholder:text-zinc-300 outline-none focus:border-brand-black transition-all font-satoshi italic"
-                placeholder="ÜRÜN HAKKINDAKİ GÖRÜŞLERİN..."
-              />
-              <Button
-                type="submit"
-                variant="primary"
-                size="xl"
-                className="w-full !rounded-full italic tracking-[0.2em]"
-              >
-                YAYINLA
-              </Button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

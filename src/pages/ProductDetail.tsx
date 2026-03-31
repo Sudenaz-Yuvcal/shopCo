@@ -125,15 +125,6 @@ const ProductDetail = () => {
           </span>
         </div>
 
-        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-12 mb-32 items-start">
-          <div className="lg:col-span-7 w-full rounded-[40px] overflow-hidden bg-zinc-50 border border-zinc-100">
-            <img
-              src={product.image}
-              className="w-full aspect-[4/5] object-cover hover:scale-105 transition-transform duration-1000"
-              alt={product.name}
-            />
-          </div>
-
           <ProductInfo
             product={product}
             isFavorite={isFavorite}
@@ -144,6 +135,7 @@ const ProductDetail = () => {
         </div>
 
         <ProductTabs product={product} />
+    <div className="mt-32 w-full scale-[0.9] origin-top">
 
         <div className="mt-40 mb-20">
           <div className="flex items-end justify-between mb-20 border-b-[6px] border-black pb-8">
@@ -170,8 +162,7 @@ const ProductDetail = () => {
             ))}
           </div>
         </div>
-      </div>
-    </div>
+      </div></div>
   );
 };
 

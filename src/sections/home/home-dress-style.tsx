@@ -41,11 +41,12 @@ const DressStyle = () => {
   ];
 
   return (
-    <section className="px-6 py-20 bg-white">
+    <section className="">
       <div className="max-w-7xl mx-auto bg-brand-gray rounded-[40px] p-8 md:p-16 text-center">
-        <h2 className="text-4xl md:text-6xl font-[1000] text-black italic uppercase tracking-tighter mb-12">
+        <h2 className="text-3xl md:text-6xl font-[1000] text-black italic uppercase tracking-tighter mb-12">
           STİLİNE GÖRE GÖZ AT
         </h2>
+        <br></br>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {STYLES.map((style) => (
             <DressStyleCard key={style.name} style={style} />
