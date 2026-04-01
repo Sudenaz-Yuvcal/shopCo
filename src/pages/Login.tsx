@@ -4,8 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { loginSchema } from "../utils/schemas";
-
+import * as yup from "yup";
 import Button from "../components/Ui/Button";
 import Input from "../components/Ui/Input";
 import { useUser } from "../context/UserContext";
@@ -16,7 +15,12 @@ import {
   RiArrowRightSLine,
   RiShieldCheckLine,
 } from "react-icons/ri";
+import{baseEmail, basePassword} from "../utils/schemas"
 
+export const loginSchema = yup.object().shape({
+  email: baseEmail,
+  password: basePassword,
+});
 interface ILoginForm {
   email: string;
   password: string;

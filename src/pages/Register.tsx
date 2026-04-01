@@ -4,12 +4,12 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { registerSchema } from "../utils/schemas";
 import Button from "../components/Ui/Button";
 import Input from "../components/Ui/Input";
 import { useUser } from "../context/UserContext";
 import LoadingOverlay from "../components/Ui/LoadingOverlay";
 import CodeVerify from "../components/Verification/CodeVerify";
+import { baseEmail, basePassword } from "../utils/schemas";
 import {
   RiMailLine,
   RiUserLine,
@@ -17,6 +17,28 @@ import {
   RiSparklingLine,
   RiShieldCheckLine,
 } from "react-icons/ri";
+import * as yup from "yup";
+
+
+export const registerSchema = yup.object().shape({
+  fullName: yup
+    .string()
+    .required("AD SOYAD GEREKLİ.")
+    .test("is-full-name", "AD VE SOYADINIZI TAM GİRİNİZ.", (val) =>
+      val ? val.trim().includes(" ") && val.trim().length >= 5 : false,
+    ),
+  email: baseEmail,
+  password: basePassword,
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref("password")], "ŞİFRELER EŞLEŞMİYOR.")
+    .required("ŞİFRE TEKRARI GEREKLİ."),
+  acceptTerms: yup
+    .boolean()
+    .oneOf([true], "ŞARTLARI ONAYLAMALISINIZ.")
+    .required(),
+});
+
 
 interface IRegisterForm {
   fullName: string;

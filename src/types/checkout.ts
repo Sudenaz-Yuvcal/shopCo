@@ -4,7 +4,6 @@ export interface ICheckoutForm {
   email: string;
   address: string;
   city: string;
-  zipCode: string;
   phone: string;
   expiryDate: string;
   cardName: string;

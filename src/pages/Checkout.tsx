@@ -1,37 +1,23 @@
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { useCart } from "../context/CartContext";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import type { ICheckoutForm } from "../types/checkout";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { checkoutSchema } from "../utils/schemas";
-import ShippingSection from "../sections/checkout/checkout-shipping-section";
-import PaymentSection from "../sections/checkout/checkout-payment-section";
+import CheckoutForm from "../components/Cart/CheckoutForm";
 import CheckoutSummary from "../sections/checkout/checkout-summary";
-import type { FieldErrors } from "react-hook-form";
+import { TURKISH_CITIES } from "../constants/Cities";
 
 const Checkout = () => {
   const { cart, totals, clearCart } = useCart();
   const navigate = useNavigate();
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<ICheckoutForm>({
-    resolver: yupResolver(checkoutSchema),
-    mode: "onChange",
-  });
+  const handleCheckoutSubmit = (data: ICheckoutForm) => {
+    console.log("Form Doğrulandı, İşlem Başlıyor:", data);
 
-  const onSubmit: SubmitHandler<ICheckoutForm> = (data) => {
     const loadingToast = toast.loading("ÖDEME İŞLENİYOR...", {
       position: "top-center",
       theme: "dark",
     });
-
-    console.log("Sipariş Verisi:", data);
 
     setTimeout(() => {
       toast.update(loadingToast, {
@@ -41,56 +27,41 @@ const Checkout = () => {
         autoClose: 2000,
         theme: "dark",
       });
+
       clearCart();
-      navigate("/success");
+      setTimeout(() => {
+        navigate("/success");
+      }, 800);
     }, 2500);
   };
-  const onError = (errors: FieldErrors<ICheckoutForm>) => {
-    console.log("Form Hataları:", errors);
 
-    Object.keys(errors).forEach((key) => {
-      console.warn(
-        `Hatalı Alan: ${key} ->`,
-        errors[key as keyof ICheckoutForm]?.message,
-      );
-    });
-    toast.error("LÜTFEN TÜM ALANLARI DOĞRU DOLDURUN!", {
-      theme: "dark",
-      position: "top-center",
-    });
-  };
   return (
-    <div className="bg-white min-h-screen font-satoshi">
+    <div className="bg-white min-h-screen font-satoshi container mx-auto px-4 py-10">
       <Helmet>
         <title>Güvenli Ödeme | SHOP.CO</title>
       </Helmet>
 
-      <div className="max-w-7xl mx-auto px-6 py-12 text-black text-left">
-        <div className="flex items-center gap-4 mb-10 border-b-[6px] border-black pb-8">
-          <h1 className="text-5xl md:text-7xl font-[1000] uppercase tracking-tighter italic leading-none">
-            ÖDEME
-          </h1>
-          <span className="text-[10px] font-black bg-black text-white px-3 py-1 rounded-full italic tracking-widest">
-            SECURE 256-BIT
-          </span>
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-16">
+        <div className="lg:col-span-7">
+          <CheckoutForm
+            onCheckoutSubmit={handleCheckoutSubmit}
+            filteredCities={[...TURKISH_CITIES]}
+          />
         </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit, onError)}
-          className="flex flex-col lg:grid lg:grid-cols-12 gap-16"
-        >
-          <div className="lg:col-span-7 space-y-24">
-            <ShippingSection register={register} errors={errors} />
-            <PaymentSection
-              register={register}
-              setValue={setValue}
-              errors={errors}
-            />
-          </div>
-          <div className="lg:col-span-5">
+        <div className="lg:col-span-5">
+          <div className="sticky top-10 space-y-6">
             <CheckoutSummary cart={cart} totals={totals} />
+
+            <button
+              form="checkout-form"
+              type="submit"
+              className="w-full bg-black text-white py-5 rounded-full font-black uppercase italic tracking-widest hover:bg-zinc-900 transition-all active:scale-[0.98]"
+            >
+              ÖDEMEYİ TAMAMLA
+            </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

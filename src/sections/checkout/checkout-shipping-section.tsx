@@ -63,14 +63,6 @@ const ShippingSection = ({ register, errors }: ShippingSectionProps) => (
           ))}
         </datalist>
       </div>
-
-      <Input
-        {...register("zipCode")}
-        placeholder="POSTA KODU"
-        maxLength={5}
-        error={errors.zipCode?.message}
-        className="!rounded-3xl !py-5 font-black"
-      />
     </div>
   </section>
 );

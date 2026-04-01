@@ -4,7 +4,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { recoverySchema } from "../utils/schemas";
 import {
   RiMailSendLine,
   RiPhoneLine,
@@ -14,7 +13,26 @@ import {
 } from "react-icons/ri";
 import Button from "../components/Ui/Button";
 import Input from "../components/Ui/Input";
+import * as yup from "yup";
 
+const baseEmail = yup
+  .string()
+  .email("Geçerli bir e-posta giriniz")
+  .required("E-posta zorunlu");
+
+export const recoverySchema = yup.object({
+  method: yup.string().oneOf(["email", "phone"]).required(),
+
+  inputValue: yup.string().when("method", ([method], schema) => {
+    if (method === "email") {
+      return baseEmail;
+    }
+
+    return schema
+      .required("Telefon zorunlu")
+      .matches(/^[0-9]{10}$/, "TELEFON 10 HANE OLMALIDIR.");
+  }),
+});
 interface RecoveryFormInput {
   method: "email" | "phone";
   inputValue: string;
