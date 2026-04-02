@@ -39,7 +39,7 @@ const Hero = () => {
 
       <div className="relative z-20 max-w-7xl mx-auto px-4 md:px-10 flex flex-col pt-10 md:pt-20 lg:h-full text-left">
         <div className="max-w-[620px]">
-          <h1 className="text-[36px] text-center md:text-left md:text-[60px] font-[1000] leading-[0.9] mb-6 text-black uppercase tracking-[-0.05em] italic">
+          <h1 className="text-[36px] text-center md:text-left md:text-[60px] font-[1000] leading-[0.9] mb-6 text-black uppercase tracking-[-0.05em]">
             TARZINIZA UYGUN <br className="hidden md:block" /> KIYAFETLER BULUN
           </h1>
           <p className="text-gray-500 text-center text-sm md:text-base mb-8 md:mb-10 max-w-[480px] leading-relaxed font-medium">

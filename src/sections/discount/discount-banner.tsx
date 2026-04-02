@@ -23,7 +23,7 @@ const DiscountBanner = () => (
           </span>{" "}
           indirimleri keşfet
         </p>
-        <div className="flex items-center gap-3 text-red-500 font-black text-[10px] tracking-widest uppercase bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+        <div className="flex items-center gap-3 text-red font-black text-[10px] tracking-widest uppercase bg-white/5 px-4 py-2 rounded-xl border border-white/5">
           <FiClock className="animate-spin-slow" /> STOKLARLA SINIRLI
         </div>
       </div>

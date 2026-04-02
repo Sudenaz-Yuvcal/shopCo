@@ -217,7 +217,7 @@ const WheelOfFortune = () => {
                       <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">
                         Yeni Hakka Kalan
                       </p>
-                      <p className="text-white font-mono text-xl font-bold">
+                      <p className="text-white font-mono text-lg font-bold">
                         {timeLeft}
                       </p>
                     </div>

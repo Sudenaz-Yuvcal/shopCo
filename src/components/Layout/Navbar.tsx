@@ -93,7 +93,7 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="w-full bg-black text-white py-2.5 px-4 relative">
           <div className="max-w-7xl mx-auto flex items-center justify-center text-center">
             <p className="text-[10px] md:text-xs font-light tracking-wide italic">
-              İlk siparişinde %20 indirim kazanmak için kayıt ol.
+              İlk siparişinde %50 indirim kazanmak için kayıt ol.
               <Link
                 to="/register"
                 className="font-[1000] underline ml-2 hover:opacity-80 transition-opacity italic"
