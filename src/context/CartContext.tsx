@@ -27,7 +27,9 @@ interface CartContextType {
     delivery: number;
     final: number;
   };
+
   removeFromCart: (id: number, size: string, color: string) => void;
+
   updateQuantity: (
     id: number,
     size: string,
@@ -82,6 +84,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       ];
     });
   };
+
   const removeFromCart = (id: number, size: string, color: string) => {
     setCart((prev) =>
       prev.filter(

@@ -43,6 +43,7 @@ const CheckoutForm = ({
   onCheckoutSubmit,
   filteredCities,
 }: CheckoutFormProps) => {
+
   const [showCityList, setShowCityList] = useState<boolean>(false);
 
   const {

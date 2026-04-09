@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import axios from "axios";
 import Button from "../components/Ui/Button";
 import Input from "../components/Ui/Input";
 import { useUser } from "../context/UserContext";
@@ -15,12 +16,13 @@ import {
   RiArrowRightSLine,
   RiShieldCheckLine,
 } from "react-icons/ri";
-import{baseEmail, basePassword} from "../utils/schemas"
+import { baseEmail, basePassword } from "../utils/schemas";
 
 export const loginSchema = yup.object().shape({
   email: baseEmail,
   password: basePassword,
 });
+
 interface ILoginForm {
   email: string;
   password: string;
@@ -30,31 +32,77 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useUser();
   const [isLoading, setIsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
+    setError,
   } = useForm<ILoginForm>({
     resolver: yupResolver(loginSchema) as unknown as Resolver<ILoginForm>,
     mode: "onChange",
   });
 
-  const onSubmit: SubmitHandler<ILoginForm> = (data) => {
+  const onSubmit: SubmitHandler<ILoginForm> = async (data) => {
     setIsLoading(true);
+
     localStorage.removeItem("is_new_registrant");
     localStorage.removeItem("welcome_coupon_expiry");
 
-    setTimeout(() => {
+    try {
+      const authRes = await axios.post(
+        "https://api.escuelajs.co/api/v1/auth/login",
+        {
+          email: data.email,
+          password: data.password,
+        },
+      );
+
+      const { access_token } = authRes.data;
+
+      const userRes = await axios.get(
+        "https://api.escuelajs.co/api/v1/auth/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        },
+      );
+
+      const userData = userRes.data;
+
       login({
-        name: data.email.split("@")[0].toUpperCase(),
+        name: userData.name,
         surname: "ÜYE",
-        email: data.email,
+        email: userData.email,
+        avatar: userData.avatar,
         membership: "Standard",
       });
 
-      toast.success("OTURUM AÇILDI, HESABIN YÜKLENİYOR...", { theme: "dark" });
+      localStorage.setItem("token", access_token);
+
+      toast.success(`HOŞ GELDİN ${userData.name.toUpperCase()}!`, {
+        theme: "dark",
+      });
       navigate("/account");
-    }, 1500);
+    } 
+    catch (error: unknown)
+     {
+      const errorResponse = error as { response?: { status?: number } };
+      const status = errorResponse.response?.status;
+
+      if (status === 401) {
+        toast.error("E-POSTA VEYA ŞİFRE HATALI!", { theme: "dark" });
+        setError("password", {
+          type: "manual",
+          message: "Kimlik bilgileri eşleşmedi.",
+        });
+      } else {
+        toast.error("SUNUCU BAĞLANTI HATASI!", { theme: "dark" });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,6 +110,7 @@ const Login: React.FC = () => {
       <Helmet>
         <title>Giriş Yap | SHOP.CO</title>
       </Helmet>
+
       {isLoading && <LoadingOverlay message="KİMLİK DOĞRULANIYOR..." />}
 
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-zinc-50 rounded-full blur-[120px] -mr-40 -mt-40 opacity-60" />
@@ -80,13 +129,15 @@ const Login: React.FC = () => {
         <div className="relative bg-black p-12 hidden md:flex flex-col justify-between items-start text-left">
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-6">
-              <RiShieldCheckLine className="text-zinc-500" size={20} />
+              <span className="p-1.5 bg-zinc-800 rounded-lg">
+                <RiShieldCheckLine className="text-zinc-400" size={16} />
+              </span>
               <span className="text-[10px] font-black text-zinc-500 tracking-[0.4em] uppercase">
                 SECURE ACCESS
               </span>
             </div>
             <h2 className="text-5xl lg:text-7xl font-[1000] text-white leading-[0.85] uppercase tracking-tighter italic">
-              STİLİNE <br />{" "}
+              STİLİNE <br />
               <span className="text-zinc-700 underline decoration-zinc-800 underline-offset-8">
                 GERİ DÖN.
               </span>
@@ -126,9 +177,9 @@ const Login: React.FC = () => {
               </label>
               <div className="relative group">
                 <RiMailLine className="absolute left-6 top-1/2 -translate-y-1/2 text-xl text-zinc-300 group-focus-within:text-black transition-colors" />
-
                 <Input
                   {...register("email")}
+                  autoComplete="email"
                   onChange={(e) => {
                     e.target.value = e.target.value.toLowerCase();
                     register("email").onChange(e);
@@ -162,6 +213,7 @@ const Login: React.FC = () => {
                 <RiLockPasswordLine className="absolute left-6 top-1/2 -translate-y-1/2 text-xl text-zinc-300 group-focus-within:text-black transition-colors" />
                 <Input
                   type="password"
+                  autoComplete="current-password"
                   {...register("password")}
                   placeholder="••••••••"
                   className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs tracking-widest focus:ring-2 focus:ring-black transition-all ${

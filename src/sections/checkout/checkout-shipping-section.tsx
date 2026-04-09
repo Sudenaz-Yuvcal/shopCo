@@ -63,6 +63,7 @@ const ShippingSection = ({ register, errors }: ShippingSectionProps) => (
           ))}
         </datalist>
       </div>
+
     </div>
   </section>
 );

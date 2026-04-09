@@ -38,7 +38,7 @@ const CartItemCard = ({
       <div className="flex-1 flex flex-col justify-between py-2">
         <div className="flex justify-between items-start text-left">
           <div>
-            <h3 className="font-[1000] text-2xl font-satoshi tracking-tighter italic leading-none text-black">
+            <h3 className="font-[1000] text-2xl font-satoshi tracking-tighter leading-none text-black">
               {item.name}
             </h3>
             <p className="text-[10px] font-black text-zinc-400 mt-3 uppercase tracking-widest italic">
@@ -47,7 +47,7 @@ const CartItemCard = ({
           </div>
           <button
             onClick={onRemoveClick}
-            className="text-zinc-300 hover:text-red-600 transition-colors p-2"
+            className="text-zinc-300 hover:text-red transition-colors p-2"
           >
             <FiTrash2 size={22} />
           </button>

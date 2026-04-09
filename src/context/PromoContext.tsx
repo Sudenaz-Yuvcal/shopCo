@@ -26,15 +26,21 @@ export const PromoProvider = ({ children }: { children: ReactNode }) => {
       setAppliedPromoCode("SUDE30");
       return { success: true, message: "%30 İndirim Uygulandı!" };
     }
-
+    if (cleanCode === "3AL2ÖDE") {
+      setAppliedPromoCode("3AL2ÖDE");
+      return { success: true, message: "3 AL 2 ÖDE!" };
+    }
+    if (cleanCode === "KARGOBEDAVA") {
+      setAppliedPromoCode("KARGOBEDAVA");
+      return { success: true, message: "KARGO BEDAVA!" };
+    }
     if (cleanCode === "HOSGELDIN50") {
       if (subtotal >= 500) {
         setAppliedPromoCode("HOSGELDIN50");
         return { success: true, message: "%50 İndirim Uygulandı!" };
       }
-      return { success: false, message: "Bu kod için alt limit 500 TL'dir." };
+      return { success: false, message: "Bu kod için alt limit 500 $'dır." };
     }
-
     return { success: false, message: "Geçersiz kod." };
   };
 

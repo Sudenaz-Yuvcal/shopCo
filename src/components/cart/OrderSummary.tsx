@@ -97,11 +97,7 @@ const OrderSummary = ({
             variant={isPromoApplied ? "danger" : "primary"}
             className="!rounded-full !px-10 italic"
           >
-            {isPromoApplied ? (
-              <FiRotateCcw className="animate-spin" />
-            ) : (
-              "UYGULA"
-            )}
+            {isPromoApplied ? <FiRotateCcw className="" /> : "UYGULA"}
           </Button>
         </div>
         <Button

@@ -2,6 +2,7 @@ import { useCart } from "../context/CartContext";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import type { ICheckoutForm } from "../types/checkout";
 import CheckoutForm from "../components/Cart/CheckoutForm";
 import CheckoutSummary from "../sections/checkout/checkout-summary";
@@ -10,6 +11,14 @@ import { TURKISH_CITIES } from "../constants/Cities";
 const Checkout = () => {
   const { cart, totals, clearCart } = useCart();
   const navigate = useNavigate();
+
+  const { watch } = useForm<ICheckoutForm>();
+
+  const watchedCity = watch("city") || "";
+
+  const filteredCities = TURKISH_CITIES.filter((city) =>
+    city.toLowerCase().includes(watchedCity.toLowerCase()),
+  );
 
   const handleCheckoutSubmit = (data: ICheckoutForm) => {
     console.log("Form Doğrulandı, İşlem Başlıyor:", data);
@@ -45,7 +54,7 @@ const Checkout = () => {
         <div className="lg:col-span-7">
           <CheckoutForm
             onCheckoutSubmit={handleCheckoutSubmit}
-            filteredCities={[...TURKISH_CITIES]}
+            filteredCities={filteredCities}
           />
         </div>
 

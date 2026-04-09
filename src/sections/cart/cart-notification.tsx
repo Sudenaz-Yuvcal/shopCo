@@ -21,7 +21,7 @@ const CartNotification = ({
     >
       <div className="p-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {notification.type === "success" ? (
+          {notification.type === "success" ?  (
             <FiCheckCircle className="text-green-500" size={24} />
           ) : (
             <FiAlertCircle className="text-red-500" size={24} />

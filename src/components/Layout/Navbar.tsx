@@ -12,24 +12,24 @@ import { HiMenuAlt1 } from "react-icons/hi";
 import { useCart } from "../../context/CartContext";
 import { useUser } from "../../context/UserContext";
 import { useFavorite } from "../../context/FavoriteContext";
-import { ALL_PRODUCTS } from "../../constants/Product";
 import type { Product } from "../../types/product";
 import Input from "../Ui/Input";
 import Button from "../Ui/Button";
 import WheelOfFortune from "../../sections/home/home-wheel-of-fortune";
+import type { APIProduct } from "../../types/api";
+
 const normalizeString = (str: string) => {
   if (!str) return "";
   return str
     .trim()
     .toLocaleLowerCase("tr-TR")
-    .replace(/İ/g, "i")
-    .replace(/I/g, "i")
-    .replace(/ı/g, "i")
-    .replace(/ğ/g, "g")
-    .replace(/ü/g, "u")
-    .replace(/ş/g, "s")
-    .replace(/ö/g, "o")
-    .replace(/ç/g, "c")
+    .replace(
+      /[İIığüşöç]/g,
+      (m) =>
+        ({ İ: "i", I: "i", ı: "i", ğ: "g", ü: "u", ş: "s", ö: "o", ç: "c" })[
+          m
+        ] || m,
+    )
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 };
@@ -51,34 +51,55 @@ const Navbar: React.FC<NavbarProps> = ({
   const { favorites } = useFavorite();
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [searchResults, setSearchResults] = useState<Partial<Product>[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
-    if (searchTerm.trim().length > 1) {
-      const normalizedSearch = normalizeString(searchTerm);
+    const fetchSearch = async () => {
+      if (searchTerm.trim().length > 1) {
+        try {
+          const normalizedSearch = normalizeString(searchTerm);
 
-      const filtered = ALL_PRODUCTS.filter((product: Product) => {
-        const productName = normalizeString(product.name);
-        const productCategory = normalizeString(product.category);
-        const productBrand = normalizeString(product.brand || "");
+          const res = await fetch(
+            `https://api.escuelajs.co/api/v1/products/?title=${normalizedSearch}`,
+          );
+          const data = await res.json();
 
-        return (
-          productName.includes(normalizedSearch) ||
-          productCategory.includes(normalizedSearch) ||
-          productBrand.includes(normalizedSearch)
-        );
-      }).slice(0, 6);
+          const filtered = (data as APIProduct[])
+            .filter(
+              (p: APIProduct) =>
+                normalizeString(p.title).includes(normalizedSearch) &&
+                p.title.length < 30 &&
+                !p.title.includes("_") &&
+                p.images?.length > 0,
+            )
+            .map((p: APIProduct) => ({
+              id: p.id,
+              name: p.title,
+              image: p.images[0].replace(/[\[\]"]/g, ""),
+              value: p.price,
+              category: p.category?.name,
+              brand: "SHOP.CO",
+            }))
+            .slice(0, 6);
 
-      setSearchResults(filtered);
-      setIsSearchOpen(true);
-    } else {
-      setSearchResults([]);
-      setIsSearchOpen(false);
-    }
+          setSearchResults(filtered);
+          setIsSearchOpen(true);
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            console.error("Search error:", error.message);
+          }
+        }
+      } else {
+        setSearchResults([]);
+        setIsSearchOpen(false);
+      }
+    };
+
+    const debounce = setTimeout(fetchSearch, 300);
+    return () => clearTimeout(debounce);
   }, [searchTerm]);
 
   const handleSeeAll = () => {
@@ -142,22 +163,24 @@ const Navbar: React.FC<NavbarProps> = ({
               {isShopOpen && (
                 <div className="absolute top-full left-0 w-56 bg-white border border-black/5 shadow-2xl rounded-2xl p-4 animate-in fade-in slide-in-from-top-2">
                   <div className="space-y-1">
-                    {["Erkek", "Kadın", "Çocuk"].map((cat) => (
-                      <Link
-                        key={cat}
-                        to={`/shop?category=${cat}`}
-                        className="block px-4 py-3 hover:bg-black hover:text-white rounded-xl transition-all font-black text-[10px] italic uppercase tracking-tighter"
-                      >
-                        {cat} Giyim
-                      </Link>
-                    ))}
+                    {["Clothes", "Shoes", "Electronics", "Miscellaneous"].map(
+                      (cat) => (
+                        <Link
+                          key={cat}
+                          to={`/shop?category=${cat}`}
+                          className="block px-4 py-3 hover:bg-black hover:text-white rounded-xl transition-all font-black text-[10px] italic uppercase tracking-tighter"
+                        >
+                          {cat === "Miscellaneous" ? "Aksesuar" : cat}
+                        </Link>
+                      ),
+                    )}
                   </div>
                 </div>
               )}
             </div>
             <Link
               to="/discount"
-              className="hover:text-red-600 transition-colors italic"
+              className="hover:text-red-600 transition-colors italic text-red-600"
             >
               İndirim
             </Link>
@@ -185,7 +208,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSeeAll()}
-                placeholder="ZARA, GUCCI, CALVIN ARA..."
+                placeholder="ÜRÜN VEYA KATEGORİ ARA..."
                 className="!py-3 pl-12 w-full text-[10px] bg-brand-gray border-none !rounded-full font-black tracking-widest focus:ring-2 focus:ring-black transition-all"
               />
               <RiSearchLine className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 text-lg group-focus-within:opacity-100 group-focus-within:text-black transition-all" />
@@ -203,11 +226,11 @@ const Navbar: React.FC<NavbarProps> = ({
                             setIsSearchOpen(false);
                             setSearchTerm("");
                           }}
-                          className="flex items-center gap-4 p-3 hover:bg-brand-soft rounded-[20px] cursor-pointer transition-all group"
+                          className="flex items-center gap-4 p-3 hover:bg-zinc-50 rounded-[20px] cursor-pointer transition-all group"
                         >
                           <img
                             src={p.image}
-                            className="w-14 h-14 bg-brand-surface rounded-xl shrink-0 border border-black/5"
+                            className="w-14 h-14 object-cover rounded-xl shrink-0 border border-black/5"
                             alt={p.name}
                           />
                           <div className="flex-1 min-w-0">
@@ -215,7 +238,7 @@ const Navbar: React.FC<NavbarProps> = ({
                               {p.name}
                             </h4>
                             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                              {p.category} | {p.brand}
+                              {p.category}
                             </p>
                           </div>
                           <p className="font-[1000] text-sm italic tracking-tighter text-black">
@@ -230,7 +253,7 @@ const Navbar: React.FC<NavbarProps> = ({
                       onClick={handleSeeAll}
                       className="w-full !p-4 !text-[10px] tracking-[0.4em] italic"
                     >
-                      TÜM KOLEKSİYONU GÖR →
+                      TÜM SONUÇLARI GÖR →
                     </Button>
                   </>
                 ) : (
@@ -249,7 +272,7 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               <RiShoppingCart2Line />
               {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] animate-bounce border-2 border-white shadow-lg leading-none">
+                <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] animate-bounce border-2 border-white shadow-lg">
                   {totalItems}
                 </span>
               )}
@@ -260,16 +283,26 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               <RiHeartLine />
               {favorites.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-lg leading-none">
+                <span className="absolute -top-2 -right-2 bg-red text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-lg">
                   {favorites.length}
                 </span>
               )}
             </Link>
             <Link
               to={user ? "/account" : "/login"}
-              className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-[11px] font-black border-2 border-black/10 shadow-xl hover:scale-110 transition-all uppercase italic"
+              className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-[11px] font-black border-2 border-black/10 shadow-xl hover:scale-110 transition-all overflow-hidden uppercase italic"
             >
-              {user ? user.name[0] : <RiUserLine />}
+              {user?.avatar ? (
+                <img
+                  src={user.avatar.replace(/[\[\]"]/g, "")}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : user ? (
+                user.name[0]
+              ) : (
+                <RiUserLine />
+              )}
             </Link>
           </div>
         </div>

@@ -18,6 +18,7 @@ const DiscountGrid = ({
       const originalPrice = product.oldValue ?? 0;
       const currentPrice = product.value;
       const isFav = isInFavorites(product.id);
+
       const discountPercentage =
         originalPrice > 0
           ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
@@ -46,15 +47,23 @@ const DiscountGrid = ({
           <Link to={`/product/${product.id}`} className="flex flex-col gap-5">
             <div className="relative aspect-[3/4] bg-brand-neutral rounded-[40px] overflow-hidden border border-zinc-100 shadow-sm transition-transform duration-700 group-hover:shadow-2xl">
               <img
-                src={product.image || undefined}
+                src={product.image}
                 alt={product.name}
                 className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/Frame-10.png";
+                  target.onerror = null;
+                }}
               />
-              <div className="absolute top-6 left-6 flex flex-col gap-2">
-                <div className="bg-red-600 text-red text-[11px] font-black px-4 py-2 rounded-2xl uppercase tracking-widest transform -rotate-2">
-                  -{discountPercentage}%
+
+              {discountPercentage > 0 && (
+                <div className="absolute top-6 left-6 flex flex-col gap-2">
+                  <div className="bg-red-600 text-white text-[11px] font-black px-4 py-2 rounded-2xl uppercase tracking-widest transform -rotate-2">
+                    -{discountPercentage}%
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="space-y-2 px-2">
@@ -65,9 +74,11 @@ const DiscountGrid = ({
                 <span className="text-2xl font-[1000] text-black italic tracking-tighter">
                   ${product.value}
                 </span>
-                <span className="text-sm font-black text-zinc-300 line-through decoration-red-600/30 italic">
-                  ${product.oldValue}
-                </span>
+                {product.oldValue && (
+                  <span className="text-sm font-black text-zinc-300 line-through decoration-red-600/30 italic">
+                    ${product.oldValue}
+                  </span>
+                )}
               </div>
             </div>
           </Link>

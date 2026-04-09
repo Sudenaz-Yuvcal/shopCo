@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { RiCloseLine } from "react-icons/ri";
+import { toast } from "react-toastify"; 
 import Button from "../../components/Ui/Button";
 import { WELCOME_GIFT_DATA } from "../../constants/Gifts";
 import { GiftCoupon } from "../../components/Home/GiftCoupon";
@@ -15,6 +16,21 @@ const WelcomeGift: React.FC = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location]);
+
+  const handleCopyCode = () => {
+    navigator.clipboard
+      .writeText(WELCOME_GIFT_DATA.CODE)
+      .then(() => {
+        toast.success("Kupon Kodu Kopyalandı! 🔥", {
+          position: "top-center",
+          autoClose: 2000,
+          theme: "dark",
+        });
+      })
+      .catch(() => {
+        toast.error("Kopyalama başarısız oldu.");
+      });
+  };
 
   if (!showGift) return null;
 
@@ -56,16 +72,26 @@ const WelcomeGift: React.FC = () => {
             {WELCOME_GIFT_DATA.DESCRIPTION}
           </p>
 
-          <GiftCoupon
-            code={WELCOME_GIFT_DATA.CODE}
-            limitText={WELCOME_GIFT_DATA.LIMIT_TEXT}
-          />
+          <div
+            onClick={handleCopyCode}
+            className="cursor-pointer active:scale-95 transition-all group relative"
+          >
+            <GiftCoupon
+              code={WELCOME_GIFT_DATA.CODE}
+              limitText={WELCOME_GIFT_DATA.LIMIT_TEXT}
+            />
+            <div className="absolute -bottom-6 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+                Kopyalamak için tıkla
+              </p>
+            </div>
+          </div>
 
           <Button
             variant="primary"
             size="xl"
             onClick={() => setShowGift(false)}
-            className="w-full shadow-2xl hover:scale-[1.02] italic"
+            className="w-full shadow-2xl hover:scale-[1.02] italic mt-4"
           >
             {WELCOME_GIFT_DATA.BUTTON_TEXT}
           </Button>

@@ -4,6 +4,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import {AxiosError} from "axios";
+import axios from "axios";
+
 import Button from "../components/Ui/Button";
 import Input from "../components/Ui/Input";
 import { useUser } from "../context/UserContext";
@@ -18,7 +21,6 @@ import {
   RiShieldCheckLine,
 } from "react-icons/ri";
 import * as yup from "yup";
-
 
 export const registerSchema = yup.object().shape({
   fullName: yup
@@ -38,7 +40,6 @@ export const registerSchema = yup.object().shape({
     .oneOf([true], "ŞARTLARI ONAYLAMALISINIZ.")
     .required(),
 });
-
 
 interface IRegisterForm {
   fullName: string;
@@ -60,6 +61,7 @@ const Register: React.FC = () => {
     handleSubmit,
     watch,
     formState: { errors, isValid },
+    setError,
   } = useForm<IRegisterForm>({
     resolver: yupResolver(registerSchema) as unknown as Resolver<IRegisterForm>,
     mode: "onChange",
@@ -77,28 +79,56 @@ const Register: React.FC = () => {
     return strength;
   }, [passwordValue]);
 
-  const onSubmit: SubmitHandler<IRegisterForm> = (data) => {
+  const onSubmit: SubmitHandler<IRegisterForm> = async (data) => {
     setIsLoading(true);
-    setFormData(data);
+    try {
+      await axios.post("https://api.escuelajs.co/api/v1/users/", {
+        name: data.fullName,
+        email: data.email,
+        password: data.password,
+        avatar: "https://i.imgur.com/LDOO4Qs.jpg",
+      });
 
-    setTimeout(() => {
-      setIsLoading(false);
+      setFormData(data);
       setStep(2);
       toast.info("DOĞRULAMA KODU E-POSTANA GÖNDERİLDİ.", { theme: "dark" });
-    }, 1500);
-  };
+    } catch (error: unknown) {
+      const err = error as AxiosError;
 
-  const handleVerificationSuccess = (_code: string) => {
-    
+      if (err.response?.status === 400) {
+        toast.error("BU E-POSTA ZATEN KULLANIMDA!", { theme: "dark" });
+        setError("email", {
+          type: "manual",
+          message: "E-posta zaten kayıtlı.",
+        });
+      } else {
+        toast.error("KAYIT SIRASINDA BİR HATA OLUŞTU!", { theme: "dark" });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const handleVerificationSuccess = async (_code: string) => {
     if (!formData) return;
     setIsLoading(true);
 
-    const nameParts = formData.fullName.trim().split(" ");
-    const firstName = nameParts[0];
-    const lastName =
-      nameParts.length > 1 ? nameParts.slice(1).join(" ") : "ÜYE";
+    try {
+      const authRes = await axios.post(
+        "https://api.escuelajs.co/api/v1/auth/login",
+        {
+          email: formData.email,
+          password: formData.password,
+        },
+      );
 
-    setTimeout(() => {
+      const { access_token } = authRes.data;
+      localStorage.setItem("token", access_token);
+
+      const nameParts = formData.fullName.trim().split(" ");
+      const firstName = nameParts[0];
+      const lastName =
+        nameParts.length > 1 ? nameParts.slice(1).join(" ") : "ÜYE";
+
       login({
         name: firstName.toUpperCase(),
         surname: lastName.toUpperCase(),
@@ -112,7 +142,11 @@ const Register: React.FC = () => {
         icon: <RiSparklingLine className="text-yellow-400" />,
       });
       navigate("/", { state: { isNewUser: true } });
-    }, 2000);
+    } catch (error) {
+      toast.error("OTURUM AÇILIRKEN BİR HATA OLUŞTU!", { theme: "dark" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -123,7 +157,9 @@ const Register: React.FC = () => {
       {isLoading && (
         <LoadingOverlay
           message={
-            step === 1 ? "KOD GÖNDERİLİYOR..." : "HESABINIZ HAZIRLANIYOR..."
+            step === 1
+              ? "HESABINIZ OLUŞTURULUYOR..."
+              : "HESABINIZ HAZIRLANIYOR..."
           }
         />
       )}

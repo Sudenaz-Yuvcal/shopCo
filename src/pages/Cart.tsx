@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { useForm, type FieldError } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { FiArrowLeft, FiShoppingBag } from "react-icons/fi";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
@@ -31,7 +31,6 @@ const Cart = () => {
 
   const [promoInput, setPromoInput] = useState("");
   const [showCheckout, setShowCheckout] = useState(false);
-  const [showCityList, setShowCityList] = useState(false);
   const [notification, setNotification] = useState<{
     msg: string;
     type: "success" | "error";
@@ -74,35 +73,22 @@ const Cart = () => {
     }
   };
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<ICheckoutForm>();
+  const { watch } = useForm<ICheckoutForm>();
   const watchedCity = watch("city") || "";
-
-  const errorStyle = (
-    isError: FieldError | undefined,
-  ): React.CSSProperties => ({
-    border: isError ? "2px solid #ef4444" : "1px solid #e4e4e7",
-    backgroundColor: isError ? "#fef2f2" : "white",
-    transition: "all 0.3s ease",
-  });
 
   const showNotify = (msg: string, type: "success" | "error" = "success") =>
     setNotification({ msg, type });
-
   const handleApplyPromo = (code?: string) => {
     const targetCode =
       typeof code === "string" ? code : promoInput.trim().toUpperCase();
     if (!targetCode && !isPromoApplied) return;
     const result = applyPromoCode(targetCode, totals.subtotal);
-    showNotify(result.message, result.success ? "success" : "error");
+    if (targetCode) {
+      showNotify(result.message, result.success ? "success" : "error");
+    }
+
     setPromoInput("");
   };
-
   const onCheckoutSubmit = (_data: ICheckoutForm) => {
     if (!user) return showNotify("LÜTFEN ÖNCE GİRİŞ YAPIN!", "error");
 
@@ -166,7 +152,7 @@ const Cart = () => {
         progress={progress}
       />
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="">
         <button
           onClick={() =>
             showCheckout ? setShowCheckout(false) : navigate("/shop")
@@ -174,13 +160,13 @@ const Cart = () => {
           className="flex items-center gap-3 text-zinc-400 hover:text-black transition-all mb-10 group"
         >
           <FiArrowLeft className="group-hover:-translate-x-2 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-widest italic">
+          <span className="text-[10px] font-black tracking-widest ">
             {showCheckout ? "SEPETE DÖN" : "ALIŞVERİŞE DEVAM ET"}
           </span>
         </button>
 
         <div className="">
-          <h1 className="text-5xl md:text-4xl font-[1000]  font-satoshi">
+          <h1 className="text-5xl md:text-4xl font-[1000] font-satoshi">
             {showCheckout ? "ÖDEME" : "SEPETİM"}
           </h1>
 
@@ -191,7 +177,7 @@ const Cart = () => {
             </span>
           </div>
         </div>
-        
+
         <br></br>
 
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-16 items-start">
@@ -210,15 +196,8 @@ const Cart = () => {
             ) : (
               <div className="animate-in fade-in slide-in-from-left duration-500">
                 <CheckoutForm
-                  register={register}
-                  errors={errors}
-                  handleSubmit={handleSubmit}
                   onCheckoutSubmit={onCheckoutSubmit}
-                  setValue={setValue}
-                  showCityList={showCityList}
-                  setShowCityList={setShowCityList}
                   filteredCities={filteredCities}
-                  errorStyle={errorStyle}
                 />
               </div>
             )}

@@ -44,6 +44,12 @@ const ProductInfo = ({
     ? Math.round(((product.oldValue - product.value) / product.oldValue) * 100)
     : null;
 
+  const handleImageError = (e: React.UIEvent<HTMLImageElement>) => {
+    const target = e.currentTarget;
+    target.src = "/Frame-10.png";
+    target.onerror = null;
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto items-start font-satoshi">
       <div className="lg:col-span-7 flex flex-col-reverse lg:flex-row gap-4 h-auto lg:h-[530px]">
@@ -61,6 +67,7 @@ const ProductInfo = ({
             >
               <img
                 src={img}
+                onError={handleImageError}
                 alt="thumb"
                 className="w-full h-full object-cover mix-blend-multiply"
               />
@@ -70,6 +77,7 @@ const ProductInfo = ({
         <div className="flex-1 rounded-[40px] overflow-hidden flex items-center justify-center p-8">
           <img
             src={images[activeImg]}
+            onError={handleImageError}
             alt={product.name}
             className="w-full h-full object-cover mix-blend-multiply transform hover:scale-105 transition-transform duration-50s0"
           />

@@ -4,14 +4,14 @@ export interface Product {
   value: number;
   image: string;
   category: string;
-  color: string;
+  color?: string;
   oldValue?: number;
   rating: number;
   brand?: string;
   size?: string[];
   inStock?: boolean;
   price: number;
-  description?: string;
+  description?: number;
   images?: string[];
 }
 

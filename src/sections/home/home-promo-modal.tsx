@@ -70,13 +70,13 @@ const PromoModal = () => {
           className={`absolute top-6 right-6 md:top-10 md:right-10 !w-12 !h-12 !p-0 z-20 shadow-2xl transition-all duration-500 ${
             canClose
               ? "!bg-white !text-black hover:rotate-90 scale-100"
-              : "!bg-white/5 !text-white/20 scale-90 cursor-not-allowed"
+              : "bg-white/5 text-white scale-90 cursor-not-allowed"
           }`}
         >
           {canClose ? (
             <RiCloseLine size={28} />
           ) : (
-            <span className="font-black text-sm tabular-nums">{timeLeft}</span>
+            <span className="font-black text-sm text-white">{timeLeft}</span>
           )}
         </Button>
 

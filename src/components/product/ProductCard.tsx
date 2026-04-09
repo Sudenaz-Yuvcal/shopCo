@@ -13,6 +13,11 @@ const ProductCard = (product: Product) => {
     ? Math.round(((oldValue - value) / oldValue) * 100)
     : null;
 
+  const handleImageError = (e: React.UIEvent<HTMLImageElement>) => {
+    const target = e.currentTarget;
+    target.src = "/Frame-10.png";
+    target.onerror = null;
+  };
   return (
     <div className="relative group w-full font-satoshi">
       <button
@@ -40,6 +45,7 @@ const ProductCard = (product: Product) => {
         <div className="bg-brand-surface rounded-[14px] md:rounded-[20px] aspect-square overflow-hidden relative">
           <img
             src={image}
+            onError={handleImageError}
             alt={name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
             loading="lazy"

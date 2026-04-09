@@ -91,7 +91,7 @@ const WheelOfFortune = () => {
         winAudio.current?.play().catch(() => {});
         setWonPrize(result);
       } else {
-        toast.error("Bugün şansın kapalıydı, yarın tekrar dene!", {
+        toast.error("Şansın kapalıydı, tekrar dene!", {
           theme: "dark",
         });
       }
@@ -184,7 +184,7 @@ const WheelOfFortune = () => {
               <div className="inline-flex items-center gap-2 bg-yellow-400/10 text-yellow-400 px-4 py-2 rounded-full border border-yellow-400/20">
                 <FiAward />
                 <span className="text-xs font-black tracking-widest uppercase italic">
-                  Haftalık Şans Festivali
+                  Günlük Şans Festivali
                 </span>
               </div>
               <div className="space-y-4">

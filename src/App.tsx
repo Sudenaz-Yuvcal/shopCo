@@ -2,7 +2,8 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "./context/CartContext";
 import { PromoProvider } from "./context/PromoContext";
-import { OrderProvider } from "./context/OrderContext";
+import {OrderProvider} from "./context/OrderContext"
+import { FavoriteProvider } from "./context/FavoriteContext";
 
 import AppRouter from "./router";
 import ScrollToTop from "./components/ScrollToTop";
@@ -14,31 +15,34 @@ function App() {
   return (
     <UserProvider>
       <OrderProvider>
-        <HelmetProvider>
-          <CartProvider>
-            <PromoProvider>
-              <Router>
-                <ScrollToTop />
+        <FavoriteProvider>
+      <HelmetProvider>
+        <CartProvider>
+          <PromoProvider>
+            <Router>
+              <ScrollToTop />
 
-                <AppRouter />
+              <AppRouter />
 
-                <ToastContainer
-                  position="top-right"
-                  autoClose={2500}
-                  limit={3}
-                  hideProgressBar={false}
-                  newestOnTop={true}
-                  closeOnClick
-                  rtl={false}
-                  pauseOnFocusLoss
-                  draggable
-                  pauseOnHover
-                  theme="dark"
-                />
-              </Router>
-            </PromoProvider>
-          </CartProvider>
-        </HelmetProvider>
+              <ToastContainer
+                position="top-right"
+                autoClose={2500}
+                limit={3}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="dark"
+              />
+            </Router>
+          </PromoProvider>
+        </CartProvider>
+      </HelmetProvider>
+              </FavoriteProvider>
+
       </OrderProvider>
     </UserProvider>
   );

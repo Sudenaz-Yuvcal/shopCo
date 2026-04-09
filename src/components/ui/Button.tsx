@@ -14,7 +14,7 @@ const variants = {
   outline:
     "border-2 border-zinc-100 text-black hover:border-black hover:bg-black hover:text-white",
   white: "bg-white text-black hover:bg-zinc-100 shadow-xl",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+  danger: "bg-red text-white hover:bg-red-700",
 };
 
 const sizes = {

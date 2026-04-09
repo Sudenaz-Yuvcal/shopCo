@@ -100,7 +100,7 @@ const CategorySidebar = ({
               onChange={() => handleCategoryToggle(cat)}
             />
             <div
-              className={`w-5 h-5 border-2 rounded-lg flex items-center justify-center transition-all ${
+              className={`w-5 h-5 border-2 rounded-lg flex items-center justify-center  ${
                 tempFilters.selectedCategories.includes(cat)
                   ? "bg-black border-black shadow-lg"
                   : "border-zinc-200 group-hover:border-black"
@@ -135,7 +135,7 @@ const CategorySidebar = ({
       </div>
       <input
         type="range"
-        min="50"
+        min="10"
         max="500"
         step="10"
         value={tempFilters.price}
