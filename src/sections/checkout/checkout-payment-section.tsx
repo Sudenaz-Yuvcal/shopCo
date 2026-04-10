@@ -9,7 +9,7 @@ import type { ICheckoutForm } from "../../types/checkout";
 
 interface PaymentSectionProps {
   register: UseFormRegister<ICheckoutForm>;
-  errors: FieldErrors<ICheckoutForm>;
+  errors: FieldErrors<ICheckoutForm>; 
   setValue: UseFormSetValue<ICheckoutForm>;
 }
 

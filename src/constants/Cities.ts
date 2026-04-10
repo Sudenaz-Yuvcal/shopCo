@@ -81,5 +81,3 @@ export const TURKISH_CITIES = [
   "Yozgat",
   "Zonguldak",
 ] as const;
-
-export type TurkishCity = (typeof TURKISH_CITIES)[number];

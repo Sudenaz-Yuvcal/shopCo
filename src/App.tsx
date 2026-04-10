@@ -2,7 +2,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "./context/CartContext";
 import { PromoProvider } from "./context/PromoContext";
-import {OrderProvider} from "./context/OrderContext"
+import { OrderProvider } from "./context/OrderContext";
 import { FavoriteProvider } from "./context/FavoriteContext";
 
 import AppRouter from "./router";
@@ -10,41 +10,52 @@ import ScrollToTop from "./components/ScrollToTop";
 import { UserProvider } from "./context/UserContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function App() {
   return (
-    <UserProvider>
-      <OrderProvider>
-        <FavoriteProvider>
-      <HelmetProvider>
-        <CartProvider>
-          <PromoProvider>
-            <Router>
-              <ScrollToTop />
+    <QueryClientProvider client={queryClient}>
+      <UserProvider>
+        <OrderProvider>
+          <FavoriteProvider>
+            <HelmetProvider>
+              <CartProvider>
+                <PromoProvider>
+                  <Router>
+                    <ScrollToTop />
 
-              <AppRouter />
+                    <AppRouter />
 
-              <ToastContainer
-                position="top-right"
-                autoClose={2500}
-                limit={3}
-                hideProgressBar={false}
-                newestOnTop={true}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="dark"
-              />
-            </Router>
-          </PromoProvider>
-        </CartProvider>
-      </HelmetProvider>
-              </FavoriteProvider>
-
-      </OrderProvider>
-    </UserProvider>
+                    <ToastContainer
+                      position="top-right"
+                      autoClose={2500}
+                      limit={3}
+                      hideProgressBar={false}
+                      newestOnTop={true}
+                      closeOnClick
+                      rtl={false}
+                      pauseOnFocusLoss
+                      draggable
+                      pauseOnHover
+                      theme="dark"
+                    />
+                  </Router>
+                </PromoProvider>
+              </CartProvider>
+            </HelmetProvider>
+          </FavoriteProvider>
+        </OrderProvider>
+      </UserProvider>
+    </QueryClientProvider>
   );
 }
 

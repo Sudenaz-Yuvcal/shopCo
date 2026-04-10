@@ -15,7 +15,7 @@ import Register from "./pages/Register";
 import Password from "./pages/Password";
 import Account from "./pages/Account";
 import Favorite from "./pages/Favorite";
-import ProductDetailPage from "./pages/ProductDetailPage";
+import AddProductPage from "./pages/Admin/AddProductPage";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
@@ -39,7 +39,7 @@ const AppRouter: React.FC = () => {
         { path: "login", element: <Login /> },
         { path: "register", element: <Register /> },
         { path: "password", element: <Password /> },
-        { path: "/product/:id", element: <ProductDetailPage /> },
+        { path: "/admin/add-product", element: <AddProductPage /> },
         {
           path: "checkout",
           element: (
@@ -67,6 +67,7 @@ const AppRouter: React.FC = () => {
 
   const element = useRoutes(routes);
 
-return element;};
+  return element;
+};
 
 export default AppRouter;

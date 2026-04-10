@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "../api/axiosInstance";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
 import { useFavorite } from "../context/FavoriteContext";
@@ -11,103 +13,77 @@ import ProductCard from "../components/Product/ProductCard";
 import { RiCheckLine, RiArrowRightUpLine } from "react-icons/ri";
 import Button from "../components/Ui/Button";
 import type { APIProduct } from "../types/api";
+import { getCleanProducts, cleanImageUrl } from "../utils/filterProducts";
 
 const ProductDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toggleFavorite, isInFavorites } = useFavorite();
   const { addToCart } = useCart();
   const { user } = useUser();
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showAddedModal, setShowAddedModal] = useState(false);
   const [addedDetails, setAddedDetails] = useState({ qty: 1, size: "" });
 
-  const isFavorite = product ? isInFavorites(product.id) : false;
-
   useEffect(() => {
-    setLoading(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
-
-    fetch(`https://api.escuelajs.co/api/v1/products/${id}`)
-      .then((res) => res.json())
-      .then((data: APIProduct) => {
-        const adapted: Product = {
-          id: data.id,
-          name: data.title,
-          image:
-            data.images?.[0]?.replace(/[\[\]"]/g, "").replace(/\\/g, "") ?? "",
-          images: Array.isArray(data.images)
-            ? data.images.map((img: string) =>
-                img.replace(/[\[\]"]/g, "").replace(/\\/g, ""),
-              )
-            : [],
-          value: data.price,
-          price: data.price,
-          oldValue: Math.round(data.price * (1 + (Math.random() * 0.3 + 0.1))),
-          description: data.description,
-          rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
-          category: data.category?.name?.includes("Updated")
-            ? " Kategori"
-            : data.category?.name || "Kategori",
-          color: "black",
-        };
-        setProduct(adapted);
-
-        return fetch(
-          `https://api.escuelajs.co/api/v1/products/?categoryId=${data.category.id}&offset=0&limit=5`,
-        );
-      })
-      .then((res) => res.json())
-      .then((relatedData: APIProduct[]) => {
-        const adaptedRelated: Product[] = relatedData
-          .filter((p: APIProduct) => p.id !== Number(id))
-          .slice(0, 4)
-          .map((p: APIProduct) => {
-            const imagesArray = p.images ?? [];
-            const cleanedImages = imagesArray.length
-              ? imagesArray.map((img: string) =>
-                  img.replace(/[\[\]"]/g, "").replace(/\\/g, ""),
-                )
-              : [];
-
-            return {
-              id: p.id,
-              name: p.title,
-              image: cleanedImages[0] ?? "",
-              images: cleanedImages,
-              price: p.price,
-              value: p.price,
-              rating: 4.5,
-              category: p.category?.name?.includes("Updated")
-                ? "Kategori"
-                : p.category?.name || "Kategori",
-            };
-          });
-
-        setRelatedProducts(adaptedRelated);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Yükleme hatası:", err);
-        setLoading(false);
-      });
   }, [id]);
 
-  if (loading)
-    return (
-      <div className="p-32 text-center font-black italic animate-pulse text-black">
-        YÜKLENİYOR...
-      </div>
-    );
-  if (!product)
-    return (
-      <div className="p-32 text-center font-black text-black">
-        TASARIM BULUNAMADI
-      </div>
-    );
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["product-detail", id],
+    queryFn: async () => {
+      const res = await axiosInstance.get<APIProduct>(`/products/${id}`);
+      const productData = res.data;
+      const cleanedImages = (productData.images || []).map(cleanImageUrl);
+
+      const adaptedProduct: Product = {
+        id: productData.id,
+        name: productData.title,
+        image: cleanedImages[0] || "https://placehold.co/600x800?text=SHOP.CO",
+        images: cleanedImages,
+        value: productData.price,
+        price: productData.price,
+        oldValue: Math.round(productData.price * 1.3),
+        description: String(productData.description || ""),
+        rating: 4.8,
+        category: productData.category?.name || "Shop.co Özel",
+        color: "black",
+      };
+
+      let relatedItems: Product[] = [];
+      try {
+        const categoryId = productData.category?.id;
+        const relatedRes = await axiosInstance.get<APIProduct[]>(
+          `/products/?categoryId=${categoryId}&offset=0&limit=10`,
+        );
+        relatedItems = getCleanProducts(relatedRes.data);
+
+        if (relatedItems.length <= 1) {
+          const fallbackRes = await axiosInstance.get<APIProduct[]>(
+            `/products/?offset=10&limit=10`,
+          );
+          relatedItems = getCleanProducts(fallbackRes.data);
+        }
+      } catch (err) {
+        console.error("Related products fetch error:", err);
+      }
+
+      const finalRelated = relatedItems
+        .filter((p: Product) => p.id !== Number(id))
+        .slice(0, 4)
+        .map((p: Product) => ({
+          ...p,
+          image: p.image || "https://placehold.co/600x800?text=SHOP.CO",
+        }));
+
+      return { product: adaptedProduct, relatedProducts: finalRelated };
+    },
+    enabled: !!id,
+  });
+
+  const product = data?.product;
+  const relatedProducts = data?.relatedProducts || [];
+  const isFavorite = product ? isInFavorites(product.id) : false;
 
   const handleAddToCart = (qty: number, size: string, color: string) => {
     if (product) {
@@ -116,6 +92,20 @@ const ProductDetail = () => {
       setShowAddedModal(true);
     }
   };
+
+  if (loading)
+    return (
+      <div className="py-40 text-center font-[1000] italic text-4xl animate-pulse tracking-tighter uppercase text-black">
+        ÜRÜN YÜKLENİYOR...
+      </div>
+    );
+
+  if (!product)
+    return (
+      <div className="py-40 text-center font-[1000] italic text-4xl uppercase tracking-tighter text-black">
+        TASARIM BULUNAMADI!
+      </div>
+    );
 
   return (
     <div className="bg-white min-h-screen font-satoshi">
@@ -129,7 +119,7 @@ const ProductDetail = () => {
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowAddedModal(false)}
           />
-          <div className="relative bg-white w-full max-w-[450px] rounded-[40px] p-10 shadow-2xl text-center">
+          <div className="relative bg-white w-full max-w-[450px] rounded-[40px] p-10 shadow-2xl text-center animate-in zoom-in duration-300">
             <div className="flex items-center gap-4 mb-10 border-b border-zinc-100 pb-6 justify-center">
               <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center">
                 <RiCheckLine size={28} />
@@ -139,17 +129,15 @@ const ProductDetail = () => {
               </h3>
             </div>
             <div className="flex gap-6 mb-10 text-left">
-              <div className="w-28 h-28 shrink-0 rounded-3xl overflow-hidden border border-zinc-100">
+              <div className="w-28 h-28 shrink-0 rounded-3xl overflow-hidden border border-zinc-100 bg-zinc-50">
                 <img
                   src={product.image}
                   className="w-full h-full object-cover"
                   alt={product.name}
-                  referrerPolicy="no-referrer"
-                  crossOrigin="anonymous"
                 />
               </div>
               <div className="flex flex-col justify-center space-y-2">
-                <h4 className="font-black text-lg uppercase italic text-black leading-none">
+                <h4 className="font-black text-lg uppercase italic text-black leading-tight">
                   {product.name}
                 </h4>
                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
@@ -165,13 +153,13 @@ const ProductDetail = () => {
                 variant="primary"
                 size="xl"
                 onClick={() => navigate("/cart")}
-                className="w-full !rounded-full !py-6 italic shadow-xl"
+                className="w-full !rounded-full !py-6 italic shadow-xl font-black uppercase"
               >
                 ÖDEMEYE GİT →
               </Button>
               <button
                 onClick={() => setShowAddedModal(false)}
-                className="w-full text-[10px] font-black uppercase text-zinc-300 hover:text-black py-2"
+                className="w-full text-[10px] font-black uppercase text-zinc-300 hover:text-black py-2 transition-colors"
               >
                 ALIŞVERİŞE DEVAM ET
               </button>
@@ -200,7 +188,7 @@ const ProductDetail = () => {
           isFavorite={isFavorite}
           onToggleFavorite={toggleFavorite}
           onAddToCart={handleAddToCart}
-          userAddress={user?.address}
+          userAddress={user?.address || "Bursa, Türkiye"}
         />
       </div>
 
@@ -226,9 +214,15 @@ const ProductDetail = () => {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {relatedProducts.map((p) => (
-            <ProductCard key={p.id} {...p} />
-          ))}
+          {relatedProducts.length > 0 ? (
+            relatedProducts.map((p) => <ProductCard key={p.id} {...p} />)
+          ) : (
+            <div className="col-span-full py-10 border-2 border-dashed border-zinc-100 rounded-3xl text-center">
+              <p className="text-zinc-400 font-black italic uppercase text-[10px]">
+                Henüz benzer bir tasarım bulunamadı.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

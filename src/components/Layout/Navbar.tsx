@@ -17,6 +17,8 @@ import Input from "../Ui/Input";
 import Button from "../Ui/Button";
 import WheelOfFortune from "../../sections/home/home-wheel-of-fortune";
 import type { APIProduct } from "../../types/api";
+import { getCleanProducts } from "../../utils/filterProducts";
+import axiosInstance from "../../api/axiosInstance";
 
 const normalizeString = (str: string) => {
   if (!str) return "";
@@ -54,43 +56,36 @@ const Navbar: React.FC<NavbarProps> = ({
   const [searchResults, setSearchResults] = useState<Partial<Product>[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchSearch = async () => {
       if (searchTerm.trim().length > 1) {
+        setIsLoading(true);
         try {
           const normalizedSearch = normalizeString(searchTerm);
-
-          const res = await fetch(
-            `https://api.escuelajs.co/api/v1/products/?title=${normalizedSearch}`,
+          const res = await axiosInstance.get<APIProduct[]>(
+            `/products/?title=${normalizedSearch}`,
           );
-          const data = await res.json();
 
-          const filtered = (data as APIProduct[])
+          const allCleaned = getCleanProducts(res.data);
+          const filtered = allCleaned
             .filter(
-              (p: APIProduct) =>
-                normalizeString(p.title).includes(normalizedSearch) &&
-                p.title.length < 30 &&
-                !p.title.includes("_") &&
-                p.images?.length > 0,
+              (p: Product) =>
+                normalizeString(p.name).includes(normalizedSearch) &&
+                p.name.length < 35,
             )
-            .map((p: APIProduct) => ({
-              id: p.id,
-              name: p.title,
-              image: p.images[0].replace(/[\[\]"]/g, ""),
-              value: p.price,
-              category: p.category?.name,
-              brand: "SHOP.CO",
-            }))
             .slice(0, 6);
 
           setSearchResults(filtered);
           setIsSearchOpen(true);
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            console.error("Search error:", error.message);
-          }
+        } catch (error) {
+          setSearchResults([]);
+        } finally {
+          setIsLoading(false);
         }
       } else {
         setSearchResults([]);
@@ -102,10 +97,25 @@ const Navbar: React.FC<NavbarProps> = ({
     return () => clearTimeout(debounce);
   }, [searchTerm]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleSeeAll = () => {
-    setIsSearchOpen(false);
-    navigate(`/shop?search=${encodeURIComponent(searchTerm)}`);
-    setSearchTerm("");
+    if (searchTerm.trim().length > 0) {
+      setIsSearchOpen(false);
+      navigate(`/shop?search=${encodeURIComponent(searchTerm)}`);
+      setSearchTerm("");
+    }
   };
 
   return (
@@ -211,6 +221,11 @@ const Navbar: React.FC<NavbarProps> = ({
                 placeholder="ÜRÜN VEYA KATEGORİ ARA..."
                 className="!py-3 pl-12 w-full text-[10px] bg-brand-gray border-none !rounded-full font-black tracking-widest focus:ring-2 focus:ring-black transition-all"
               />
+              {isLoading ? (
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full" />
+              ) : (
+                <RiSearchLine className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 text-lg group-focus-within:opacity-100 group-focus-within:text-black transition-all" />
+              )}
               <RiSearchLine className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 text-lg group-focus-within:opacity-100 group-focus-within:text-black transition-all" />
             </div>
             {isSearchOpen && (
@@ -311,4 +326,4 @@ const Navbar: React.FC<NavbarProps> = ({
   );
 };
 
-export default Navbar;
+export default Navbar; 

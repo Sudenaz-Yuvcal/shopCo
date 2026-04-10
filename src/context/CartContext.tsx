@@ -36,7 +36,6 @@ interface CartContextType {
     color: string,
     delta: number,
   ) => void;
-  clearCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -111,11 +110,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const clearCart = () => setCart([]);
-
   const subtotal = cart.reduce(
     (acc, item: CartItem) => acc + (item.price || 0) * item.quantity,
-    0,
+    0,  
   );
 
   const delivery = subtotal > 500 ? 0 : 50;
@@ -130,7 +127,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         addToCart,
         removeFromCart,
         updateQuantity,
-        clearCart,
         totals,
       }}
     >

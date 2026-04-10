@@ -1,49 +1,40 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
+import { useQuery } from "@tanstack/react-query"; 
+import axiosInstance from "../../api/axiosInstance"; 
 import ProductCard from "../../components/Product/ProductCard";
 import Button from "../../components/Ui/Button";
-import type { Product } from "../../types/product";
 import type { APIProduct } from "../../types/api";
+import { getCleanProducts } from "../../utils/filterProducts";
 
 import "swiper/css";
 
 const NewArrivals = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    fetch("https://api.escuelajs.co/api/v1/products?offset=0&limit=4")
-      .then((res) => res.json())
-      .then((data: APIProduct[]) => {
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ["new-arrivals-home"],
+    queryFn: async () => {
+      const res = await axiosInstance.get<APIProduct[]>("/products?offset=0&limit=20");
+      
+      const cleaned = getCleanProducts(res.data);
 
-        const adapted: Product[] = data.map((item: APIProduct) => ({
-          id: item.id,
-          name: item.title,
-          image: item.images[0].replace(/[\[\]"]/g, ""), 
-          price: item.price,
-          value: item.price,
-          oldValue: Math.round(item.price * (1 + (Math.random() * 0.3 + 0.1))),
-          category: item.category?.name || "Kategori",
-          rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
-          color: "black",
-          brand: "SHOP.CO",
-        }));
-        setProducts(adapted);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        console.error("Hata:", err);
-        setLoading(false);
-      });
-  }, []);
+      return cleaned.map((item) => ({
+        ...item,
+        oldValue: Math.round(item.price * 1.3),
+        category: item.category || "New Arrival",
+      })).slice(0, 4); 
+    }
+  });
+
   if (loading)
     return (
-      <div className="py-20 text-center font-bold italic">YÜKLENİYOR...</div>
+      <div className="py-20 text-center font-[1000] italic text-2xl uppercase tracking-tighter opacity-30 animate-pulse">
+        YENİ KOLEKSİYON YÜKLENİYOR...
+      </div>
     );
 
   return (
-    <section className="max-w-7xl mx-auto ">
+    <section className="max-w-7xl mx-auto px-4 py-12 md:py-20 font-satoshi">
       <h2 className="text-[32px] md:text-[52px] font-[1000] text-center mb-10 md:mb-14 uppercase tracking-[-0.05em] text-black leading-none italic">
         YENİ GELENLER
       </h2>
@@ -71,11 +62,11 @@ const NewArrivals = () => {
       </div>
 
       <div className="flex justify-center mt-12 md:mt-16">
-        <Link to="/shop" className="w-full md:w-auto">
+        <Link to="/newproduct" className="w-full md:w-auto">
           <Button
             variant="outline"
             size="lg"
-            className="w-full md:w-64 !rounded-full font-bold italic border-zinc-200 hover:bg-black hover:text-white transition-all duration-300"
+            className="w-full md:w-64 !rounded-full font-[1000] italic border-zinc-200 hover:bg-black hover:text-white transition-all duration-300 uppercase text-xs tracking-[0.2em]"
           >
             Hepsini Gör
           </Button>

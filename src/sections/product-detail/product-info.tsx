@@ -8,6 +8,7 @@ import {
 import { FiMinus, FiPlus } from "react-icons/fi";
 import Button from "../../components/Ui/Button";
 import type { Product } from "../../types/product";
+import { handleImageError } from "../../utils/imageHandlers";
 
 interface ProductInfoProps {
   product: Product;
@@ -44,11 +45,7 @@ const ProductInfo = ({
     ? Math.round(((product.oldValue - product.value) / product.oldValue) * 100)
     : null;
 
-  const handleImageError = (e: React.UIEvent<HTMLImageElement>) => {
-    const target = e.currentTarget;
-    target.src = "/Frame-10.png";
-    target.onerror = null;
-  };
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto items-start font-satoshi">

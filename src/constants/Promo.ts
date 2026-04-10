@@ -6,5 +6,3 @@ export const PROMO_CAMPAIGN = {
   INITIAL_SECONDS: { hours: 10, minutes: 55, seconds: 16 },
   CLOSE_DELAY: 3,
 } as const;
-
-export type PromoCampaign = typeof PROMO_CAMPAIGN;

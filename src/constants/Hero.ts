@@ -11,6 +11,3 @@ export const HERO_BRANDS = [
   { name: "PRADA", src: "/prada.png" },
   { name: "CALVIN KLEIN", src: "/ck.png" },
 ] as const;
-
-export type HeroStat = (typeof HERO_STATS)[number];
-export type HeroBrand = (typeof HERO_BRANDS)[number];

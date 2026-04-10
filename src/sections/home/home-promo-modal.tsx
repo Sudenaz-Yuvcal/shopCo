@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { RiCloseLine, RiThunderstormsFill } from "react-icons/ri";
 import Button from "../../components/Ui/Button";
 import { PROMO_CAMPAIGN } from "../../constants/Promo";
@@ -20,6 +20,7 @@ const PromoModal = () => {
   );
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const mainTimer = setInterval(() => {
@@ -50,7 +51,9 @@ const PromoModal = () => {
   }, []);
 
   if (!isOpen) return null;
-
+  if (!isOpen || location.pathname === "/admin/add-product") {
+    return null;
+  }
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4 md:p-10 font-satoshi">
       <div

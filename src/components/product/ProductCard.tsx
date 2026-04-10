@@ -3,6 +3,8 @@ import type { Product } from "../../types/product";
 import { RiHeartLine, RiHeartFill } from "react-icons/ri";
 import { useFavorite } from "../../context/FavoriteContext";
 import { StarRating } from "./ProductStarRating";
+import { handleImageError } from "../../utils/imageHandlers";
+
 
 const ProductCard = (product: Product) => {
   const { id, image, name, value, oldValue, rating = 4.5 } = product;
@@ -13,11 +15,6 @@ const ProductCard = (product: Product) => {
     ? Math.round(((oldValue - value) / oldValue) * 100)
     : null;
 
-  const handleImageError = (e: React.UIEvent<HTMLImageElement>) => {
-    const target = e.currentTarget;
-    target.src = "/Frame-10.png";
-    target.onerror = null;
-  };
   return (
     <div className="relative group w-full font-satoshi">
       <button

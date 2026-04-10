@@ -9,4 +9,3 @@ export const WELCOME_GIFT_DATA = {
   EXPIRY_TEXT: "7 GÜN İÇİNDE GEÇERLİ", 
 } as const;
 
-export type WelcomeGift = typeof WELCOME_GIFT_DATA;

@@ -1,46 +1,39 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
+import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "../../api/axiosInstance";
 import ProductCard from "../../components/Product/ProductCard";
 import Button from "../../components/Ui/Button";
-import type { Product } from "../../types/product";
 import type { APIProduct } from "../../types/api";
+import { getCleanProducts } from "../../utils/filterProducts";
 
 import "swiper/css";
 
 const TopSelling = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ["top-selling"],
+    queryFn: async () => {
+      const res = await axiosInstance.get<APIProduct[]>(
+        "/products?offset=10&limit=20",
+      );
 
-  useEffect(() => {
-    fetch("https://api.escuelajs.co/api/v1/products?offset=4&limit=4")
-      .then((res) => res.json())
-      .then((data: APIProduct[]) => {
-        const adapted: Product[] = data.map((item: APIProduct) => ({
-          id: item.id,
-          name: item.title,
-          image: item.images[0].replace(/[\[\]"]/g, ""),
-          price: item.price,
-          value: item.price,
-          oldValue: Math.round(item.price * (1 + (Math.random() * 0.3 + 0.1))),
-          category: item.category?.name || "Top Selling",
-          rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
-          color: "black",
+      const cleaned = getCleanProducts(res.data);
+
+      return cleaned
+        .map((item) => ({
+          ...item,
+          oldValue: Math.round(item.price * 1.3),
+          category: item.category || "Top Selling",
           brand: "SHOP.CO",
-        }));
-        setProducts(adapted);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        console.error("Hata :", err);
-        setLoading(false);
-      });
-  }, []);
+        }))
+        .slice(0, 4); 
+    },
+  });
 
   if (loading)
     return (
-      <div className="py-20 text-center font-bold italic opacity-50 uppercase">
+      <div className="py-20 text-center font-[1000] italic text-2xl opacity-50 uppercase tracking-tighter animate-pulse">
         Popüler Ürünler Hazırlanıyor...
       </div>
     );
@@ -78,7 +71,7 @@ const TopSelling = () => {
           <Button
             variant="outline"
             size="lg"
-            className="w-full md:w-64 !rounded-full font-bold italic border-zinc-200 hover:bg-black hover:text-white transition-all duration-300 shadow-sm"
+            className="w-full md:w-64 !rounded-full font-black italic border-zinc-200 hover:bg-black hover:text-white transition-all duration-300 shadow-sm uppercase text-xs tracking-widest"
           >
             Hepsini Gör
           </Button>

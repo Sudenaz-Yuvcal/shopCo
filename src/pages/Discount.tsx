@@ -1,70 +1,41 @@
-import { useEffect, useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "../api/axiosInstance";
 import { useFavorite } from "../context/FavoriteContext";
 import DiscountBanner from "../sections/discount/discount-banner";
 import DiscountHeader from "../sections/discount/discount-header";
 import DiscountGrid from "../sections/discount/discount-grid";
-import type { Product } from "../types/product";
 import type { APIProduct } from "../types/api";
+import { getCleanProducts } from "../utils/filterProducts";
 
 const Discount = () => {
   const { toggleFavorite, isInFavorites } = useFavorite();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const BRANDS = ["ZARA", "GUCCI", "PRADA", "VERSACE", "CALVIN KLEIN"];
+  const { data: discountProducts = [], isLoading: loading } = useQuery({
+    queryKey: ["discount-products"],
+    queryFn: async () => {
+      const res = await axiosInstance.get<APIProduct[]>(
+        "/products?offset=15&limit=30",
+      );
 
-  useEffect(() => {
-    setLoading(true);
-    fetch("https:api.escuelajs.co/api/v1/products")
-      .then((res) => res.json())
-      .then((data) => {
-        const cleanData = data.filter(
-          (p: APIProduct) =>
-            p.title.length < 50 &&
-            !p.title.includes("_") &&
-            p.images &&
-            p.images.length > 0,
-        );
+      const cleaned = getCleanProducts(res.data);
 
-        const adapted: Product[] = cleanData.map((p: APIProduct) => {
-          let cleanImage = p.images[0];
-          if (
-            cleanImage &&
-            (cleanImage.startsWith("[") || cleanImage.startsWith('"'))
-          ) {
-            cleanImage = cleanImage.replace(/[\[\]"]/g, "");
-          }
-
-          const hasDiscount = Math.random() > 0.5;
-          const originalPrice = p.price;
-          const oldPrice = hasDiscount ? Math.floor(originalPrice * 1.4) : null;
+      return cleaned
+        .map((product) => {
+          const hasDiscount = Math.random() > 0.3; 
+          const oldPrice = hasDiscount
+            ? Math.floor(product.price * 1.4)
+            : undefined;
 
           return {
-            id: p.id,
-            name: p.title,
-            image:
-              cleanImage ||
-              "https://placehold.co/600x800/F3F3F3/000000?text=SHOP.CO",
-            value: originalPrice,
-            price: originalPrice,
+            ...product,
             oldValue: oldPrice,
-            category: p.category?.name || "İndirim",
-          rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
-            brand: BRANDS[Math.floor(Math.random() * BRANDS.length)],
-            color: "black",
+            category: product.category || "İndirim",
           };
-        });
-
-        setProducts(adapted);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  const discountProducts = useMemo(() => {
-    return products.filter((p) => p.oldValue && p.oldValue > p.value);
-  }, [products]);
+        })
+        .filter((p) => p.oldValue && p.oldValue > p.price); 
+    },
+  });
 
   return (
     <div className="bg-white min-h-screen">
@@ -76,18 +47,22 @@ const Discount = () => {
         <DiscountBanner />
 
         {loading ? (
-          <div className="mt-8 flex justify-center italic font-black text-zinc-400">
-            FIRSATLAR YÜKLENİYOR...
+          <div className="mt-16 flex flex-col items-center gap-4 animate-pulse">
+            <div className="h-1 bg-black w-32" />
+            <div className="italic font-[1000] text-2xl text-black uppercase tracking-tighter">
+              FIRSATLAR YÜKLENİYOR...
+            </div>
+            <div className="h-1 bg-black w-32" />
           </div>
         ) : (
-          <>
+          <div className="animate-in fade-in slide-in-from-bottom-5 duration-700">
             <DiscountHeader count={discountProducts.length} />
             <DiscountGrid
               products={discountProducts}
               toggleFavorite={toggleFavorite}
               isInFavorites={isInFavorites}
             />
-          </>
+          </div>
         )}
       </div>
     </div>

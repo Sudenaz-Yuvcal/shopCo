@@ -28,10 +28,17 @@ const WheelOfFortune = () => {
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [canSpin, setCanSpin] = useState<boolean>(true);
 
+  const [showCloseIcon, setShowCloseIcon] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState<boolean>(true);
+
   const clickAudio = useRef<HTMLAudioElement | null>(null);
   const winAudio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    const closeTimer = setTimeout(() => {
+      setShowCloseIcon(true);
+    }, 5000);
+
     clickAudio.current = new Audio(
       "https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3",
     );
@@ -58,7 +65,10 @@ const WheelOfFortune = () => {
       }
     };
     const timer = setInterval(checkStatus, 1000);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(closeTimer);
+    };
   }, []);
 
   const spinWheel = () => {
@@ -91,13 +101,13 @@ const WheelOfFortune = () => {
         winAudio.current?.play().catch(() => {});
         setWonPrize(result);
       } else {
-        toast.error("Şansın kapalıydı, tekrar dene!", {
-          theme: "dark",
-        });
+        toast.error("şansın kapalıydı, tekrar dene!", { theme: "dark" });
       }
       localStorage.setItem("last_spin_time", new Date().getTime().toString());
     }, 4000);
   };
+
+  if (!isVisible) return null;
 
   return (
     <>
@@ -131,39 +141,55 @@ const WheelOfFortune = () => {
           .wheel-entrance { animation: wheelFrisbee 1s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
         `}
       </style>
-      <div
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-28 right-8 z-[9998] cursor-pointer group flex flex-col items-center animate-super-bounce"
-      >
-        <div className="absolute bottom-full mb-6 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-110 pointer-events-none">
-          <div className="bg-black text-white text-[11px] font-[1000] px-5 py-2.5 rounded-2xl border-2 border-yellow-400 italic uppercase shadow-2xl whitespace-nowrap">
-            {canSpin ? "🎁 ŞANSINI DENE!" : `🔒 ${timeLeft}`}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 border-[10px] border-transparent border-t-yellow-400"></div>
-          </div>
-        </div>
-        <div className="relative">
-          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-10 h-3 bg-black rounded-[100%] blur-md animate-shadow-pulse"></div>
-          <div className="absolute -inset-6 bg-yellow-400 rounded-full blur-[40px] opacity-20 group-hover:opacity-60 transition-opacity animate-pulse"></div>
-          <div
-            className={`relative w-16 h-16 bg-black border-4 border-yellow-400 rounded-full flex items-center justify-center shadow-xl transition-all ${canSpin ? "hover:rotate-[360deg]" : "opacity-50 grayscale"}`}
+
+      <div className="fixed bottom-28 right-8 z-[9998] flex flex-col items-center animate-super-bounce">
+        {showCloseIcon && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsVisible(false);
+            }}
+            className="absolute -top-4 -right-2 bg-black text-white rounded-full p-1.5 z-[9999] shadow-lg hover:bg-red-700 transition-colors border-2 border-white/20 active:scale-90"
           >
-            <FiZap
-              className={canSpin ? "text-yellow-400" : "text-zinc-500"}
-              size={34}
-            />
-            {canSpin && (
-              <span className="absolute -top-1 -right-1 flex h-6 w-6">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-              </span>
-            )}
+            <FiX size={14} />
+          </button>
+        )}
+
+        <div
+          onClick={() => setIsOpen(true)}
+          className="cursor-pointer group flex flex-col items-center"
+        >
+          <div className="absolute bottom-full mb-6 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-110 pointer-events-none">
+            <div className="bg-black text-white text-[11px] font-[1000] px-5 py-2.5 rounded-2xl border-2 border-yellow-400 italic uppercase shadow-2xl whitespace-nowrap">
+              {canSpin ? "🎁 ŞANSINI DENE!" : `🔒 ${timeLeft}`}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-[10px] border-transparent border-t-yellow-400"></div>
+            </div>
           </div>
-        </div>
-        <div className="mt-5 bg-yellow-400 px-4 py-1.5 rounded-xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] animate-text-pulse transition-transform">
-          <span className="text-[11px] font-black italic text-black uppercase block">
-            HEDİYENİ AL!
-          </span>
+          <div className="relative">
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-10 h-3 bg-black rounded-[100%] blur-md animate-shadow-pulse"></div>
+            <div className="absolute -inset-6 bg-yellow-400 rounded-full blur-[40px] opacity-20 group-hover:opacity-60 transition-opacity animate-pulse"></div>
+            <div
+              className={`relative w-16 h-16 bg-black border-4 border-yellow-400 rounded-full flex items-center justify-center shadow-xl transition-all ${canSpin ? "hover:rotate-[360deg]" : "opacity-50 grayscale"}`}
+            >
+              <FiZap
+                className={canSpin ? "text-yellow-400" : "text-zinc-500"}
+                size={34}
+              />
+              {canSpin && (
+                <span className="absolute -top-1 -right-1 flex h-6 w-6">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="mt-5 bg-yellow-400 px-4 py-1.5 rounded-xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] animate-text-pulse transition-transform">
+            <span className="text-[11px] font-black italic text-black uppercase block">
+              HEDİYENİ AL!
+            </span>
+          </div>
         </div>
       </div>
+
       {isOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8 overflow-hidden">
           <div
