@@ -5,19 +5,46 @@ import { useFavorite } from "../../context/FavoriteContext";
 import { StarRating } from "./ProductStarRating";
 import { handleImageError } from "../../utils/imageHandlers";
 
+interface ProductCardProps extends Product {
+  slug?: string;
+}
 
-const ProductCard = (product: Product) => {
-  const { id, image, name, value, oldValue, rating = 4.5 } = product;
+const ProductCard = (product: ProductCardProps) => {
+  const {
+    id,
+    images,
+    image,
+    name,
+    value,
+    oldValue,
+    rating = 4.5,
+    slug,
+    category,
+  } = product;
+
   const { toggleFavorite, isInFavorites } = useFavorite();
   const isFavorite = isInFavorites(id);
+
+  const getCleanImage = () => {
+    let target = images && images.length > 0 ? images[0] : image;
+    if (typeof target === "string") {
+      return target.replace(/[\[\]"']/g, "");
+    }
+    return target;
+  };
+
+  const mainImage = getCleanImage();
 
   const discount = oldValue
     ? Math.round(((oldValue - value) / oldValue) * 100)
     : null;
 
+  const productPath = slug ? `/product/${slug}` : `/product/${id}`;
+
   return (
     <div className="relative group w-full font-satoshi">
       <button
+        type="button"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -35,32 +62,35 @@ const ProductCard = (product: Product) => {
         )}
       </button>
 
-      <Link
-        to={`/product/${id}`}
-        className="flex flex-col gap-1 md:gap-2 cursor-pointer"
-      >
+      <Link to={productPath} className="block">
         <div className="bg-brand-surface rounded-[14px] md:rounded-[20px] aspect-square overflow-hidden relative">
           <img
-            src={image}
+            src={mainImage}
             onError={handleImageError}
             alt={name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
-            loading="lazy"
+            loading="eager"
           />
-          {discount && discount > 20 && (
-            <div className="absolute top-2 left-2 bg-black text-white text-[8px] md:text-[10px] px-2 py-1 rounded-full font-black uppercase tracking-tighter">
-              POPÜLER
+
+          {category === "NEW" ? (
+            <div className="absolute top-2 left-2 bg-red text-white text-[8px] md:text-[10px] px-3 py-1 rounded-full font-[1000] uppercase tracking-tighter italic shadow-sm z-10">
+              YENİ
             </div>
+          ) : (
+            discount &&
+            discount > 20 && (
+              <div className="absolute top-2 left-2 bg-black text-white text-[8px] md:text-[10px] px-3 py-1 rounded-full font-[1000] uppercase tracking-tighter shadow-sm z-10">
+                POPÜLER
+              </div>
+            )
           )}
         </div>
 
-        <div className="flex flex-col gap-1 mt-1">
+        <div className="flex flex-col gap-1 mt-2">
           <h3 className="font-[1000] text-[13px] md:text-lg text-black truncate uppercase tracking-tight leading-tight group-hover:underline underline-offset-2">
             {name}
           </h3>
-
           <StarRating rating={rating} />
-
           <div className="flex flex-wrap items-center gap-1.5 md:gap-3 mt-0.5">
             <span className="font-[1000] text-lg md:text-2xl text-black">
               ${value}

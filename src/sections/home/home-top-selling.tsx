@@ -17,29 +17,28 @@ const TopSelling = () => {
       const res = await axiosInstance.get<APIProduct[]>(
         "/products?offset=10&limit=20",
       );
-
       const cleaned = getCleanProducts(res.data);
 
       return cleaned
         .map((item) => ({
           ...item,
           oldValue: Math.round(item.price * 1.3),
-          category: item.category || "Top Selling",
+          category: "Top Selling",
           brand: "SHOP.CO",
         }))
-        .slice(0, 4); 
+        .slice(0, 4);
     },
   });
 
   if (loading)
     return (
-      <div className="py-20 text-center font-[1000] italic text-2xl opacity-50 uppercase tracking-tighter animate-pulse">
-        Popüler Ürünler Hazırlanıyor...
+      <div className="py-20 text-center font-[1000] italic text-2xl opacity-50 uppercase tracking-tighter animate-pulse text-black">
+        POPÜLER ÜRÜNLER HAZIRLANIYOR...
       </div>
     );
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-12 md:py-20 font-satoshi">
+    <section className="max-w-7xl mx-auto px-4 py-12 md:py-20 font-satoshi border-t border-zinc-100">
       <h2 className="text-[32px] md:text-[52px] font-[1000] text-center mb-10 md:mb-14 uppercase tracking-[-0.05em] text-black leading-none italic">
         EN ÇOK SATANLAR
       </h2>

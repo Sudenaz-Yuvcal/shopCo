@@ -16,7 +16,7 @@ import type { APIProduct } from "../types/api";
 import { getCleanProducts, cleanImageUrl } from "../utils/filterProducts";
 
 const ProductDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toggleFavorite, isInFavorites } = useFavorite();
   const { addToCart } = useCart();
@@ -27,14 +27,38 @@ const ProductDetail = () => {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [id]);
+  }, [slug]);
 
   const { data, isLoading: loading } = useQuery({
-    queryKey: ["product-detail", id],
+    queryKey: ["product-detail", slug],
     queryFn: async () => {
-      const res = await axiosInstance.get<APIProduct>(`/products/${id}`);
+      const res = await axiosInstance.get<APIProduct>(`/products/${slug}`);
       const productData = res.data;
-      const cleanedImages = (productData.images || []).map(cleanImageUrl);
+
+      const cleanedImages = (productData.images || [])
+        .map((img) => {
+          const rawUrl = Array.isArray(img) ? img[0] : img;
+          return cleanImageUrl(rawUrl);
+        })
+        .filter((url) => url && url.startsWith("http"));
+
+      const fullDescription = String(productData.description || ""); 
+      const descriptionParts = fullDescription.split("|||");
+      const pureDescription = descriptionParts[0]?.trim();
+      const hiddenFaqsString = descriptionParts[1]?.trim();
+
+      let parsedFaqs: { question: string; answer: string }[] = [];
+      if (hiddenFaqsString) {
+        try {
+          parsedFaqs = JSON.parse(hiddenFaqsString) as {
+            question: string;
+            answer: string;
+          }[];
+        } catch (error) {
+          console.error("FAQ parse hatası:", error);
+          parsedFaqs = [];
+        }
+      }
 
       const adaptedProduct: Product = {
         id: productData.id,
@@ -44,10 +68,11 @@ const ProductDetail = () => {
         value: productData.price,
         price: productData.price,
         oldValue: Math.round(productData.price * 1.3),
-        description: String(productData.description || ""),
+        description: pureDescription || "Açıklama bulunamadı.",
         rating: 4.8,
         category: productData.category?.name || "Shop.co Özel",
         color: "black",
+        faqs: parsedFaqs,
       };
 
       let relatedItems: Product[] = [];
@@ -69,16 +94,19 @@ const ProductDetail = () => {
       }
 
       const finalRelated = relatedItems
-        .filter((p: Product) => p.id !== Number(id))
+        .filter((p) => p.id !== productData.id)
         .slice(0, 4)
-        .map((p: Product) => ({
+        .map((p) => ({
           ...p,
-          image: p.image || "https://placehold.co/600x800?text=SHOP.CO",
+          image:
+            p.image ||
+            p.images?.[0] ||
+            "https://placehold.co/600x800?text=SHOP.CO",
         }));
 
       return { product: adaptedProduct, relatedProducts: finalRelated };
     },
-    enabled: !!id,
+    enabled: !!slug,
   });
 
   const product = data?.product;
@@ -93,19 +121,21 @@ const ProductDetail = () => {
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="py-40 text-center font-[1000] italic text-4xl animate-pulse tracking-tighter uppercase text-black">
         ÜRÜN YÜKLENİYOR...
       </div>
     );
+  }
 
-  if (!product)
+  if (!product) {
     return (
       <div className="py-40 text-center font-[1000] italic text-4xl uppercase tracking-tighter text-black">
         TASARIM BULUNAMADI!
       </div>
     );
+  }
 
   return (
     <div className="bg-white min-h-screen font-satoshi">

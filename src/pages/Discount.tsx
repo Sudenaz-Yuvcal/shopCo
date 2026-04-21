@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../api/axiosInstance";
@@ -7,35 +8,58 @@ import DiscountHeader from "../sections/discount/discount-header";
 import DiscountGrid from "../sections/discount/discount-grid";
 import type { APIProduct } from "../types/api";
 import { getCleanProducts } from "../utils/filterProducts";
+import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 
 const Discount = () => {
   const { toggleFavorite, isInFavorites } = useFavorite();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8; 
 
   const { data: discountProducts = [], isLoading: loading } = useQuery({
     queryKey: ["discount-products"],
     queryFn: async () => {
       const res = await axiosInstance.get<APIProduct[]>(
-        "/products?offset=15&limit=30",
+        "/products?offset=15&limit=100",
       );
-
       const cleaned = getCleanProducts(res.data);
 
-      return cleaned
+      return (cleaned as any[])
         .map((product) => {
-          const hasDiscount = Math.random() > 0.3; 
-          const oldPrice = hasDiscount
-            ? Math.floor(product.price * 1.4)
-            : undefined;
+          const oldPrice = Math.floor(product.price * 1.4);
 
           return {
             ...product,
             oldValue: oldPrice,
-            category: product.category || "İndirim",
+            category: "Discounted",
           };
         })
-        .filter((p) => p.oldValue && p.oldValue > p.price); 
+        .filter((p) => p.oldValue && p.oldValue > p.price);
     },
   });
+
+  const totalPages = Math.ceil(discountProducts.length / itemsPerPage);
+
+  const currentItems = useMemo(() => {
+    const last = currentPage * itemsPerPage;
+    const first = last - itemsPerPage;
+    return discountProducts.slice(first, last);
+  }, [discountProducts, currentPage]);
+
+  const renderPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, "...", totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, "...", currentPage, "...", totalPages);
+      }
+    }
+    return pages;
+  };
 
   return (
     <div className="bg-white min-h-screen">
@@ -57,11 +81,60 @@ const Discount = () => {
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-5 duration-700">
             <DiscountHeader count={discountProducts.length} />
+
             <DiscountGrid
-              products={discountProducts}
+              products={currentItems}
               toggleFavorite={toggleFavorite}
               isInFavorites={isInFavorites}
             />
+
+            {totalPages > 1 && (
+              <div className="mt-20 flex items-center justify-between border-t border-zinc-100 pt-8">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-xl hover:bg-black hover:text-white transition-all disabled:opacity-30"
+                >
+                  <HiChevronLeft size={20} />
+                  <span className="hidden md:inline font-bold uppercase text-xs">
+                    Geri
+                  </span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {renderPageNumbers().map((number, index) => (
+                    <button
+                      key={index}
+                      onClick={() =>
+                        typeof number === "number" && setCurrentPage(number)
+                      }
+                      className={`w-10 h-10 rounded-xl font-bold transition-all ${
+                        currentPage === number
+                          ? "bg-black text-white"
+                          : "hover:bg-zinc-100 text-zinc-400"
+                      } ${number === "..." ? "cursor-default text-zinc-300" : ""}`}
+                    >
+                      {number}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-xl hover:bg-black hover:text-white transition-all disabled:opacity-30"
+                >
+                  <span className="hidden md:inline font-bold uppercase text-xs">
+                    İleri
+                  </span>
+                  <HiChevronRight size={20} />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

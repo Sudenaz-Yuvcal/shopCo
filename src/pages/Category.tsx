@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { RiEqualizerLine, RiCloseLine, RiArrowDownSLine } from "react-icons/ri";
+import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import Button from "../components/Ui/Button";
 import CategorySidebar from "../sections/category/category-sidebar";
 import ProductGrid from "../sections/category/category-product-grid";
@@ -14,7 +15,6 @@ import type { FilterState } from "../types/filter";
 const Category = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get("category");
-  const brandParam = searchParams.get("brand");
   const searchQuery = searchParams.get("search");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,15 +46,15 @@ const Category = () => {
 
   const BRANDS = ["ZARA", "GUCCI", "PRADA", "VERSACE", "CALVIN KLEIN"];
 
-const { data: products = [], isLoading: loading } = useQuery<Product[]>({
+  const { data: products = [], isLoading: loading } = useQuery<Product[]>({
     queryKey: ["category-products"],
     queryFn: async () => {
-      
       const rawData = await getProducts();
-      return getCleanProducts(rawData as unknown as import("../types/api").APIProduct[]);
+      return getCleanProducts(rawData as any);
     },
     staleTime: 1000 * 60 * 5,
   });
+
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => {
@@ -65,7 +65,6 @@ const { data: products = [], isLoading: loading } = useQuery<Product[]>({
         const brandFilterMatch =
           appliedFilters.selectedBrands.length === 0 ||
           appliedFilters.selectedBrands.includes(p.brand?.toUpperCase() || "");
-
         const urlCategoryMatch =
           !categoryParam ||
           p.category.toLowerCase() === categoryParam.toLowerCase();
@@ -88,27 +87,38 @@ const { data: products = [], isLoading: loading } = useQuery<Product[]>({
       });
   }, [products, searchQuery, appliedFilters, sortBy, categoryParam]);
 
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
   const currentProducts = useMemo(() => {
     const lastIndex = currentPage * productsPerPage;
     const firstIndex = lastIndex - productsPerPage;
     return filteredProducts.slice(firstIndex, lastIndex);
   }, [filteredProducts, currentPage]);
 
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-
-  const resetToFirstPage = () => setCurrentPage(1);
+  const renderPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) pages.push(1, 2, 3, "...", totalPages);
+      else if (currentPage >= totalPages - 2)
+        pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
+      else pages.push(1, "...", currentPage, "...", totalPages);
+    }
+    return pages;
+  };
 
   const handleApplyFilter = () => {
     setAppliedFilters({ ...tempFilters });
     setIsFilterOpen(false);
-    resetToFirstPage();
+    setCurrentPage(1);
   };
 
   const handleResetFilters = () => {
     setTempFilters({ ...initialFilters });
     setAppliedFilters({ ...initialFilters });
     setSearchParams({});
-    resetToFirstPage();
+    setCurrentPage(1);
   };
 
   const handleBrandToggle = (brand: string) =>
@@ -128,9 +138,7 @@ const { data: products = [], isLoading: loading } = useQuery<Product[]>({
     }));
 
   const displayTitle =
-    brandParam ||
-    (searchQuery ? `"${searchQuery}"` : categoryParam) ||
-    "MAĞAZA";
+    (searchQuery ? `"${searchQuery}"` : categoryParam) || "MAĞAZA";
 
   return (
     <div className="bg-white min-h-screen">
@@ -138,7 +146,7 @@ const { data: products = [], isLoading: loading } = useQuery<Product[]>({
         <title>{displayTitle} | SHOP.CO</title>
       </Helmet>
 
-      <div className="max-w-7xl mx-auto px-6 py-12 text-left font-satoshi">
+      <div className="max-w-7xl mx-auto px-6 py-12 font-satoshi">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2 text-[9px] font-black text-zinc-300 uppercase tracking-[0.3em] italic">
             <Link to="/" className="hover:text-black transition-colors">
@@ -177,13 +185,12 @@ const { data: products = [], isLoading: loading } = useQuery<Product[]>({
               <h1 className="text-5xl md:text-3xl font-[1000] text-black uppercase italic tracking-tighter leading-none">
                 {displayTitle}
               </h1>
-              <div className="flex flex-col md:items-end gap-2">
+              <div className="flex flex-col md:items-end gap-2 text-right">
                 <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em] italic">
                   {loading
                     ? "ARANIYOR..."
                     : `${filteredProducts.length} TASARIM LİSTELENDİ`}
                 </p>
-
                 <div className="flex items-center gap-2 border-b-2 border-black/5 pb-1">
                   <span className="text-zinc-400 text-[10px] font-black uppercase italic">
                     Sırala:
@@ -193,7 +200,7 @@ const { data: products = [], isLoading: loading } = useQuery<Product[]>({
                       value={sortBy}
                       onChange={(e) => {
                         setSortBy(e.target.value);
-                        resetToFirstPage();
+                        setCurrentPage(1);
                       }}
                       className="appearance-none bg-transparent pr-6 font-black text-[11px] uppercase italic text-black outline-none cursor-pointer"
                     >
@@ -224,39 +231,49 @@ const { data: products = [], isLoading: loading } = useQuery<Product[]>({
                 />
 
                 {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-3 mt-20 mb-10">
+                  <div className="mt-20 flex items-center justify-between border-t border-zinc-100 pt-8">
                     <button
-                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
                       disabled={currentPage === 1}
-                      className="w-12 h-12 flex items-center justify-center rounded-full border border-zinc-200 disabled:opacity-20 hover:bg-black hover:text-white transition-all duration-300"
+                      className="flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-xl hover:bg-black hover:text-white transition-all disabled:opacity-30"
                     >
-                      <RiArrowDownSLine className="rotate-90" size={20} />
+                      <HiChevronLeft size={20} />
+                      <span className="hidden md:inline font-bold uppercase text-xs">
+                        Geri
+                      </span>
                     </button>
 
-                    <div className="flex gap-2">
-                      {[...Array(totalPages)].map((_, i) => (
+                    <div className="flex items-center gap-2">
+                      {renderPageNumbers().map((number, index) => (
                         <button
-                          key={i + 1}
-                          onClick={() => setCurrentPage(i + 1)}
-                          className={`w-12 h-12 rounded-full font-black italic transition-all duration-300 ${
-                            currentPage === i + 1
-                              ? "bg-black text-white scale-110 shadow-2xl"
-                              : "bg-zinc-100 text-zinc-400 hover:bg-zinc-200"
-                          }`}
+                          key={index}
+                          onClick={() =>
+                            typeof number === "number" && setCurrentPage(number)
+                          }
+                          className={`w-10 h-10 rounded-xl font-bold transition-all ${
+                            currentPage === number
+                              ? "bg-black text-white"
+                              : "hover:bg-zinc-100 text-zinc-400"
+                          } ${number === "..." ? "cursor-default text-zinc-300" : ""}`}
                         >
-                          {i + 1}
+                          {number}
                         </button>
                       ))}
                     </div>
 
                     <button
                       onClick={() =>
-                        setCurrentPage((p) => Math.min(p + 1, totalPages))
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                       }
                       disabled={currentPage === totalPages}
-                      className="w-12 h-12 flex items-center justify-center rounded-full border border-zinc-200 disabled:opacity-20 hover:bg-black hover:text-white transition-all duration-300"
+                      className="flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-xl hover:bg-black hover:text-white transition-all disabled:opacity-30"
                     >
-                      <RiArrowDownSLine className="-rotate-90" size={20} />
+                      <span className="hidden md:inline font-bold uppercase text-xs">
+                        İleri
+                      </span>
+                      <HiChevronRight size={20} />
                     </button>
                   </div>
                 )}
@@ -272,7 +289,7 @@ const { data: products = [], isLoading: loading } = useQuery<Product[]>({
             className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setIsFilterOpen(false)}
           />
-          <div className="relative w-full bg-white rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-500 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+          <div className="relative w-full bg-white rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-500">
             <div className="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
               <h2 className="text-3xl font-[1000] italic uppercase tracking-tighter">
                 FİLTRELER
@@ -299,7 +316,7 @@ const { data: products = [], isLoading: loading } = useQuery<Product[]>({
             />
             <Button
               onClick={handleApplyFilter}
-              className="w-full !rounded-full italic font-[1000] mt-10 !py-6 text-xl tracking-[0.2em] shadow-xl"
+              className="w-full !rounded-full italic font-[1000] mt-10 !py-6 text-xl tracking-[0.2em]"
             >
               UYGULA
             </Button>

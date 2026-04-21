@@ -1,47 +1,51 @@
 import type { APIProduct } from "../types/api";
 import type { Product } from "../types/product";
 
+interface ExtendedAPIProduct extends APIProduct {
+  brand?: string;
+  rating?: number;
+  color?: string;
+}
+
 export const cleanImageUrl = (url: string): string => {
-  if (!url) return "https://placehold.co/600x800?text=SHOP.CO";
+  if (!url) return "";
 
-  let cleaned = url.replace(/[\[\]"]/g, "").replace(/\\/g, "");
-
-  // if (cleaned.includes("files/")) {
-  //   return "https://placehold.co/600x800?text=Gecersiz+Resim";
-  // }
+  let cleaned = url.replace(/^\["?|"?\]$/g, "").replace(/\\"/g, '"');
+  cleaned = cleaned.replace(/^"|"$/g, "");
 
   return cleaned;
 };
 
-export const getCleanProducts = (data: APIProduct[]): Product[] => {
+export const getCleanProducts = (data: APIProduct[] = []): Product[] => {
   const BRANDS = ["ZARA", "GUCCI", "PRADA", "VERSACE", "CALVIN KLEIN"];
 
   return data
-    .filter((p: APIProduct) => {
+    .filter((p) => {
       const firstImage = p.images?.[0] || "";
-
       return (
         p.title &&
         p.title.length > 2 &&
-        p.images &&
-        p.images.length > 0 &&
+        p.images?.length > 0 &&
         !firstImage.includes("placehold") &&
         !firstImage.includes("600x400")
       );
     })
-    .map((p: APIProduct) => {
-      const cleanImage = cleanImageUrl(p.images[0]);
+    .map((p) => {
+      const item = p as ExtendedAPIProduct;
+
+      const defaultBrand = BRANDS[p.id % BRANDS.length];
+      const defaultRating = parseFloat((3.8 + (p.id % 12) / 10).toFixed(1));
 
       return {
         id: p.id,
-        name: p.title,
-        image: cleanImage,
+        name: p.title.trim(),
+        image: cleanImageUrl(p.images[0]),
         value: p.price,
         price: p.price,
         category: p.category?.name || "Mağaza",
-        rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
-        brand: BRANDS[Math.floor(Math.random() * BRANDS.length)],
-        color: "black",
+        rating: item.rating ?? defaultRating,
+        brand: item.brand ?? defaultBrand,
+        color: item.color ?? "Black",
       };
     });
 };

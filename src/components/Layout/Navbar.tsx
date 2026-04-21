@@ -173,17 +173,21 @@ const Navbar: React.FC<NavbarProps> = ({
               {isShopOpen && (
                 <div className="absolute top-full left-0 w-56 bg-white border border-black/5 shadow-2xl rounded-2xl p-4 animate-in fade-in slide-in-from-top-2">
                   <div className="space-y-1">
-                    {["Clothes", "Shoes", "Electronics", "Miscellaneous"].map(
-                      (cat) => (
-                        <Link
-                          key={cat}
-                          to={`/shop?category=${cat}`}
-                          className="block px-4 py-3 hover:bg-black hover:text-white rounded-xl transition-all font-black text-[10px] italic uppercase tracking-tighter"
-                        >
-                          {cat === "Miscellaneous" ? "Aksesuar" : cat}
-                        </Link>
-                      ),
-                    )}
+                    {[
+                      "Clothes",
+                      "Shoes",
+                      "Electronics",
+                      "Miscellaneous",
+                      "Furniture",
+                    ].map((cat) => (
+                      <Link
+                        key={cat}
+                        to={`/shop?category=${cat}`}
+                        className="block px-4 py-3 hover:bg-black hover:text-white rounded-xl transition-all font-black text-[10px] italic uppercase tracking-tighter"
+                      >
+                        {cat === "Miscellaneous" ? "Miscellaneous" : cat}
+                      </Link>
+                    ))}
                   </div>
                 </div>
               )}
@@ -326,4 +330,4 @@ const Navbar: React.FC<NavbarProps> = ({
   );
 };
 
-export default Navbar; 
+export default Navbar;

@@ -1,6 +1,7 @@
 export interface Product {
   id: number;
   name: string;
+  price: number;
   value: number;
   image: string;
   category: string;
@@ -10,7 +11,11 @@ export interface Product {
   brand?: string;
   size?: string[];
   inStock?: boolean;
-  price: number;
   description?: string;
   images?: string[];
+
+  faqs?: {
+    question: string;
+    answer: string;
+  }[];
 }

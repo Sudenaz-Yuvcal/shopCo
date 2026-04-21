@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   RiHeartLine,
   RiHeartFill,
@@ -8,7 +8,6 @@ import {
 import { FiMinus, FiPlus } from "react-icons/fi";
 import Button from "../../components/Ui/Button";
 import type { Product } from "../../types/product";
-import { handleImageError } from "../../utils/imageHandlers";
 
 interface ProductInfoProps {
   product: Product;
@@ -36,47 +35,46 @@ const ProductInfo = ({
   const [quantity, setQuantity] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
 
-  const images =
-    product.images && product.images.length > 0
-      ? product.images
-      : [product.image, product.image, product.image];
 
+  useEffect(() => {
+    setActiveImg(0);
+  }, [product]);
   const discount = product.oldValue
     ? Math.round(((product.oldValue - product.value) / product.oldValue) * 100)
     : null;
 
-
+  console.log(product?.images?.[activeImg]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto items-start font-satoshi">
       <div className="lg:col-span-7 flex flex-col-reverse lg:flex-row gap-4 h-auto lg:h-[530px]">
         <div className="flex flex-row lg:flex-col gap-3 w-full lg:w-28 shrink-0 overflow-x-auto lg:overflow-y-auto scrollbar-hide">
           <br></br>
-          {images.slice(0, 3).map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveImg(i)}
-              className={`aspect-square rounded-2xl overflow-hidden border-2 bg-[#F0F0F0] transition-all shrink-0 w-24 lg:w-full ${
-                activeImg === i
-                  ? "border-black ring-2 ring-black ring-offset-2"
-                  : "border-transparent opacity-60 hover:opacity-100"
-              }`}
-            >
-              <img
-                src={img}
-                onError={handleImageError}
-                alt="thumb"
-                className="w-full h-full object-cover mix-blend-multiply"
-              />
-            </button>
-          ))}
+
+          {product?.images &&
+            product?.images?.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveImg(i)}
+                className={`aspect-square rounded-2xl overflow-hidden border-2 bg-[#F0F0F0] transition-all shrink-0 w-24 lg:w-full ${
+                  activeImg === i
+                    ? "border-black ring-2 ring-black ring-offset-2"
+                    : "border-transparent opacity-60 hover:opacity-100"
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`Product thumbnail ${i + 1}`}
+                  className="w-full h-full object-cover mix-blend-multiply"
+                />
+              </button>
+            ))}
         </div>
         <div className="flex-1 rounded-[40px] overflow-hidden flex items-center justify-center p-8">
           <img
-            src={images[activeImg]}
-            onError={handleImageError}
+            src={product?.images?.[activeImg] ?? product?.image ?? ""}
             alt={product.name}
-            className="w-full h-full object-cover mix-blend-multiply transform hover:scale-105 transition-transform duration-50s0"
+            className="w-full h-full object-cover mix-blend-multiply transform hover:scale-105 transition-transform duration-500"
           />
         </div>
       </div>

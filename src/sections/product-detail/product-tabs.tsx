@@ -8,7 +8,7 @@ import type { Review, SortOption } from "../../types/review";
 import type { Product } from "../../types/product";
 import { SlidersHorizontal } from "lucide-react";
 
-const FAQ_DATA = [
+const DEFAULT_FAQ_DATA = [
   {
     question: "KUMAŞ VE MATERYAL KALİTESİ NEDİR?",
     answer:
@@ -58,6 +58,17 @@ const ProductTabs = ({ product }: { product: Product }) => {
     text: "",
   });
 
+  const activeFaqs = useMemo(() => {
+    if (
+      product.faqs &&
+      Array.isArray(product.faqs) &&
+      product.faqs.length > 0
+    ) {
+      return product.faqs;
+    }
+    return DEFAULT_FAQ_DATA;
+  }, [product.faqs]);
+
   const sortedReviews = useMemo(() => {
     return [...reviews].sort((a, b) => {
       const dateA = new Date(a.date).getTime();
@@ -94,13 +105,13 @@ const ProductTabs = ({ product }: { product: Product }) => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex-1 min-w-[150px] pb-6 text-sm font-bold uppercase tracking-widest transition-all relative ${
-                activeTab.includes(tab.split(" ")[0])
+                activeTab === tab
                   ? "text-black italic"
                   : "text-zinc-300 hover:text-zinc-500"
               }`}
             >
               {tab}
-              {activeTab.includes(tab.split(" ")[0]) && (
+              {activeTab === tab && (
                 <div className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-black animate-in fade-in" />
               )}
             </button>
@@ -116,7 +127,7 @@ const ProductTabs = ({ product }: { product: Product }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <p className="text-zinc-500 font-medium leading-relaxed">
                   {product.description ||
-                    "Bu özel tasarım parça, modern stil ile konforu birleştiriyor. Yüksek kaliteli kumaşı ve özenle işlenmiş detaylarıyla gardırobunuzun vazgeçilmezi olacak."}
+                    "Bu özel tasarım parça, modern stil ile konforu birleştiriyor."}
                 </p>
                 <ul className="space-y-4">
                   {[
@@ -155,7 +166,7 @@ const ProductTabs = ({ product }: { product: Product }) => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="bg-[#F0F0F0] px-6 py-3 rounded-full text-[10px] font-black uppercase outline-none"
+                    className="bg-[#F0F0F0] px-6 py-3 rounded-full text-[10px] font-black uppercase outline-none cursor-pointer"
                   >
                     <option value="latest">Latest</option>
                     <option value="oldest">Oldest</option>
@@ -208,12 +219,13 @@ const ProductTabs = ({ product }: { product: Product }) => {
 
           {activeTab === "FAQs" && (
             <div className="max-w-3xl mx-auto space-y-4 animate-in fade-in duration-500">
-              {FAQ_DATA.map((faq, index) => (
+              {activeFaqs.map((faq, index) => (
                 <div
                   key={index}
                   className="border-2 border-zinc-100 rounded-[24px] overflow-hidden transition-all"
                 >
                   <button
+                    type="button"
                     onClick={() =>
                       setOpenFaqIndex(openFaqIndex === index ? null : index)
                     }
@@ -229,7 +241,9 @@ const ProductTabs = ({ product }: { product: Product }) => {
                     )}
                   </button>
                   <div
-                    className={`overflow-hidden transition-all duration-300 ${openFaqIndex === index ? "max-h-40" : "max-h-0"}`}
+                    className={`overflow-hidden transition-all duration-300 ${
+                      openFaqIndex === index ? "max-h-96" : "max-h-0"
+                    }`}
                   >
                     <p className="p-6 pt-0 text-zinc-500 text-sm font-medium leading-relaxed border-t border-zinc-50 italic">
                       {faq.answer}
@@ -265,7 +279,11 @@ const ProductTabs = ({ product }: { product: Product }) => {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <RiStarFill
                       key={star}
-                      className={`text-2xl cursor-pointer transition-all ${star <= newReview.rating ? "text-yellow-400 scale-110" : "text-zinc-200"}`}
+                      className={`text-2xl cursor-pointer transition-all ${
+                        star <= newReview.rating
+                          ? "text-yellow-400 scale-110"
+                          : "text-zinc-200"
+                      }`}
                       onClick={() =>
                         setNewReview({ ...newReview, rating: star })
                       }
