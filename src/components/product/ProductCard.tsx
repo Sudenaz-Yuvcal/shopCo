@@ -18,14 +18,23 @@ const ProductCard = (product: ProductCardProps) => {
     value,
     oldValue,
     rating = 4.5,
-    slug,
     category,
   } = product;
 
   const { toggleFavorite, isInFavorites } = useFavorite();
   const isFavorite = isInFavorites(id);
 
-  const getCleanImage = () => {
+  const createSlug = (text: string, productId: string | number): string => {
+    const slugifiedName = text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    return `${slugifiedName}-${productId}`;
+  };
+
+  const getCleanImage = (): string | undefined => {
     let target = images && images.length > 0 ? images[0] : image;
     if (typeof target === "string") {
       return target.replace(/[\[\]"']/g, "");
@@ -39,7 +48,7 @@ const ProductCard = (product: ProductCardProps) => {
     ? Math.round(((oldValue - value) / oldValue) * 100)
     : null;
 
-  const productPath = slug ? `/product/${slug}` : `/product/${id}`;
+  const productPath = `/shopCo/${createSlug(name, id)}`;
 
   return (
     <div className="relative group w-full font-satoshi">

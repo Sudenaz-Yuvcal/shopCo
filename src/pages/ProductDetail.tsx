@@ -29,10 +29,19 @@ const ProductDetail = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
+  const getProductIdFromSlug = (slugStr: string | undefined): string | null => {
+    if (!slugStr) return null;
+    const parts = slugStr.split("-");
+    return parts[parts.length - 1];
+  };
+
+  const actualId = getProductIdFromSlug(slug);
+
   const { data, isLoading: loading } = useQuery({
-    queryKey: ["product-detail", slug],
+    queryKey: ["product-detail", actualId],
     queryFn: async () => {
-      const res = await axiosInstance.get<APIProduct>(`/products/${slug}`);
+      if (!actualId) throw new Error("ID not found");
+      const res = await axiosInstance.get<APIProduct>(`/products/${actualId}`);
       const productData = res.data;
 
       const cleanedImages = (productData.images || [])
@@ -40,9 +49,12 @@ const ProductDetail = () => {
           const rawUrl = Array.isArray(img) ? img[0] : img;
           return cleanImageUrl(rawUrl);
         })
-        .filter((url) => url && url.startsWith("http"));
+        .filter(
+          (url): url is string =>
+            typeof url === "string" && url.startsWith("http"),
+        );
 
-      const fullDescription = String(productData.description || ""); 
+      const fullDescription = String(productData.description || "");
       const descriptionParts = fullDescription.split("|||");
       const pureDescription = descriptionParts[0]?.trim();
       const hiddenFaqsString = descriptionParts[1]?.trim();
@@ -50,12 +62,8 @@ const ProductDetail = () => {
       let parsedFaqs: { question: string; answer: string }[] = [];
       if (hiddenFaqsString) {
         try {
-          parsedFaqs = JSON.parse(hiddenFaqsString) as {
-            question: string;
-            answer: string;
-          }[];
+          parsedFaqs = JSON.parse(hiddenFaqsString);
         } catch (error) {
-          console.error("FAQ parse hatası:", error);
           parsedFaqs = [];
         }
       }
@@ -90,7 +98,7 @@ const ProductDetail = () => {
           relatedItems = getCleanProducts(fallbackRes.data);
         }
       } catch (err) {
-        console.error("Related products fetch error:", err);
+        relatedItems = [];
       }
 
       const finalRelated = relatedItems
@@ -106,7 +114,7 @@ const ProductDetail = () => {
 
       return { product: adaptedProduct, relatedProducts: finalRelated };
     },
-    enabled: !!slug,
+    enabled: !!actualId,
   });
 
   const product = data?.product;

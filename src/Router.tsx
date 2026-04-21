@@ -31,7 +31,7 @@ const AppRouter: React.FC = () => {
         { index: true, element: <Home /> },
         { path: "cart", element: <Cart /> },
         { path: "favorite", element: <Favorite /> },
-        { path: "product/:slug", element: <ProductDetail /> },
+        { path: "shopCo/:slug", element: <ProductDetail /> },
         { path: "newproduct", element: <NewProduct /> },
         { path: "brands", element: <Brands /> },
         { path: "discount", element: <Discount /> },
@@ -39,7 +39,7 @@ const AppRouter: React.FC = () => {
         { path: "login", element: <Login /> },
         { path: "register", element: <Register /> },
         { path: "password", element: <Password /> },
-        { path: "/admin/add-product", element: <AddProductPage /> },
+        { path: "admin/add-product", element: <AddProductPage /> },
         {
           path: "checkout",
           element: (
