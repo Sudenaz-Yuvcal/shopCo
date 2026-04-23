@@ -1,69 +1,105 @@
-import axiosInstance from "./axiosInstance";
+import { supabase } from "../lib/supabase";
 
-export interface APIProduct {
+interface SupabaseProductRow {
   id: number;
-  slug: string;
   title: string;
   price: number;
   description: string;
   images: string[];
+  created_at: string;
+  category_id: number;
+  brand?: string;
+  faqs?: { question: string; answer: string }[];
+  variants: {
+    size: string;
+    color: string;
+    stock: number;
+  }[];
   category: {
     id: number;
     name: string;
     image: string;
-  };
+  } | null;
 }
 
-export interface CreateProductDTO {
-  title: string;
-  slug: string;
+export interface APIProduct {
+  id: number;
+  name: string;
   price: number;
   description: string;
-  categoryId: number;
   images: string[];
-  faqs?: {
-    question: string;
-    answer: string;
+  brand: string;
+  faqs: { question: string; answer: string }[];
+  variants: {
+    size: string;
+    color: string;
+    stock: number;
   }[];
+  category: {
+    id: number;
+    name: string;
+    image: string;
+  } | null;
+  created_at?: string;
 }
+
+const mapProductRow = (row: SupabaseProductRow): APIProduct => ({
+  id: row.id,
+  name: row.title,
+  price: row.price,
+  description: row.description,
+  images: row.images,
+  brand: row.brand || "",
+  faqs: row.faqs || [],
+  category: row.category,
+  created_at: row.created_at,
+  variants: row.variants || [],
+});
 
 export const getProducts = async (): Promise<APIProduct[]> => {
   try {
-    const response = await axiosInstance.get<APIProduct[]>("/products");
-    return response.data.reverse();
+    const { data, error } = await supabase
+      .from("products")
+      .select(`*, category:categories (id, name, image)`)
+      .order("id", { ascending: false });
+
+    if (error) throw error;
+
+    const rows = data as SupabaseProductRow[];
+    return rows.map(mapProductRow);
   } catch (error) {
     console.error("Ürünler çekilirken hata oluştu:", error);
     return [];
   }
 };
 
-export const addProduct = async (
-  productData: CreateProductDTO,
-): Promise<APIProduct> => {
-  const cleanImages = productData.images.filter(
-    (img) => img && img.startsWith("http"),
-  );
-
-  if (cleanImages.length === 0) {
-    throw new Error("En az bir geçerli görsel URL'si girmelisiniz!");
-  }
-
+export const getProductBySlug = async (
+  identifier: string,
+): Promise<APIProduct | null> => {
   try {
-    const payload = {
-      title: productData.title,
-      price: Math.floor(Number(productData.price)),
-      description: productData.description,
-      categoryId: Number(productData.categoryId),
-      images: cleanImages,
-    };
+    const idStr = identifier.includes("-")
+      ? identifier.split("-").pop()
+      : identifier;
+    const id = Number(idStr);
 
-    const response = await axiosInstance.post<APIProduct>("/products", payload);
+    if (isNaN(id)) return null;
 
-    return response.data;
-  } catch (error: any) {
-    console.error("API Hata Detayı:", error.response?.data);
-    throw new Error(
-      error.response?.data?.message || "Ürün eklenirken bir hata oluştu.",
-    );
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        `
+        *, 
+        category:categories (id, name, image)
+      `,
+      )
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+
+    return mapProductRow(data as SupabaseProductRow);
+  } catch (error) {
+    console.error("Ürün detayı çekilirken hata:", error);
+    return null;
   }
 };

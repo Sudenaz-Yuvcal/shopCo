@@ -93,18 +93,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       ),
     );
   };
-
   const updateQuantity = (
     id: number,
     size: string,
     color: string,
-    delta: number,
+    newQty: number, 
   ) => {
     setCart((prev) =>
       prev
         .map((item: CartItem) =>
           item.id === id && item.size === size && item.color === color
-            ? { ...item, quantity: item.quantity + delta }
+            ? { ...item, quantity: Number(newQty) } 
             : item,
         )
         .filter((item: CartItem) => item.quantity > 0),

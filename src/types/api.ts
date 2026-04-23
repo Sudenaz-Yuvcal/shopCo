@@ -1,7 +1,7 @@
 export interface APIProduct {
   id: number;
   name: string;
-  description: number;
+  description: string;
   title: string;
   price: number;
   images: string[];

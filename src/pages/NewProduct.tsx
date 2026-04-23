@@ -1,49 +1,57 @@
 import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "../api/axiosInstance";
+import { getProducts } from "../api/productService";
 import ProductCard from "../components/Product/ProductCard";
 import NewProductBanner from "../sections/new-product/new-product-banner";
-import type { APIProduct } from "../types/api";
-import { getCleanProducts } from "../utils/filterProducts";
+import type { Product } from "../types/product";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 
 const NewProduct = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  const { data: products = [], isLoading: loading } = useQuery({
+  const { data: rawProducts, isLoading: loading } = useQuery({
     queryKey: ["new-arrivals-page-full"],
     queryFn: async () => {
-      const res = await axiosInstance.get<APIProduct[]>(
-        "/products?offset=0&limit=100",
-      );
-      const cleaned = getCleanProducts(res.data);
+      const allProducts = await getProducts();
+
       const THREE_DAYS_IN_MS = 3 * 24 * 60 * 60 * 1000;
       const now = new Date().getTime();
 
-      const processed = (cleaned as any[])
-        .map((product) => {
-          const dateSource =
-            product.creationAt || product.createdAt || new Date();
-          const productDate = new Date(dateSource).getTime();
-          const isActuallyNew = now - productDate <= THREE_DAYS_IN_MS;
+      const processed = allProducts.map((item: any) => {
+        const dateSource = item.id
+          ? new Date(Date.now() - (100 - item.id) * 3600000).toISOString()
+          : new Date().toISOString();
+        const productDate = new Date(dateSource).getTime();
+        const isActuallyNew = now - productDate <= THREE_DAYS_IN_MS;
 
-          return {
-            ...product,
-            oldValue: Math.round(product.price * 1.3),
-            category: isActuallyNew ? "NEW" : "Arrival",
-          };
-        })
-        .sort((a, b) => b.id - a.id);
+        return {
+          ...item,
+          stock: item.stock ?? 0, 
+          value: item.price,
+          image:
+            item.images && item.images.length > 0
+              ? item.images[0]
+              : "https://via.placeholder.com/600",
+          rating: item.rating || 4.5, 
+          oldValue: Math.round(item.price * 1.3),
+          category: isActuallyNew ? "NEW" : item.category?.name || "Arrival",
+          brand: "SHOP.CO",
+        } as Product;
+      });
 
-      const realNewOnes = processed.filter((p) => p.category === "NEW");
-
-      return realNewOnes.length > 0 ? realNewOnes : processed;
+      return processed.sort((a, b) => b.id - a.id);
     },
   });
 
+  const products = useMemo(() => {
+    if (!rawProducts || !Array.isArray(rawProducts)) return [] as Product[];
+    return rawProducts as Product[];
+  }, [rawProducts]);
+
   const totalPages = Math.ceil(products.length / itemsPerPage);
+
   const currentItems = useMemo(() => {
     const last = currentPage * itemsPerPage;
     const first = last - itemsPerPage;
@@ -51,7 +59,7 @@ const NewProduct = () => {
   }, [products, currentPage]);
 
   const renderPageNumbers = () => {
-    const pages = [];
+    const pages: (number | string)[] = [];
     if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
@@ -102,13 +110,15 @@ const NewProduct = () => {
               {totalPages > 1 && (
                 <div className="mt-20 flex items-center justify-between border-t border-zinc-100 pt-8">
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.max(prev - 1, 1));
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                     disabled={currentPage === 1}
                     className="flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-xl hover:bg-black hover:text-white transition-all disabled:opacity-30"
                   >
-                    <HiChevronLeft size={20} />{" "}
+                    <HiChevronLeft size={20} />
                     <span className="hidden md:inline font-bold uppercase text-xs">
                       Geri
                     </span>
@@ -118,9 +128,13 @@ const NewProduct = () => {
                     {renderPageNumbers().map((number, index) => (
                       <button
                         key={index}
-                        onClick={() =>
-                          typeof number === "number" && setCurrentPage(number)
-                        }
+                        type="button"
+                        onClick={() => {
+                          if (typeof number === "number") {
+                            setCurrentPage(number);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }
+                        }}
                         className={`w-10 h-10 rounded-xl font-bold transition-all ${
                           currentPage === number
                             ? "bg-black text-white"
@@ -133,15 +147,17 @@ const NewProduct = () => {
                   </div>
 
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                     disabled={currentPage === totalPages}
                     className="flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-xl hover:bg-black hover:text-white transition-all disabled:opacity-30"
                   >
                     <span className="hidden md:inline font-bold uppercase text-xs">
                       İleri
-                    </span>{" "}
+                    </span>
                     <HiChevronRight size={20} />
                   </button>
                 </div>

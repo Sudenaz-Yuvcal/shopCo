@@ -21,6 +21,33 @@ const Checkout = () => {
   );
 
   const handleCheckoutSubmit = (data: ICheckoutForm) => {
+    for (const item of cart) {
+      const selectedVariant = item.variants?.find(
+        (v) => v.color === item.color && v.size === item.size,
+      );
+
+      const currentStock = selectedVariant?.stock ?? 0;
+
+      if (item.quantity > 10) {
+        toast.error(`${item.name} için maksimum 10 adet sınırı aşılmış!`, {
+          position: "top-center",
+          theme: "dark",
+        });
+        return; 
+      }
+
+      if (item.quantity > currentStock) {
+        toast.error(
+          `Üzgünüz, ${item.name} (${item.size}) için yeterli stok yok!`,
+          {
+            position: "top-center",
+            theme: "dark",
+          },
+        );
+        return;
+      }
+    }
+
     console.log("Form Doğrulandı, İşlem Başlıyor:", data);
 
     const loadingToast = toast.loading("ÖDEME İŞLENİYOR...", {
@@ -65,10 +92,21 @@ const Checkout = () => {
             <button
               form="checkout-form"
               type="submit"
-              className="w-full bg-black text-white py-5 rounded-full font-black uppercase italic tracking-widest hover:bg-zinc-900 transition-all active:scale-[0.98]"
+              disabled={cart.length === 0}
+              className={`w-full py-5 rounded-full font-black uppercase italic tracking-widest transition-all active:scale-[0.98] ${
+                cart.length === 0
+                  ? "bg-zinc-100 text-zinc-400 cursor-not-allowed"
+                  : "bg-black text-white hover:bg-zinc-900 shadow-xl shadow-black/10"
+              }`}
             >
-              ÖDEMEYİ TAMAMLA
+              {cart.length === 0 ? "SEPETİNİZ BOŞ" : "ÖDEMEYİ TAMAMLA"}
             </button>
+
+            {cart.length > 0 && (
+              <p className="text-[10px] text-zinc-400 text-center font-medium italic uppercase tracking-tighter">
+                * Ödemeniz 256-bit SSL şifreleme ile korunmaktadır.
+              </p>
+            )}
           </div>
         </div>
       </div>

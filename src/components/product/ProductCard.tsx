@@ -3,10 +3,11 @@ import type { Product } from "../../types/product";
 import { RiHeartLine, RiHeartFill } from "react-icons/ri";
 import { useFavorite } from "../../context/FavoriteContext";
 import { StarRating } from "./ProductStarRating";
-import { handleImageError } from "../../utils/imageHandlers";
 
 interface ProductCardProps extends Product {
   slug?: string;
+  created_at?: string;
+  title?: string;
 }
 
 const ProductCard = (product: ProductCardProps) => {
@@ -14,28 +15,45 @@ const ProductCard = (product: ProductCardProps) => {
     id,
     images,
     image,
+    title,
     name,
+    price,
     value,
     oldValue,
     rating = 4.5,
-    category,
+    slug: supabaseSlug,
+    created_at,
+    brand,
+    variants = [], 
   } = product;
+
+  const totalStock = variants.reduce((acc: number, curr: { stock: number }) => {
+    return acc + Number(curr.stock || 0);
+  }, 0);
+
+  const isOutOfStock = totalStock <= 0;
+
+  const displayName = title || name || "İsimsiz Ürün";
+  const displayPrice = price || value || 0;
 
   const { toggleFavorite, isInFavorites } = useFavorite();
   const isFavorite = isInFavorites(id);
 
-  const createSlug = (text: string, productId: string | number): string => {
-    const slugifiedName = text
+  const generateUrlSlug = (text: string): string => {
+    return text
       .toLowerCase()
       .trim()
       .replace(/[^\w\s-]/g, "")
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
-    return `${slugifiedName}-${productId}`;
   };
 
+  const productPath = supabaseSlug
+    ? `/shopCo/${supabaseSlug}`
+    : `/shopCo/${generateUrlSlug(displayName)}-${id}`;
+
   const getCleanImage = (): string | undefined => {
-    let target = images && images.length > 0 ? images[0] : image;
+    const target = images && images.length > 0 ? images[0] : image;
     if (typeof target === "string") {
       return target.replace(/[\[\]"']/g, "");
     }
@@ -44,14 +62,21 @@ const ProductCard = (product: ProductCardProps) => {
 
   const mainImage = getCleanImage();
 
-  const discount = oldValue
-    ? Math.round(((oldValue - value) / oldValue) * 100)
-    : null;
+  const isNew = created_at
+    ? new Date().getTime() - new Date(created_at).getTime() <=
+      3 * 24 * 60 * 60 * 1000
+    : id % 5 === 0;
 
-  const productPath = `/shopCo/${createSlug(name, id)}`;
+  const discount = oldValue
+    ? Math.round(((oldValue - displayPrice) / oldValue) * 100)
+    : 30;
 
   return (
-    <div className="relative group w-full font-satoshi">
+    <div
+      className={`relative group w-full font-satoshi transition-all duration-300 ${
+        isOutOfStock ? "opacity-60" : ""
+      }`}
+    >
       <button
         type="button"
         onClick={(e) => {
@@ -72,44 +97,71 @@ const ProductCard = (product: ProductCardProps) => {
       </button>
 
       <Link to={productPath} className="block">
-        <div className="bg-brand-surface rounded-[14px] md:rounded-[20px] aspect-square overflow-hidden relative">
+        <div
+          className={`bg-[#F0EEED] rounded-[14px] md:rounded-[20px] aspect-square overflow-hidden relative ${
+            isOutOfStock ? "grayscale" : ""
+          }`}
+        >
           <img
             src={mainImage}
-            onError={handleImageError}
-            alt={name}
+            alt={displayName}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
             loading="eager"
           />
 
-          {category === "NEW" ? (
-            <div className="absolute top-2 left-2 bg-red text-white text-[8px] md:text-[10px] px-3 py-1 rounded-full font-[1000] uppercase tracking-tighter italic shadow-sm z-10">
-              YENİ
+          {isOutOfStock ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10">
+              <div className="bg-black text-white text-[10px] md:text-xs px-4 py-2 rounded-full font-[1000] tracking-widest uppercase">
+                Tükendi
+              </div>
             </div>
           ) : (
-            discount &&
-            discount > 20 && (
-              <div className="absolute top-2 left-2 bg-black text-white text-[8px] md:text-[10px] px-3 py-1 rounded-full font-[1000] uppercase tracking-tighter shadow-sm z-10">
-                POPÜLER
-              </div>
-            )
+            <>
+              {isNew && (
+                <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-bold z-10">
+                  YENİ
+                </div>
+              )}
+              {!isNew && discount > 20 && (
+                <div className="absolute top-2 left-2 bg-black text-white text-[10px] px-3 py-1 rounded-full font-bold z-10">
+                  POPÜLER
+                </div>
+              )}
+            </>
           )}
         </div>
 
         <div className="flex flex-col gap-1 mt-2">
-          <h3 className="font-[1000] text-[13px] md:text-lg text-black truncate uppercase tracking-tight leading-tight group-hover:underline underline-offset-2">
-            {name}
-          </h3>
-          <StarRating rating={rating} />
-          <div className="flex flex-wrap items-center gap-1.5 md:gap-3 mt-0.5">
-            <span className="font-[1000] text-lg md:text-2xl text-black">
-              ${value}
+          {brand && (
+            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none">
+              {brand}
             </span>
-            {oldValue && (
+          )}
+
+          <h3
+            className={`font-[1000] text-[13px] md:text-lg text-black truncate uppercase tracking-tight leading-tight group-hover:underline underline-offset-2 ${
+              isOutOfStock ? "text-zinc-400" : ""
+            }`}
+          >
+            {displayName}
+          </h3>
+
+          <StarRating rating={rating} />
+
+          <div className="flex flex-wrap items-center gap-1.5 md:gap-3 mt-0.5">
+            <span
+              className={`font-[1000] text-lg md:text-2xl ${
+                isOutOfStock ? "text-zinc-400" : "text-black"
+              }`}
+            >
+              ${displayPrice}
+            </span>
+            {oldValue && !isOutOfStock && (
               <div className="flex items-center gap-2">
                 <span className="text-gray-400 line-through text-base md:text-2xl font-bold">
                   ${oldValue}
                 </span>
-                <span className="bg-brand-red/10 text-red px-2 py-1 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-[1000] italic">
+                <span className="bg-red-500/10 text-red-500 px-2 py-1 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-[1000] italic">
                   -{discount}%
                 </span>
               </div>

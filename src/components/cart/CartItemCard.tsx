@@ -8,7 +8,7 @@ interface CartItemCardProps {
     id: number,
     size: string,
     color: string,
-    delta: number,
+    newQty: number,
   ) => void;
 }
 
@@ -17,13 +17,28 @@ const CartItemCard = ({
   onRemoveClick,
   updateQuantity,
 }: CartItemCardProps) => {
+  const currentQty = Number(item.quantity) || 0;
+  const maxStock = Number(item.stock) || 0;
+
   const handleDecrease = () => {
-    if (item.quantity === 1) {
+    const nextQty = currentQty - 1;
+
+    if (nextQty <= 0) {
       onRemoveClick();
     } else {
-      updateQuantity(item.id, item.size, item.color, -1);
+      updateQuantity(item.id, item.size, item.color, nextQty);
     }
   };
+
+  const handleIncrease = () => {
+    const nextQty = currentQty + 1;
+
+    if (nextQty <= 10 && nextQty <= maxStock) {
+      updateQuantity(item.id, item.size, item.color, nextQty);
+    }
+  };
+
+  const displayPrice = Number(item.price || (item as any).value || 0);
 
   return (
     <div className="flex gap-8 p-6 bg-zinc-50 rounded-[40px] border border-transparent hover:border-zinc-200 transition-all group">
@@ -38,7 +53,7 @@ const CartItemCard = ({
       <div className="flex-1 flex flex-col justify-between py-2">
         <div className="flex justify-between items-start text-left">
           <div>
-            <h3 className="font-[1000] text-2xl font-satoshi tracking-tighter leading-none text-black">
+            <h3 className="font-[1000] text-2xl font-satoshi tracking-tighter leading-none text-black uppercase">
               {item.name}
             </h3>
             <p className="text-[10px] font-black text-zinc-400 mt-3 uppercase tracking-widest italic">
@@ -47,7 +62,7 @@ const CartItemCard = ({
           </div>
           <button
             onClick={onRemoveClick}
-            className="text-zinc-300 hover:text-red transition-colors p-2"
+            className="text-zinc-300 hover:text-red-500 transition-colors p-2"
           >
             <FiTrash2 size={22} />
           </button>
@@ -55,22 +70,31 @@ const CartItemCard = ({
 
         <div className="flex justify-between items-end">
           <span className="font-[1000] text-3xl tracking-tighter italic text-black">
-            ${item.price || item.value}
+            ${displayPrice.toLocaleString()}
           </span>
 
           <div className="bg-white border border-zinc-100 px-6 py-3 rounded-full flex gap-8 items-center shadow-sm">
             <button
               onClick={handleDecrease}
               className="text-zinc-400 hover:text-black transition-colors"
+              type="button"
             >
               <FiMinus />
             </button>
-            <span className="font-black text-sm tabular-nums text-black">
-              {item.quantity}
+
+            <span className="font-black text-sm tabular-nums text-black min-w-[20px] text-center">
+              {currentQty}
             </span>
+
             <button
-              onClick={() => updateQuantity(item.id, item.size, item.color, 1)}
-              className="text-zinc-400 hover:text-black transition-colors"
+              onClick={handleIncrease}
+              disabled={currentQty >= 10 || currentQty >= maxStock}
+              className={`transition-colors ${
+                currentQty >= 10 || currentQty >= maxStock
+                  ? "text-zinc-200 cursor-not-allowed"
+                  : "text-zinc-400 hover:text-black"
+              }`}
+              type="button"
             >
               <FiPlus />
             </button>

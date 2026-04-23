@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { RiHeartLine, RiHeartFill } from "react-icons/ri";
 import type { Product } from "../../types/product";
-import { handleImageError } from "../../utils/imageHandlers";
 
 interface DiscountGridProps {
   products: Product[];
@@ -14,9 +13,7 @@ const DiscountGrid = ({
   toggleFavorite,
   isInFavorites,
 }: DiscountGridProps) => (
-
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-16">
-
     {products.map((product) => {
       const originalPrice = product.oldValue ?? 0;
       const currentPrice = product.value;
@@ -47,13 +44,15 @@ const DiscountGrid = ({
             )}
           </button>
 
-          <Link to={`/product/${product.id}`} className="flex flex-col gap-5">
+          <Link
+            to={`/shopCo/${product.name.toLowerCase().replace(/ /g, "-")}-${product.id}`}
+            className="flex flex-col gap-5"
+          >
             <div className="relative aspect-[3/4] bg-brand-neutral rounded-[40px] overflow-hidden border border-zinc-100 shadow-sm transition-transform duration-700 group-hover:shadow-2xl">
               <img
                 src={product.image}
                 alt={product.name}
                 className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
-                onError={handleImageError}
               />
 
               {discountPercentage > 0 && (

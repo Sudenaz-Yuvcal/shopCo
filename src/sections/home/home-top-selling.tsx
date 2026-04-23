@@ -2,30 +2,51 @@ import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
 import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "../../api/axiosInstance";
+import { getProducts } from "../../api/productService";
 import ProductCard from "../../components/Product/ProductCard";
 import Button from "../../components/Ui/Button";
-import type { APIProduct } from "../../types/api";
-import { getCleanProducts } from "../../utils/filterProducts";
+import type { Product } from "../../types/product"; 
 
 import "swiper/css";
+
+interface RawProduct {
+  id: number;
+  price: number;
+  images?: string[];
+  name?: string;
+  title?: string;
+  variants?: { size: string; color: string; stock: number }[];
+  [key: string]: any;
+}
 
 const TopSelling = () => {
   const { data: products = [], isLoading: loading } = useQuery({
     queryKey: ["top-selling"],
     queryFn: async () => {
-      const res = await axiosInstance.get<APIProduct[]>(
-        "/products?offset=10&limit=20",
-      );
-      const cleaned = getCleanProducts(res.data);
+      const allProducts = (await getProducts()) as RawProduct[];
 
-      return cleaned
-        .map((item) => ({
-          ...item,
-          oldValue: Math.round(item.price * 1.3),
-          category: "Top Selling",
-          brand: "SHOP.CO",
-        }))
+      return allProducts
+        .map(
+          (item): Product => ({
+            ...item,
+            id: item.id,
+            name: item.title || item.name || "Popüler Ürün",
+            value: item.price,
+            price: item.price,
+            image: item.images && item.images.length > 0 ? item.images[0] : "",
+            images: item.images || [],
+            rating: 4.8,
+            oldValue: Math.round(item.price * 1.3),
+            category: "Top Selling",
+            brand: "SHOP.CO",
+            variants: item.variants || [],
+            stock:
+              item.variants?.reduce(
+                (acc, curr) => acc + (curr.stock || 0),
+                0,
+              ) || 0,
+          }),
+        )
         .slice(0, 4);
     },
   });

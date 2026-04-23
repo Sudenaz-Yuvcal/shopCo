@@ -2,48 +2,53 @@ import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
 import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "../../api/axiosInstance";
+import { getProducts } from "../../api/productService";
 import ProductCard from "../../components/Product/ProductCard";
 import Button from "../../components/Ui/Button";
-import type { APIProduct } from "../../types/api";
-import { getCleanProducts } from "../../utils/filterProducts";
+import type { Product } from "../../types/product";
 
 import "swiper/css";
+
+interface RawProduct {
+  id: number;
+  price: number;
+  images?: string[];
+  name?: string;
+  title?: string;
+  variants?: { size: string; color: string; stock: number }[];
+  [key: string]: any; 
+}
 
 const NewArrivals = () => {
   const { data: products = [], isLoading: loading } = useQuery({
     queryKey: ["new-arrivals-home"],
     queryFn: async () => {
-      const res = await axiosInstance.get<APIProduct[]>(
-        "/products?offset=0&limit=50",
-      );
-      const cleaned = getCleanProducts(res.data);
-      const THREE_DAYS_IN_MS = 3 * 24 * 60 * 60 * 1000;
-      const now = new Date().getTime();
+      const allProducts = (await getProducts()) as RawProduct[];
 
-      const allFormatted = (cleaned as any[]).map((item) => ({
-        ...item,
-        oldValue: Math.round(item.price * 1.3),
-      }));
-
-      let filtered = allFormatted.filter((product) => {
-        const dateSource =
-          product.creationAt || product.createdAt || new Date();
-        const productDate = new Date(dateSource).getTime();
-        return now - productDate <= THREE_DAYS_IN_MS;
-      });
-
-      if (filtered.length > 0) {
-        return filtered
-          .sort((a, b) => b.id - a.id)
-          .slice(0, 4)
-          .map((p) => ({ ...p, category: "NEW" }));
-      }
-
-      return allFormatted
+      return allProducts
+        .map(
+          (item): Product => ({
+            ...item,
+            id: item.id,
+            name: item.title || item.name || "Yeni Ürün",
+            value: item.price,
+            price: item.price,
+            image: item.images && item.images.length > 0 ? item.images[0] : "",
+            images: item.images || [],
+            rating: 4.5,
+            oldValue: Math.round(item.price * 1.3),
+            category: "NEW",
+            brand: "SHOP.CO",
+            variants: item.variants || [],
+            stock:
+              item.variants?.reduce(
+                (acc, curr) => acc + (curr.stock || 0),
+                0,
+              ) || 0,
+          }),
+        )
         .sort((a, b) => b.id - a.id)
-        .slice(0, 4)
-        .map((p) => ({ ...p, category: "Arrival" }));
+        .slice(0, 4);
     },
   });
 

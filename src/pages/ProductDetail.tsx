@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "../api/axiosInstance";
+import { getProductBySlug } from "../api/productService";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
 import { useFavorite } from "../context/FavoriteContext";
@@ -10,10 +10,34 @@ import type { Product } from "../types/product";
 import ProductInfo from "../sections/product-detail/product-info";
 import ProductTabs from "../sections/product-detail/product-tabs";
 import ProductCard from "../components/Product/ProductCard";
-import { RiCheckLine, RiArrowRightUpLine } from "react-icons/ri";
+import { RiCheckLine } from "react-icons/ri";
 import Button from "../components/Ui/Button";
-import type { APIProduct } from "../types/api";
-import { getCleanProducts, cleanImageUrl } from "../utils/filterProducts";
+
+
+interface LocalAPIProduct {
+  id: number;
+  title?: string;
+  name?: string;
+  price: number;
+  images?: string[];
+  image?: string;
+  description?: string;
+  category?: { name: string } | string;
+  brand?: string;
+  created_at?: string;
+  oldValue?: number;
+  rating?: number;
+  faqs?: { question: string; answer: string }[];
+  variants: {
+    size: string;
+    color: string;
+    stock: number;
+  }[];
+}
+
+interface ExtendedProduct extends Product {
+  created_at?: string;
+}
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -23,7 +47,11 @@ const ProductDetail = () => {
   const { user } = useUser();
 
   const [showAddedModal, setShowAddedModal] = useState(false);
-  const [addedDetails, setAddedDetails] = useState({ qty: 1, size: "" });
+  const [addedDetails, setAddedDetails] = useState({
+    qty: 1,
+    size: "",
+    color: "",
+  });
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -32,7 +60,8 @@ const ProductDetail = () => {
   const getProductIdFromSlug = (slugStr: string | undefined): string | null => {
     if (!slugStr) return null;
     const parts = slugStr.split("-");
-    return parts[parts.length - 1];
+    const lastPart = parts[parts.length - 1];
+    return isNaN(Number(lastPart)) ? slugStr : lastPart;
   };
 
   const actualId = getProductIdFromSlug(slug);
@@ -40,79 +69,43 @@ const ProductDetail = () => {
   const { data, isLoading: loading } = useQuery({
     queryKey: ["product-detail", actualId],
     queryFn: async () => {
-      if (!actualId) throw new Error("ID not found");
-      const res = await axiosInstance.get<APIProduct>(`/products/${actualId}`);
-      const productData = res.data;
+      if (!actualId) throw new Error("Ürün kimliği bulunamadı");
+      const response = await getProductBySlug(actualId);
+      const productData = response as unknown as LocalAPIProduct;
 
-      const cleanedImages = (productData.images || [])
-        .map((img) => {
-          const rawUrl = Array.isArray(img) ? img[0] : img;
-          return cleanImageUrl(rawUrl);
-        })
-        .filter(
-          (url): url is string =>
-            typeof url === "string" && url.startsWith("http"),
-        );
+      if (!productData) return null;
 
-      const fullDescription = String(productData.description || "");
-      const descriptionParts = fullDescription.split("|||");
-      const pureDescription = descriptionParts[0]?.trim();
-      const hiddenFaqsString = descriptionParts[1]?.trim();
-
-      let parsedFaqs: { question: string; answer: string }[] = [];
-      if (hiddenFaqsString) {
-        try {
-          parsedFaqs = JSON.parse(hiddenFaqsString);
-        } catch (error) {
-          parsedFaqs = [];
-        }
-      }
-
-      const adaptedProduct: Product = {
+      const adaptedProduct: ExtendedProduct = {
         id: productData.id,
-        name: productData.title,
-        image: cleanedImages[0] || "https://placehold.co/600x800?text=SHOP.CO",
-        images: cleanedImages,
+        name: productData.title || productData.name || "İsimsiz Ürün",
+        title: productData.title || productData.name,
+        image: productData.images?.[0] || productData.image || "",
+        images: productData.images || [],
         value: productData.price,
         price: productData.price,
-        oldValue: Math.round(productData.price * 1.3),
-        description: pureDescription || "Açıklama bulunamadı.",
-        rating: 4.8,
-        category: productData.category?.name || "Shop.co Özel",
-        color: "black",
-        faqs: parsedFaqs,
+        oldValue: productData.oldValue || Math.round(productData.price * 1.3),
+        description: productData.description || "Açıklama bulunamadı.",
+        rating: productData.rating || 4.8,
+        category:
+          typeof productData.category === "object"
+            ? productData.category.name
+            : productData.category || "Giyim",
+        color: "Mavi",
+        faqs: productData.faqs || [],
+        brand: productData.brand || "",
+        created_at: productData.created_at,
+        stock:
+          productData.variants?.reduce(
+            (acc: number, curr: { stock: number }) => acc + (curr.stock || 0),
+            0,
+          ) || 0,
+        variants: productData.variants || [],
       };
 
-      let relatedItems: Product[] = [];
-      try {
-        const categoryId = productData.category?.id;
-        const relatedRes = await axiosInstance.get<APIProduct[]>(
-          `/products/?categoryId=${categoryId}&offset=0&limit=10`,
-        );
-        relatedItems = getCleanProducts(relatedRes.data);
-
-        if (relatedItems.length <= 1) {
-          const fallbackRes = await axiosInstance.get<APIProduct[]>(
-            `/products/?offset=10&limit=10`,
-          );
-          relatedItems = getCleanProducts(fallbackRes.data);
-        }
-      } catch (err) {
-        relatedItems = [];
-      }
-
-      const finalRelated = relatedItems
-        .filter((p) => p.id !== productData.id)
-        .slice(0, 4)
-        .map((p) => ({
-          ...p,
-          image:
-            p.image ||
-            p.images?.[0] ||
-            "https://placehold.co/600x800?text=SHOP.CO",
-        }));
-
-      return { product: adaptedProduct, relatedProducts: finalRelated };
+      return {
+        product: adaptedProduct,
+        relatedProducts: [] as ExtendedProduct[],
+      };
     },
     enabled: !!actualId,
   });
@@ -124,26 +117,24 @@ const ProductDetail = () => {
   const handleAddToCart = (qty: number, size: string, color: string) => {
     if (product) {
       addToCart(product, qty, size, color);
-      setAddedDetails({ qty, size });
+      setAddedDetails({ qty, size, color });
       setShowAddedModal(true);
     }
   };
 
-  if (loading) {
+  if (loading)
     return (
-      <div className="py-40 text-center font-[1000] italic text-4xl animate-pulse tracking-tighter uppercase text-black">
-        ÜRÜN YÜKLENİYOR...
+      <div className="py-40 text-center font-black italic text-4xl animate-pulse text-black">
+        YÜKLENİYOR...
       </div>
     );
-  }
 
-  if (!product) {
+  if (!product)
     return (
-      <div className="py-40 text-center font-[1000] italic text-4xl uppercase tracking-tighter text-black">
-        TASARIM BULUNAMADI!
+      <div className="py-40 text-center font-black italic text-4xl text-black">
+        ÜRÜN BULUNAMADI!
       </div>
     );
-  }
 
   return (
     <div className="bg-white min-h-screen font-satoshi">
@@ -152,75 +143,54 @@ const ProductDetail = () => {
       </Helmet>
 
       {showAddedModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowAddedModal(false)}
           />
-          <div className="relative bg-white w-full max-w-[450px] rounded-[40px] p-10 shadow-2xl text-center animate-in zoom-in duration-300">
-            <div className="flex items-center gap-4 mb-10 border-b border-zinc-100 pb-6 justify-center">
+          <div className="relative bg-white w-full max-w-[450px] rounded-[40px] p-10 shadow-2xl text-center">
+            <div className="flex items-center gap-4 mb-10 border-b pb-6 justify-center border-zinc-100">
               <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center">
                 <RiCheckLine size={28} />
               </div>
-              <h3 className="font-black uppercase italic tracking-tighter text-2xl text-black">
+              <h3 className="font-black uppercase italic text-2xl text-black">
                 SEPETE EKLENDİ
               </h3>
             </div>
             <div className="flex gap-6 mb-10 text-left">
-              <div className="w-28 h-28 shrink-0 rounded-3xl overflow-hidden border border-zinc-100 bg-zinc-50">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden bg-zinc-50 border border-zinc-100">
                 <img
                   src={product.image}
                   className="w-full h-full object-cover"
                   alt={product.name}
                 />
               </div>
-              <div className="flex flex-col justify-center space-y-2">
-                <h4 className="font-black text-lg uppercase italic text-black leading-tight">
+              <div>
+                <h4 className="font-black uppercase text-lg leading-tight text-black">
                   {product.name}
                 </h4>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                  {addedDetails.size} • {addedDetails.qty} ADET
+                <p className="text-xs font-bold text-zinc-400 uppercase mt-1">
+                  {addedDetails.color} / {addedDetails.size} /{" "}
+                  {addedDetails.qty} ADET
                 </p>
-                <p className="text-xl font-black italic text-black">
+                <p className="text-xl font-black italic mt-1 text-black">
                   ${product.price * addedDetails.qty}
                 </p>
               </div>
             </div>
-            <div className="space-y-4">
-              <Button
-                variant="primary"
-                size="xl"
-                onClick={() => navigate("/cart")}
-                className="w-full !rounded-full !py-6 italic shadow-xl font-black uppercase"
-              >
-                ÖDEMEYE GİT →
-              </Button>
-              <button
-                onClick={() => setShowAddedModal(false)}
-                className="w-full text-[10px] font-black uppercase text-zinc-300 hover:text-black py-2 transition-colors"
-              >
-                ALIŞVERİŞE DEVAM ET
-              </button>
-            </div>
+            <Button
+              variant="primary"
+              size="xl"
+              onClick={() => navigate("/cart")}
+              className="w-full !rounded-full italic font-black bg-black text-white"
+            >
+              ÖDEMEYE GİT →
+            </Button>
           </div>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-6 py-12 text-left">
-        <div className="flex items-center gap-3 text-zinc-300 text-[10px] font-black uppercase mb-12 italic">
-          <Link to="/" className="hover:text-black transition-colors">
-            ANA SAYFA
-          </Link>
-          <span>/</span>
-          <Link to="/shop" className="hover:text-black transition-colors">
-            MAĞAZA
-          </Link>
-          <span>/</span>
-          <span className="text-black underline underline-offset-8 decoration-black/10">
-            {product.category}
-          </span>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-6 py-12">
         <ProductInfo
           product={product}
           isFavorite={isFavorite}
@@ -232,35 +202,14 @@ const ProductDetail = () => {
 
       <ProductTabs product={product} />
 
-      <div className="max-w-7xl mx-auto px-6 mt-40 mb-20">
-        <div className="flex items-end justify-between mb-20 border-b-[6px] border-black pb-8">
-          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-none text-black">
-            BUNLARI DA <span className="text-zinc-200">SEVEBİLİRSİN</span>
-          </h2>
-          <Link
-            to="/shop"
-            className="flex items-center gap-2 text-zinc-300 hover:text-black transition-all group"
-          >
-            <span className="text-[10px] font-black uppercase tracking-widest">
-              TÜMÜNÜ GÖR
-            </span>
-            <RiArrowRightUpLine
-              size={20}
-              className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"
-            />
-          </Link>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-6 mt-20 mb-20">
+        <h2 className="text-4xl font-[1000] italic uppercase text-center mb-10 text-black">
+          Bunları da Sevebilirsin
+        </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {relatedProducts.length > 0 ? (
-            relatedProducts.map((p) => <ProductCard key={p.id} {...p} />)
-          ) : (
-            <div className="col-span-full py-10 border-2 border-dashed border-zinc-100 rounded-3xl text-center">
-              <p className="text-zinc-400 font-black italic uppercase text-[10px]">
-                Henüz benzer bir tasarım bulunamadı.
-              </p>
-            </div>
-          )}
+          {relatedProducts.map((p) => (
+            <ProductCard key={p.id} {...p} />
+          ))}
         </div>
       </div>
     </div>

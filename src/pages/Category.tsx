@@ -15,6 +15,7 @@ import type { FilterState } from "../types/filter";
 const Category = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get("category");
+  const brandParam = searchParams.get("brand");
   const searchQuery = searchParams.get("search");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,19 +39,19 @@ const Category = () => {
   });
 
   const CATEGORY_MAP = [
-    { name: "Clothes", label: "Giyim" },
-    { name: "Shoes", label: "Ayakkabı" },
-    { name: "Electronics", label: "Elektronik" },
-    { name: "Miscellaneous", label: "Aksesuar" },
+    { id: "1", name: "Clothes", label: "Giyim" },
+    { id: "2", name: "Electronics", label: "Elektronik" },
+    { id: "3", name: "Shoes", label: "Ayakkabı" },
+    { id: "4", name: "Miscellaneous", label: "Aksesuar" },
+    { id: "5", name: "Furniture", label: "Mobilya" },
   ];
-
   const BRANDS = ["ZARA", "GUCCI", "PRADA", "VERSACE", "CALVIN KLEIN"];
 
   const { data: products = [], isLoading: loading } = useQuery<Product[]>({
     queryKey: ["category-products"],
     queryFn: async () => {
-      const rawData = await getProducts();
-      return getCleanProducts(rawData as any);
+      const response = await getProducts();
+      return getCleanProducts(response);
     },
     staleTime: 1000 * 60 * 5,
   });
@@ -61,31 +62,68 @@ const Category = () => {
         const searchMatch =
           !searchQuery ||
           p.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const priceMatch = p.value <= appliedFilters.price;
-        const brandFilterMatch =
-          appliedFilters.selectedBrands.length === 0 ||
-          appliedFilters.selectedBrands.includes(p.brand?.toUpperCase() || "");
-        const urlCategoryMatch =
-          !categoryParam ||
-          p.category.toLowerCase() === categoryParam.toLowerCase();
-        const sidebarCategoryMatch =
-          appliedFilters.selectedCategories.length === 0 ||
-          appliedFilters.selectedCategories.includes(p.category);
+
+        const productPrice = p.value || p.price || 0;
+        const priceMatch = productPrice <= appliedFilters.price;
+
+        const effectiveBrands = brandParam
+          ? [brandParam.toLowerCase()]
+          : appliedFilters.selectedBrands.map((b) => b.toLowerCase());
+        const brandMatch =
+          effectiveBrands.length === 0 ||
+          (p.brand && effectiveBrands.includes(p.brand.toLowerCase().trim()));
+
+        const effectiveCategories = categoryParam
+          ? [categoryParam.toLowerCase().trim()]
+          : appliedFilters.selectedCategories.map((c) =>
+              c.toLowerCase().trim(),
+            );
+
+        const categoryMatch =
+          effectiveCategories.length === 0 ||
+          effectiveCategories.includes(
+            String(p.categoryId).toLowerCase().trim(),
+          ) ||
+          (p.category &&
+            effectiveCategories.includes(p.category.toLowerCase().trim()));
+
+        const colorMatch =
+          !appliedFilters.color ||
+          p.variants?.some(
+            (v) =>
+              v.color.toLowerCase() === appliedFilters.color?.toLowerCase(),
+          );
+
+        const sizeMatch =
+          !appliedFilters.size ||
+          p.variants?.some(
+            (v) => v.size.toLowerCase() === appliedFilters.size?.toLowerCase(),
+          );
 
         return (
           searchMatch &&
           priceMatch &&
-          brandFilterMatch &&
-          urlCategoryMatch &&
-          sidebarCategoryMatch
+          brandMatch &&
+          categoryMatch &&
+          colorMatch &&
+          sizeMatch
         );
       })
       .sort((a, b) => {
-        if (sortBy === "price-low") return a.value - b.value;
-        if (sortBy === "price-high") return b.value - a.value;
+        const valA = a.value || a.price || 0;
+        const valB = b.value || b.price || 0;
+        if (sortBy === "price-low") return valA - valB;
+        if (sortBy === "price-high") return valB - valA;
         return (b.rating || 0) - (a.rating || 0);
       });
-  }, [products, searchQuery, appliedFilters, sortBy, categoryParam]);
+  }, [
+    products,
+    searchQuery,
+    appliedFilters,
+    sortBy,
+    categoryParam,
+    brandParam,
+  ]);
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
@@ -96,7 +134,7 @@ const Category = () => {
   }, [filteredProducts, currentPage]);
 
   const renderPageNumbers = () => {
-    const pages = [];
+    const pages: (number | string)[] = [];
     if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
@@ -129,16 +167,18 @@ const Category = () => {
         : [...prev.selectedBrands, brand],
     }));
 
-  const handleCategoryToggle = (cat: string) =>
+  const handleCategoryToggle = (cat: string) => {
     setTempFilters((prev) => ({
       ...prev,
       selectedCategories: prev.selectedCategories.includes(cat)
         ? prev.selectedCategories.filter((i) => i !== cat)
         : [...prev.selectedCategories, cat],
     }));
+  };
 
   const displayTitle =
-    (searchQuery ? `"${searchQuery}"` : categoryParam) || "MAĞAZA";
+    (searchQuery ? `"${searchQuery}"` : brandParam || categoryParam) ||
+    "MAĞAZA";
 
   return (
     <div className="bg-white min-h-screen">
@@ -153,7 +193,7 @@ const Category = () => {
               ANA SAYFA
             </Link>
             <span>/</span>
-            <span className="text-black">MAĞAZA</span>
+            <span className="text-black uppercase">MAĞAZA</span>
           </div>
           <Button
             onClick={() => setIsFilterOpen(true)}
@@ -173,9 +213,16 @@ const Category = () => {
               handleBrandToggle={handleBrandToggle}
               handleCategoryToggle={handleCategoryToggle}
               BRANDS={BRANDS}
-              CATEGORIES={CATEGORY_MAP.map((c) => c.name)}
+              CATEGORIES={CATEGORY_MAP.map((c) => c.id)}
               COLOR_OPTIONS={[
-                { name: "Siyah", id: "black", tailwind: "bg-black" },
+                { name: "Siyah", id: "Siyah", tailwind: "bg-black" },
+                { name: "Mavi", id: "Mavi", tailwind: "bg-blue-900" },
+                { name: "Haki", id: "Haki", tailwind: "bg-[#4F4631]" },
+                {
+                  name: "Beyaz",
+                  id: "Beyaz",
+                  tailwind: "bg-white border border-zinc-200",
+                },
               ]}
             />
           </div>
@@ -223,13 +270,12 @@ const Category = () => {
                   />
                 ))}
               </div>
-            ) : (
+            ) : filteredProducts.length > 0 ? (
               <>
                 <ProductGrid
                   products={currentProducts}
                   handleResetFilters={handleResetFilters}
                 />
-
                 {totalPages > 1 && (
                   <div className="mt-20 flex items-center justify-between border-t border-zinc-100 pt-8">
                     <button
@@ -244,7 +290,6 @@ const Category = () => {
                         Geri
                       </span>
                     </button>
-
                     <div className="flex items-center gap-2">
                       {renderPageNumbers().map((number, index) => (
                         <button
@@ -252,17 +297,12 @@ const Category = () => {
                           onClick={() =>
                             typeof number === "number" && setCurrentPage(number)
                           }
-                          className={`w-10 h-10 rounded-xl font-bold transition-all ${
-                            currentPage === number
-                              ? "bg-black text-white"
-                              : "hover:bg-zinc-100 text-zinc-400"
-                          } ${number === "..." ? "cursor-default text-zinc-300" : ""}`}
+                          className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === number ? "bg-black text-white" : "hover:bg-zinc-100 text-zinc-400"} ${number === "..." ? "cursor-default text-zinc-300" : ""}`}
                         >
                           {number}
                         </button>
                       ))}
                     </div>
-
                     <button
                       onClick={() =>
                         setCurrentPage((prev) => Math.min(prev + 1, totalPages))
@@ -278,6 +318,19 @@ const Category = () => {
                   </div>
                 )}
               </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 bg-zinc-50 rounded-[40px] text-center px-4">
+                <RiEqualizerLine size={32} className="text-zinc-300 mb-6" />
+                <h2 className="text-2xl font-[1000] italic uppercase tracking-tighter text-black mb-2">
+                  TASARIM BULUNAMADI
+                </h2>
+                <Button
+                  onClick={handleResetFilters}
+                  className="!bg-black text-white !rounded-full px-12 py-4 italic font-[1000] mt-4"
+                >
+                  FİLTRELERİ TEMİZLE
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -296,7 +349,7 @@ const Category = () => {
               </h2>
               <button
                 onClick={() => setIsFilterOpen(false)}
-                className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:rotate-90 transition-transform"
+                className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center"
               >
                 <RiCloseLine size={28} />
               </button>
@@ -311,12 +364,19 @@ const Category = () => {
               BRANDS={BRANDS}
               CATEGORIES={CATEGORY_MAP.map((c) => c.name)}
               COLOR_OPTIONS={[
-                { name: "Siyah", id: "black", tailwind: "bg-black" },
+                { name: "Siyah", id: "Siyah", tailwind: "bg-black" },
+                { name: "Mavi", id: "Mavi", tailwind: "bg-blue-900" },
+                { name: "Haki", id: "Haki", tailwind: "bg-[#4F4631]" },
+                {
+                  name: "Beyaz",
+                  id: "Beyaz",
+                  tailwind: "bg-white border border-zinc-200",
+                },
               ]}
             />
             <Button
               onClick={handleApplyFilter}
-              className="w-full !rounded-full italic font-[1000] mt-10 !py-6 text-xl tracking-[0.2em]"
+              className="w-full !rounded-full italic font-[1000] mt-10 !py-6 text-xl"
             >
               UYGULA
             </Button>

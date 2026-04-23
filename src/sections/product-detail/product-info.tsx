@@ -17,11 +17,13 @@ interface ProductInfoProps {
   userAddress?: string;
 }
 
-const COLOR_OPTIONS = [
-  { name: "Siyah", id: "black", tailwind: "bg-black" },
-  { name: "Haki", id: "khaki", tailwind: "bg-[#4F4631]" },
-  { name: "Mavi", id: "denim", tailwind: "bg-[#31344F]" },
-];
+const colorMap: Record<string, string> = {
+  Siyah: "bg-black",
+  Mavi: "bg-[#31344F]",
+  Haki: "bg-[#4F4631]",
+  Beyaz: "bg-white border-zinc-200",
+  Kırmızı: "bg-red-600",
+};
 
 const ProductInfo = ({
   product,
@@ -30,63 +32,81 @@ const ProductInfo = ({
   onAddToCart,
   userAddress,
 }: ProductInfoProps) => {
-  const [selectedSize, setSelectedSize] = useState("Large");
-  const [selectedColor, setSelectedColor] = useState("black");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
 
+  const availableColors = Array.from(
+    new Set(product.variants?.map((v) => v.color) || []),
+  );
+  const availableSizes = Array.from(
+    new Set(product.variants?.map((v) => v.size) || []),
+  );
 
   useEffect(() => {
     setActiveImg(0);
+    if (availableColors.length > 0) setSelectedColor(availableColors[0]);
+    if (availableSizes.length > 0) setSelectedSize(availableSizes[0]);
   }, [product]);
-  const discount = product.oldValue
-    ? Math.round(((product.oldValue - product.value) / product.oldValue) * 100)
-    : null;
 
-  console.log(product?.images?.[activeImg]);
+  const currentVariant = product.variants?.find(
+    (v) => v.color === selectedColor && v.size === selectedSize,
+  );
+  const currentStock = currentVariant ? currentVariant.stock : 0;
+
+  useEffect(() => {
+    const maxAllowed = Math.min(currentStock, 10);
+    if (quantity > maxAllowed && maxAllowed > 0) {
+      setQuantity(maxAllowed);
+    } else if (currentStock === 0) {
+      setQuantity(1);
+    }
+  }, [selectedColor, selectedSize, currentStock]);
+
+  const discount = product.oldValue
+    ? Math.round(((product.oldValue - product.price) / product.oldValue) * 100)
+    : null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto items-start font-satoshi">
       <div className="lg:col-span-7 flex flex-col-reverse lg:flex-row gap-4 h-auto lg:h-[530px]">
         <div className="flex flex-row lg:flex-col gap-3 w-full lg:w-28 shrink-0 overflow-x-auto lg:overflow-y-auto scrollbar-hide">
-          <br></br>
-
-          {product?.images &&
-            product?.images?.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveImg(i)}
-                className={`aspect-square rounded-2xl overflow-hidden border-2 bg-[#F0F0F0] transition-all shrink-0 w-24 lg:w-full ${
-                  activeImg === i
-                    ? "border-black ring-2 ring-black ring-offset-2"
-                    : "border-transparent opacity-60 hover:opacity-100"
-                }`}
-              >
-                <img
-                  src={img}
-                  alt={`Product thumbnail ${i + 1}`}
-                  className="w-full h-full object-cover mix-blend-multiply"
-                />
-              </button>
-            ))}
+          {product?.images?.map((img, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveImg(i)}
+              className={`aspect-square rounded-2xl overflow-hidden border-2 bg-[#F0F0F0] transition-all shrink-0 w-24 lg:w-full ${
+                activeImg === i
+                  ? "border-black ring-2 ring-black"
+                  : "border-transparent opacity-60"
+              }`}
+            >
+              <img
+                src={img}
+                alt=""
+                className="w-full h-full object-cover mix-blend-multiply"
+              />
+            </button>
+          ))}
         </div>
-        <div className="flex-1 rounded-[40px] overflow-hidden flex items-center justify-center p-8">
+        <div className="flex-1 rounded-[40px] overflow-hidden flex items-center justify-center p-8 bg-[#F0F0F0]">
           <img
-            src={product?.images?.[activeImg] ?? product?.image ?? ""}
+            src={product?.images?.[activeImg] || product?.image || ""}
             alt={product.name}
-            className="w-full h-full object-cover mix-blend-multiply transform hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover mix-blend-multiply"
           />
         </div>
       </div>
 
       <div className="lg:col-span-5 text-left space-y-6">
         <div className="flex justify-between items-start gap-4">
-          <h1 className="text-5xl font-[1000] font-integral uppercase italic tracking-tighter leading-[0.85] flex-1">
+          <h1 className="text-5xl font-[1000] uppercase italic tracking-tighter leading-[0.85] flex-1">
             {product.name}
           </h1>
           <button
             onClick={() => onToggleFavorite(product)}
-            className="p-3 bg-zinc-50 rounded-full hover:bg-zinc-100 transition-all"
+            className="p-3 bg-zinc-50 rounded-full hover:bg-zinc-100 transition-colors"
           >
             {isFavorite ? (
               <RiHeartFill size={28} className="text-red-500" />
@@ -103,7 +123,7 @@ const ProductInfo = ({
                 key={i}
                 size={18}
                 className={
-                  i < Math.round(product.rating)
+                  i < Math.round(product.rating || 0)
                     ? "text-yellow-400"
                     : "text-zinc-200"
                 }
@@ -115,7 +135,7 @@ const ProductInfo = ({
 
         <div className="flex items-center gap-4">
           <span className="text-4xl font-black italic tracking-tighter">
-            ${product.value}
+            ${product.price}
           </span>
           {product.oldValue && (
             <div className="flex items-center gap-2">
@@ -130,24 +150,33 @@ const ProductInfo = ({
         </div>
 
         <p className="text-zinc-400 text-[13px] font-medium leading-relaxed max-w-sm">
-          {product.description ||
-            "Bu ürün gardırobunuzun en ikonik parçası olmaya aday."}
+          {product.description}
         </p>
 
         <div className="h-px bg-zinc-100 w-full" />
+
         <div className="space-y-4">
           <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest italic">
             RENK SEÇENEKLERİ
           </p>
           <div className="flex gap-3">
-            {COLOR_OPTIONS.map((color) => (
+            {availableColors.map((colorName) => (
               <button
-                key={color.id}
-                onClick={() => setSelectedColor(color.id)}
-                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${color.tailwind} ${selectedColor === color.id ? "ring-2 ring-black ring-offset-4" : "opacity-80"}`}
+                key={colorName}
+                onClick={() => setSelectedColor(colorName)}
+                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${colorMap[colorName] || "bg-zinc-300"} ${
+                  selectedColor === colorName
+                    ? "ring-2 ring-black ring-offset-4"
+                    : "opacity-80 hover:opacity-100"
+                }`}
               >
-                {selectedColor === color.id && (
-                  <RiCheckLine className="text-white text-xl" />
+                {selectedColor === colorName && (
+                  <RiCheckLine
+                    className={
+                      colorName === "Beyaz" ? "text-black" : "text-white"
+                    }
+                    size={20}
+                  />
                 )}
               </button>
             ))}
@@ -155,45 +184,86 @@ const ProductInfo = ({
         </div>
 
         <div className="h-px bg-zinc-100 w-full" />
+
         <div className="space-y-4">
           <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest italic">
             BEDENİNİ SEÇ
           </p>
           <div className="flex gap-2">
-            {["Small", "Medium", "Large", "X-Large"].map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`flex-1 py-3 rounded-full text-[11px] font-black uppercase transition-all ${selectedSize === size ? "bg-black text-white" : "bg-[#F0F0F0] text-zinc-400 hover:bg-zinc-200"}`}
-              >
-                {size}
-              </button>
-            ))}
+            {availableSizes.map((size) => {
+              const isSelected = selectedSize === size;
+              const hasStock = product.variants?.some(
+                (v) =>
+                  v.color === selectedColor && v.size === size && v.stock > 0,
+              );
+
+              return (
+                <button
+                  key={size}
+                  disabled={!hasStock}
+                  onClick={() => setSelectedSize(size)}
+                  className={`flex-1 py-3 rounded-full text-[11px] font-black uppercase transition-all ${
+                    isSelected
+                      ? "bg-black text-white"
+                      : "bg-[#F0F0F0] text-zinc-400"
+                  } ${!hasStock ? "opacity-20 cursor-not-allowed line-through" : "hover:bg-zinc-200"}`}
+                >
+                  {size}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="flex gap-3 h-14">
-          <div className="bg-[#F0F0F0] px-6 rounded-full flex items-center justify-between min-w-[140px]">
-            <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="text-zinc-500"
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-3 h-14">
+            <div className="bg-[#F0F0F0] px-6 rounded-full flex items-center justify-between min-w-[140px]">
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={currentStock <= 0}
+                className="text-zinc-500 hover:text-black transition-colors disabled:opacity-30"
+              >
+                <FiMinus size={22} />
+              </button>
+              <span className="text-xl font-black italic">
+                {currentStock > 0 ? quantity : 0}
+              </span>
+              <button
+                onClick={() =>
+                  setQuantity((prev) => Math.min(prev + 1, currentStock, 10))
+                }
+                disabled={
+                  quantity >= currentStock ||
+                  quantity >= 10 ||
+                  currentStock <= 0
+                }
+                className={`transition-colors ${quantity >= currentStock || quantity >= 10 || currentStock <= 0 ? "text-zinc-200 cursor-not-allowed" : "text-zinc-500 hover:text-black"}`}
+              >
+                <FiPlus size={22} />
+              </button>
+            </div>
+            <Button
+              onClick={() => onAddToCart(quantity, selectedSize, selectedColor)}
+              disabled={currentStock <= 0 || quantity > currentStock}
+              className={`flex-1 !rounded-full italic font-black transition-all duration-300 ${
+                currentStock <= 0 || quantity > currentStock
+                  ? "!bg-zinc-100 !text-zinc-400 cursor-not-allowed"
+                  : "!bg-black !text-white active:scale-95"
+              }`}
             >
-              <FiMinus size={22} />
-            </button>
-            <span className="text-xl font-black italic">{quantity}</span>
-            <button
-              onClick={() => setQuantity(quantity + 1)}
-              className="text-zinc-500"
-            >
-              <FiPlus size={22} />
-            </button>
+              {currentStock > 0
+                ? quantity > currentStock
+                  ? "YETERSİZ STOK"
+                  : "SEPETE EKLE →"
+                : "STOKTA YOK"}
+            </Button>
           </div>
-          <Button
-            onClick={() => onAddToCart(quantity, selectedSize, selectedColor)}
-            className="flex-1 !rounded-full !bg-black !text-white italic font-black"
-          >
-            SEPETE EKLE →
-          </Button>
+
+          {quantity >= 10 && currentStock > 10 && (
+            <p className="text-[10px] font-bold text-amber-600 italic ml-4">
+              * Tek seferde en fazla 10 adet alabilirsiniz.
+            </p>
+          )}
         </div>
 
         {userAddress && (

@@ -12,7 +12,7 @@ interface CountdownTime {
 }
 
 const PromoModal = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [canClose, setCanClose] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(PROMO_CAMPAIGN.CLOSE_DELAY);
   const [countdown, setCountdown] = useState<CountdownTime>(
@@ -23,6 +23,18 @@ const PromoModal = () => {
   const location = useLocation();
 
   useEffect(() => {
+    const lastShown = localStorage.getItem("promo_modal_last_shown");
+    const now = new Date().getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    if (!lastShown || now - parseInt(lastShown) > oneDay) {
+      setIsOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
     const mainTimer = setInterval(() => {
       setTimeLeft((prev: number) => {
         if (prev <= 1) {
@@ -48,17 +60,36 @@ const PromoModal = () => {
     }, 1000);
 
     return () => clearInterval(mainTimer);
-  }, []);
+  }, [isOpen]);
 
-  if (!isOpen) return null;
+  const handleClose = () => {
+    if (canClose) {
+      setIsOpen(false);
+      localStorage.setItem(
+        "promo_modal_last_shown",
+        new Date().getTime().toString(),
+      );
+    }
+  };
+
+  const handleNavigate = () => {
+    setIsOpen(false);
+    localStorage.setItem(
+      "promo_modal_last_shown",
+      new Date().getTime().toString(),
+    );
+    navigate("/discount");
+  };
+
   if (!isOpen || location.pathname === "/admin/add-product") {
     return null;
   }
+
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4 md:p-10 font-satoshi">
       <div
         className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-in fade-in duration-1000"
-        onClick={() => canClose && setIsOpen(false)}
+        onClick={handleClose}
       />
 
       <div className="relative w-full max-w-5xl h-full max-h-[90vh] bg-gradient-to-br from-zinc-800 via-zinc-900 to-black rounded-[40px] overflow-hidden shadow-[0_0_120px_rgba(255,0,0,0.2)] flex flex-col items-center justify-center text-center p-8 border border-white/10 animate-in zoom-in duration-500">
@@ -68,7 +99,7 @@ const PromoModal = () => {
         </div>
 
         <Button
-          onClick={() => canClose && setIsOpen(false)}
+          onClick={handleClose}
           disabled={!canClose}
           className={`absolute top-6 right-6 md:top-10 md:right-10 !w-12 !h-12 !p-0 z-20 shadow-2xl transition-all duration-500 ${
             canClose
@@ -116,10 +147,7 @@ const PromoModal = () => {
         <Button
           variant="white"
           size="xl"
-          onClick={() => {
-            setIsOpen(false);
-            navigate("/discount");
-          }}
+          onClick={handleNavigate}
           className="mt-8 shadow-2xl shadow-white/20 hover:scale-110 italic"
         >
           KEŞFET →
