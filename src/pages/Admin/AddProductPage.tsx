@@ -108,8 +108,8 @@ const AddProductPage = () => {
     { id: 4, name: "Miscellaneous" },
     { id: 5, name: "Furniture" },
   ];
-  const SIZES = ["Small", "Medium", "Large", "XLarge"];
-  const COLORS = ["Mavi", "Haki", "Siyah", "Beyaz", "Antrasit"];
+  const size = ["Small", "Medium", "Large"];
+  const color = ["Mavi", "Haki", "Siyah"];
 
   const { register, control, handleSubmit, reset, setValue } =
     useForm<AddProductInputs>({
@@ -300,7 +300,7 @@ const AddProductPage = () => {
                     className="col-span-4 admin-select-sm"
                   >
                     <option value="">RENK</option>
-                    {COLORS.map((c) => (
+                    {color.map((c) => (
                       <option key={c} value={c}>
                         {c}
                       </option>
@@ -311,7 +311,7 @@ const AddProductPage = () => {
                     className="col-span-4 admin-select-sm"
                   >
                     <option value="">BEDEN</option>
-                    {SIZES.map((s) => (
+                    {size.map((s) => (
                       <option key={s} value={s}>
                         {s}
                       </option>

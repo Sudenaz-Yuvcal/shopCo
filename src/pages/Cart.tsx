@@ -19,13 +19,14 @@ import { TURKISH_CITIES } from "../constants/Cities";
 import type { ICheckoutForm } from "../types/checkout";
 import type { CartItem } from "../context/CartContext";
 import type { Product } from "../types/product";
+import { supabase } from "../lib/supabase";
 
 const Cart = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { addOrder } = useOrder();
   const { toggleFavorite } = useFavorite();
-  const { cart, removeFromCart, updateQuantity } = useCart();
+  const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const { applyPromoCode, appliedPromoCode, isPromoApplied } = usePromo();
   const totals = useCartTotals();
 
@@ -41,15 +42,14 @@ const Cart = () => {
     isOpen: boolean;
     item: CartItem | null;
   }>({
-    isOpen: false,
+    isOpen: true,
     item: null,
   });
+
   const handleOpenDeleteModal = (item: CartItem) => {
-    setDeleteModal({
-      isOpen: true,
-      item,
-    });
+    setDeleteModal({ isOpen: true, item });
   };
+
   const handleConfirmDelete = () => {
     if (deleteModal.item) {
       removeFromCart(
@@ -61,9 +61,9 @@ const Cart = () => {
       showNotify("ÜRÜN SEPETTEN SİLİNDİ", "error");
     }
   };
+
   const handleMoveToFavorites = () => {
     const item = deleteModal.item;
-
     if (item) {
       const { quantity, size, color, ...productData } = item;
       toggleFavorite(productData as unknown as Product);
@@ -78,6 +78,7 @@ const Cart = () => {
 
   const showNotify = (msg: string, type: "success" | "error" = "success") =>
     setNotification({ msg, type });
+
   const handleApplyPromo = (code?: string) => {
     const targetCode =
       typeof code === "string" ? code : promoInput.trim().toUpperCase();
@@ -86,25 +87,51 @@ const Cart = () => {
     if (targetCode) {
       showNotify(result.message, result.success ? "success" : "error");
     }
-
     setPromoInput("");
   };
-  const onCheckoutSubmit = (_data: ICheckoutForm) => {
+
+  const onCheckoutSubmit = async (data: ICheckoutForm) => {
     if (!user) return showNotify("LÜTFEN ÖNCE GİRİŞ YAPIN!", "error");
 
+    showNotify("SİPARİŞİNİZ İŞLENİYOR, LÜTFEN BEKLEYİN...", "success");
+
     try {
+      for (const item of cart) {
+        const cleanId = parseInt(String(item.id).replace(/\D/g, ""), 10);
+
+        const { error: rpcError } = await supabase.rpc(
+          "update_variant_stock_jsonb",
+          {
+            target_id: cleanId,
+            variant_size: item.size.trim(),
+            variant_color: item.color.trim(),
+            amount_change: -item.quantity,
+          },
+        );
+
+        if (rpcError) {
+          throw new Error(
+            `${item.name} için stok güncellenemedi: ${rpcError.message}`,
+          );
+        }
+      }
+
       const orderId = addOrder(
         cart.map((item) => ({ ...item })),
         Math.round(totals.final),
       );
-
-      showNotify(`SİPARİŞİNİZ HAZIRLANIYOR! NO: ${orderId}`, "success");
+      console.log("Formdan gelen müşteri bilgileri:", data);
+      showNotify(`SİPARİŞ BAŞARILI! NO: ${orderId}`, "success");
 
       setTimeout(() => {
+        clearCart?.();
         navigate("/success");
       }, 2000);
-    } catch (error) {
-      showNotify("SİPARİŞ SIRASINDA BİR HATA OLUŞTU.", "error");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "BİR HATA OLUŞTU.";
+      showNotify(message, "error");
+      console.error("Checkout Error:", error);
     }
   };
 
@@ -134,7 +161,7 @@ const Cart = () => {
   if (cart.length === 0) return <EmptyCart />;
 
   return (
-    <div className="min-h-screen bg-white font-satoshi text-left overflow-x-hidden relative">
+    <div className="min-h-screen bg-white font-satoshi text-left overflow-x-hidden relative container mx-auto px-4 py-10">
       <Helmet>
         <title>Shop.co | {showCheckout ? "Güvenli Ödeme" : "Sepetim"}</title>
       </Helmet>
@@ -152,7 +179,7 @@ const Cart = () => {
         progress={progress}
       />
 
-      <div className="">
+      <div>
         <button
           onClick={() =>
             showCheckout ? setShowCheckout(false) : navigate("/shop")
@@ -165,22 +192,19 @@ const Cart = () => {
           </span>
         </button>
 
-        <div className="">
-          <h1 className="text-5xl md:text-4xl font-[1000] font-satoshi">
+        <div>
+          <h1 className="text-5xl md:text-4xl font-[1000] font-satoshi uppercase italic">
             {showCheckout ? "ÖDEME" : "SEPETİM"}
           </h1>
-
-          <div className="hidden md:flex items-center gap-2 text-zinc-300">
-            <FiShoppingBag size={24} />
-            <span className="text-xs font-black italic">
-              {cart.length} PARÇA
+          <div className="hidden md:flex items-center gap-2 text-zinc-300 mt-2">
+            <FiShoppingBag size={20} />
+            <span className="text-xs font-black italic uppercase">
+              {cart.length} PARÇA ÜRÜN
             </span>
           </div>
         </div>
 
-        <br></br>
-
-        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-16 items-start">
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-16 items-start mt-10">
           <div className="lg:col-span-7 w-full space-y-8">
             {!showCheckout ? (
               <div className="space-y-6">
@@ -202,6 +226,7 @@ const Cart = () => {
               </div>
             )}
           </div>
+
           <div className="lg:col-span-5 w-full sticky top-32">
             <div className="bg-white border-2 border-zinc-100 rounded-[32px] p-2">
               <OrderSummary

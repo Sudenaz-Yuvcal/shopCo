@@ -7,7 +7,7 @@ import {
 } from "react";
 
 interface User {
-  id?: number; 
+  id?: string;
   name: string;
   surname: string;
   email: string;

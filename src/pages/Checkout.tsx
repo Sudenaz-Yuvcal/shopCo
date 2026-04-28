@@ -7,38 +7,29 @@ import type { ICheckoutForm } from "../types/checkout";
 import CheckoutForm from "../components/Cart/CheckoutForm";
 import CheckoutSummary from "../sections/checkout/checkout-summary";
 import { TURKISH_CITIES } from "../constants/Cities";
+import { supabase } from "../lib/supabase";
 
 const Checkout = () => {
   const { cart, totals, clearCart } = useCart();
   const navigate = useNavigate();
-
   const { watch } = useForm<ICheckoutForm>();
 
   const watchedCity = watch("city") || "";
-
   const filteredCities = TURKISH_CITIES.filter((city) =>
     city.toLowerCase().includes(watchedCity.toLowerCase()),
   );
 
-  const handleCheckoutSubmit = (data: ICheckoutForm) => {
+  const handleCheckoutSubmit = async (data: ICheckoutForm) => {
     for (const item of cart) {
       const selectedVariant = item.variants?.find(
-        (v) => v.color === item.color && v.size === item.size,
+        (v: { size: string; stock: number }) => v.size === item.size,
       );
 
       const currentStock = selectedVariant?.stock ?? 0;
 
-      if (item.quantity > 10) {
-        toast.error(`${item.name} için maksimum 10 adet sınırı aşılmış!`, {
-          position: "top-center",
-          theme: "dark",
-        });
-        return; 
-      }
-
       if (item.quantity > currentStock) {
         toast.error(
-          `Üzgünüz, ${item.name} (${item.size}) için yeterli stok yok!`,
+          `Üzgünüz, ${item.title} (${item.size}) için yeterli stok yok! (Kalan: ${currentStock})`,
           {
             position: "top-center",
             theme: "dark",
@@ -48,27 +39,58 @@ const Checkout = () => {
       }
     }
 
-    console.log("Form Doğrulandı, İşlem Başlıyor:", data);
-
-    const loadingToast = toast.loading("ÖDEME İŞLENİYOR...", {
+    const loadingToast = toast.loading("ÖDEME VE STOKLAR İŞLENİYOR...", {
       position: "top-center",
       theme: "dark",
     });
 
-    setTimeout(() => {
+    try {
+      const updatePromises = cart.map((item) =>
+        supabase.rpc("update_variant_stock_jsonb", {
+          target_id: item.id,
+          variant_size: item.size,
+          variant_color: item.color, 
+          amount_change: -item.quantity,
+        }),
+      );
+
+      const results = await Promise.all(updatePromises);
+
+      const firstError = results.find((res) => res.error);
+      if (firstError) {
+        throw new Error(
+          firstError.error?.message || "Stok güncellenirken bir sorun oluştu.",
+        );
+      }
+
       toast.update(loadingToast, {
-        render: "ÖDEME ONAYLANDI!",
+        render: "ÖDEME ONAYLANDI VE STOKLAR GÜNCELLENDİ!",
         type: "success",
         isLoading: false,
         autoClose: 2000,
         theme: "dark",
       });
 
+      console.log("Müşteri Bilgileri:", data);
+
       clearCart();
       setTimeout(() => {
         navigate("/success");
       }, 800);
-    }, 2500);
+    } catch (error: unknown) {
+      let errorMessage = "İşlem başarısız oldu.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast.update(loadingToast, {
+        render: errorMessage,
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+        theme: "dark",
+      });
+    }
   };
 
   return (

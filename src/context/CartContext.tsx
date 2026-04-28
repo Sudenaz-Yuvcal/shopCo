@@ -93,19 +93,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       ),
     );
   };
+
   const updateQuantity = (
     id: number,
     size: string,
     color: string,
-    newQty: number, 
+    newQty: number,
   ) => {
     setCart((prev) =>
       prev
-        .map((item: CartItem) =>
-          item.id === id && item.size === size && item.color === color
-            ? { ...item, quantity: Number(newQty) } 
-            : item,
-        )
+        .map((item: CartItem) => {
+          if (item.id === id && item.size === size && item.color === color) {
+            const variant = item.variants?.find(
+              (v) => v.size === size && v.color === color,
+            );
+            const maxStock = variant?.stock ?? 99;
+            const validatedQty = newQty > maxStock ? maxStock : newQty;
+
+            return { ...item, quantity: Number(validatedQty) };
+          }
+          return item;
+        })
         .filter((item: CartItem) => item.quantity > 0),
     );
   };

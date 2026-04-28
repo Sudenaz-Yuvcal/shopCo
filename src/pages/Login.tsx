@@ -5,7 +5,8 @@ import { toast } from "react-toastify";
 import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import axios from "axios";
+import { supabase } from "../lib/supabase";
+
 import Button from "../components/Ui/Button";
 import Input from "../components/Ui/Input";
 import { useUser } from "../context/UserContext";
@@ -50,55 +51,59 @@ const Login: React.FC = () => {
     localStorage.removeItem("welcome_coupon_expiry");
 
     try {
-      const authRes = await axios.post(
-        "https://api.escuelajs.co/api/v1/auth/login",
-        {
+      const { data: authData, error: authError } =
+        await supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password,
-        },
-      );
+        });
 
-      const { access_token } = authRes.data;
+      if (authError) throw authError;
 
-      const userRes = await axios.get(
-        "https://api.escuelajs.co/api/v1/auth/profile",
-        {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-        },
-      );
+      if (authData.session && authData.user) {
+        const { user } = authData;
+        const metadata = user.user_metadata;
 
-      const userData = userRes.data;
+        const fullName = metadata.full_name || "DEĞERLİ ÜYE";
+        const nameParts = fullName.trim().split(" ");
+        const firstName = nameParts[0];
+        const lastName =
+          nameParts.length > 1 ? nameParts.slice(1).join(" ") : "ÜYE";
 
-      login({
-        name: userData.name,
-        surname: "ÜYE",
-        email: userData.email,
-        avatar: userData.avatar,
-        membership: "Standard",
-      });
+        login({
+          id: user.id,
+          name: firstName.toUpperCase(),
+          surname: lastName.toUpperCase(),
+          email: user.email || data.email,
+          membership: metadata.membership || "Standard",
+        });
 
-      localStorage.setItem("token", access_token);
+        localStorage.setItem("token", authData.session.access_token);
 
-      toast.success(`HOŞ GELDİN ${userData.name.toUpperCase()}!`, {
-        theme: "dark",
-      });
-      navigate("/account");
-    } 
-    catch (error: unknown)
-     {
-      const errorResponse = error as { response?: { status?: number } };
-      const status = errorResponse.response?.status;
+        toast.success(`HOŞ GELDİN ${firstName.toUpperCase()}!`, {
+          theme: "dark",
+        });
 
-      if (status === 401) {
-        toast.error("E-POSTA VEYA ŞİFRE HATALI!", { theme: "dark" });
+        navigate("/account");
+      }
+    } catch (error: any) {
+      const errorMessage = error.message;
+
+      if (
+        errorMessage.includes("Invalid login credentials") ||
+        errorMessage.includes("Email not confirmed")
+      ) {
+        toast.error(
+          errorMessage.includes("Email not confirmed")
+            ? "LÜTFEN E-POSTA ADRESİNİZİ ONAYLAYIN!"
+            : "E-POSTA VEYA ŞİFRE HATALI!",
+          { theme: "dark" },
+        );
         setError("password", {
           type: "manual",
           message: "Kimlik bilgileri eşleşmedi.",
         });
       } else {
-        toast.error("SUNUCU BAĞLANTI HATASI!", { theme: "dark" });
+        toast.error("GİRİŞ YAPILIRKEN BİR HATA OLUŞTU!", { theme: "dark" });
       }
     } finally {
       setIsLoading(false);

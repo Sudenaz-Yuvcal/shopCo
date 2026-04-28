@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from "react";
 import { useUser } from "../context/UserContext";
 import { useOrder } from "../context/OrderContext";
 import { Helmet } from "react-helmet-async";
-import axios from "axios";
 import { toast } from "react-toastify";
 import {
   FiPackage,
@@ -21,6 +20,7 @@ import Button from "../components/Ui/Button";
 import AccountSidebar from "../sections/account/account-sidebar";
 import OrdersSection from "../sections/account/account-orders-section";
 import LogoutModal from "../sections/account/account-logout-modal";
+import { supabase } from "../lib/supabase"; 
 
 interface SavedCard {
   id: string;
@@ -45,6 +45,7 @@ const MENU_ITEMS = [
   { id: "yorumlarim", label: "YORUMLARIM", icon: <FiStar /> },
   { id: "ayarlar", label: "AYARLAR", icon: <FiSettings /> },
 ];
+
 const Account = () => {
   const { user, logout, login } = useUser();
   const { orders } = useOrder();
@@ -84,23 +85,28 @@ const Account = () => {
     if (!user?.id) return;
     setIsUpdating(true);
     try {
-      const response = await axios.put(
-        `https://api.escuelajs.co/api/v1/users/${user.id}`,
-        {
+      const { data, error } = await supabase
+        .from("users") 
+        .update({
           name: profileData.name,
           email: profileData.email,
-        },
-      );
+        })
+        .eq("id", user.id)
+        .select()
+        .single();
 
-      if (response.data) {
+      if (error) throw error;
+
+      if (data) {
         login({
           ...user,
-          name: response.data.name,
-          email: response.data.email,
+          name: data.name,
+          email: data.email,
         });
         toast.success("BİLGİLERİN BAŞARIYLA GÜNCELLENDİ", { theme: "dark" });
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
+      console.error("Güncelleme hatası:", error.message);
       toast.error("GÜNCELLEME BAŞARISIZ OLDU", { theme: "dark" });
     } finally {
       setIsUpdating(false);
@@ -156,6 +162,7 @@ const Account = () => {
       <Helmet>
         <title>Hesabım | SHOP.CO</title>
       </Helmet>
+
       {showLogoutModal && (
         <LogoutModal
           onClose={() => setShowLogoutModal(false)}
@@ -240,7 +247,7 @@ const Account = () => {
             </div>
             <input
               required
-              placeholder="ADRES BAŞLIĞI (ÖR: EVİM)"
+              placeholder="ADRES BAŞLIĞI"
               className="w-full p-5 bg-zinc-50 rounded-2xl border-none font-black italic text-sm uppercase"
               value={newAddr.title}
               onChange={(e) =>
@@ -304,6 +311,7 @@ const Account = () => {
         />
 
         <div className="min-w-0 w-full bg-brand-offwhite rounded-[50px] p-8 md:p-14 border border-zinc-100 shadow-inner overflow-hidden min-h-[600px] relative">
+
           {activeTab === "profil" && (
             <div className="animate-in fade-in slide-in-from-right-8 duration-500 space-y-12">
               <h3 className="text-3xl font-[1000] uppercase italic tracking-tighter">

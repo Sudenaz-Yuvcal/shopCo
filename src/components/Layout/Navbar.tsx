@@ -16,25 +16,7 @@ import type { Product } from "../../types/product";
 import Input from "../Ui/Input";
 import Button from "../Ui/Button";
 import WheelOfFortune from "../../sections/home/home-wheel-of-fortune";
-import type { APIProduct } from "../../types/api";
-import { getCleanProducts } from "../../utils/filterProducts";
-import axiosInstance from "../../api/axiosInstance";
-
-const normalizeString = (str: string) => {
-  if (!str) return "";
-  return str
-    .trim()
-    .toLocaleLowerCase("tr-TR")
-    .replace(
-      /[İIığüşöç]/g,
-      (m) =>
-        ({ İ: "i", I: "i", ı: "i", ğ: "g", ü: "u", ş: "s", ö: "o", ç: "c" })[
-          m
-        ] || m,
-    )
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-};
+import { supabase } from "../../lib/supabase";
 
 interface NavbarProps {
   setIsMenuOpen: (val: boolean) => void;
@@ -58,7 +40,6 @@ const Navbar: React.FC<NavbarProps> = ({
   const searchRef = useRef<HTMLDivElement>(null);
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -66,23 +47,26 @@ const Navbar: React.FC<NavbarProps> = ({
       if (searchTerm.trim().length > 1) {
         setIsLoading(true);
         try {
-          const normalizedSearch = normalizeString(searchTerm);
-          const res = await axiosInstance.get<APIProduct[]>(
-            `/products/?title=${normalizedSearch}`,
-          );
+          const { data, error } = await supabase
+            .from("products")
+            .select("*")
+            .ilike("name", `%${searchTerm}%`)
+            .limit(6);
 
-          const allCleaned = getCleanProducts(res.data);
-          const filtered = allCleaned
-            .filter(
-              (p: Product) =>
-                normalizeString(p.name).includes(normalizedSearch) &&
-                p.name.length < 35,
-            )
-            .slice(0, 6);
+          if (error) throw error;
 
-          setSearchResults(filtered);
+          const mappedResults = (data || []).map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            value: p.price, 
+            image: p.image_url || p.image,
+          }));
+
+          setSearchResults(mappedResults);
           setIsSearchOpen(true);
         } catch (error) {
+          console.error("Arama hatası:", error);
           setSearchResults([]);
         } finally {
           setIsLoading(false);
@@ -185,7 +169,7 @@ const Navbar: React.FC<NavbarProps> = ({
                         to={`/shop?category=${cat}`}
                         className="block px-4 py-3 hover:bg-black hover:text-white rounded-xl transition-all font-black text-[10px] italic uppercase tracking-tighter"
                       >
-                        {cat === "Miscellaneous" ? "Miscellaneous" : cat}
+                        {cat}
                       </Link>
                     ))}
                   </div>
@@ -230,7 +214,6 @@ const Navbar: React.FC<NavbarProps> = ({
               ) : (
                 <RiSearchLine className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 text-lg group-focus-within:opacity-100 group-focus-within:text-black transition-all" />
               )}
-              <RiSearchLine className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 text-lg group-focus-within:opacity-100 group-focus-within:text-black transition-all" />
             </div>
             {isSearchOpen && (
               <div className="absolute top-full left-0 w-full mt-3 bg-white border border-black/10 rounded-[30px] shadow-[0_30px_70px_rgba(0,0,0,0.2)] overflow-hidden animate-in fade-in slide-in-from-top-4 z-[100]">
@@ -268,7 +251,6 @@ const Navbar: React.FC<NavbarProps> = ({
                     </div>
                     <Button
                       variant="primary"
-                      size="md"
                       onClick={handleSeeAll}
                       className="w-full !p-4 !text-[10px] tracking-[0.4em] italic"
                     >
@@ -302,7 +284,7 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               <RiHeartLine />
               {favorites.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-lg">
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-lg">
                   {favorites.length}
                 </span>
               )}

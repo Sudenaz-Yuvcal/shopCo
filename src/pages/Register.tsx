@@ -4,8 +4,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import {AxiosError} from "axios";
-import axios from "axios";
 
 import Button from "../components/Ui/Button";
 import Input from "../components/Ui/Input";
@@ -21,6 +19,7 @@ import {
   RiShieldCheckLine,
 } from "react-icons/ri";
 import * as yup from "yup";
+import { supabase } from "../lib/supabase";
 
 export const registerSchema = yup.object().shape({
   fullName: yup
@@ -39,7 +38,8 @@ export const registerSchema = yup.object().shape({
     .boolean()
     .oneOf([true], "ŞARTLARI ONAYLAMALISINIZ.")
     .required(),
-});
+
+  });
 
 interface IRegisterForm {
   fullName: string;
@@ -82,68 +82,76 @@ const Register: React.FC = () => {
   const onSubmit: SubmitHandler<IRegisterForm> = async (data) => {
     setIsLoading(true);
     try {
-      await axios.post("https://api.escuelajs.co/api/v1/users/", {
-        name: data.fullName,
+      const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        avatar: "https://i.imgur.com/LDOO4Qs.jpg",
+        options: {
+          data: {
+            full_name: data.fullName,
+            membership: "Elite",
+          },
+        },
       });
+
+      if (error) throw error;
 
       setFormData(data);
       setStep(2);
       toast.info("DOĞRULAMA KODU E-POSTANA GÖNDERİLDİ.", { theme: "dark" });
-    } catch (error: unknown) {
-      const err = error as AxiosError;
-
-      if (err.response?.status === 400) {
+    } catch (error: any) {
+      if (error.message.includes("already registered")) {
         toast.error("BU E-POSTA ZATEN KULLANIMDA!", { theme: "dark" });
         setError("email", {
           type: "manual",
           message: "E-posta zaten kayıtlı.",
         });
       } else {
-        toast.error("KAYIT SIRASINDA BİR HATA OLUŞTU!", { theme: "dark" });
+        toast.error(error.message || "KAYIT SIRASINDA BİR HATA OLUŞTU!", {
+          theme: "dark",
+        });
       }
     } finally {
       setIsLoading(false);
     }
   };
-  const handleVerificationSuccess = async (_code: string) => {
+
+  const handleVerificationSuccess = async (code: string) => {
     if (!formData) return;
     setIsLoading(true);
 
     try {
-      const authRes = await axios.post(
-        "https://api.escuelajs.co/api/v1/auth/login",
-        {
-          email: formData.email,
-          password: formData.password,
-        },
-      );
-
-      const { access_token } = authRes.data;
-      localStorage.setItem("token", access_token);
-
-      const nameParts = formData.fullName.trim().split(" ");
-      const firstName = nameParts[0];
-      const lastName =
-        nameParts.length > 1 ? nameParts.slice(1).join(" ") : "ÜYE";
-
-      login({
-        name: firstName.toUpperCase(),
-        surname: lastName.toUpperCase(),
-        email: formData.email.toLowerCase(),
-        membership: "Elite",
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: formData.email,
+        token: code,
+        type: "signup",
       });
+      if (error) throw error;
 
-      localStorage.setItem("is_new_registrant", "true");
-      toast.success("HOŞ GELDİN! %50 İNDİRİMİN TANIMLANDI.", {
-        theme: "dark",
-        icon: <RiSparklingLine className="text-yellow-400" />,
-      });
-      navigate("/", { state: { isNewUser: true } });
-    } catch (error) {
-      toast.error("OTURUM AÇILIRKEN BİR HATA OLUŞTU!", { theme: "dark" });
+      if (data.session) {
+        localStorage.setItem("token", data.session.access_token);
+
+        const nameParts = formData.fullName.trim().split(" ");
+        const firstName = nameParts[0];
+        const lastName =
+          nameParts.length > 1 ? nameParts.slice(1).join(" ") : "ÜYE";
+
+        login({
+          id: data.user?.id,
+          name: firstName.toUpperCase(),
+          surname: lastName.toUpperCase(),
+          email: formData.email.toLowerCase(),
+          membership: "Elite",
+        });
+
+        localStorage.setItem("is_new_registrant", "true");
+        toast.success("HOŞ GELDİN! %50 İNDİRİMİN TANIMLANDI.", {
+          theme: "dark",
+          icon: <RiSparklingLine className="text-yellow-400" />,
+        });
+        navigate("/", { state: { isNewUser: true } });
+      }
+    } catch (error: any) {
+      toast.error(error.message || "DOĞRULAMA HATASI!", { theme: "dark" });
     } finally {
       setIsLoading(false);
     }
@@ -219,6 +227,7 @@ const Register: React.FC = () => {
                   )}
                 </div>
 
+                {/* Email */}
                 <div className="space-y-2 relative">
                   <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-2 italic">
                     E-POSTA

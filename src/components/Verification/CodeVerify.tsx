@@ -16,7 +16,7 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
   onBack,
   isLoading,
 }) => {
-  const [code, setCode] = useState<string[]>(new Array(6).fill(""));
+  const [code, setCode] = useState<string[]>(new Array(8).fill(""));
   const [timeLeft, setTimeLeft] = useState(59);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -65,7 +65,7 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
     if (e.key === "Backspace" && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-    if (e.key === "Enter" && code.join("").length === 6) {
+    if (e.key === "Enter" && code.join("").length === 8) {
       onConfirm(code.join(""));
     }
   };
@@ -84,7 +84,7 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
         </p>
       </div>
 
-      <div className="flex justify-center gap-3 md:gap-4">
+      <div className="flex justify-center gap-1.5 md:gap-2">
         {code.map((digit, index) => (
           <input
             key={index}
@@ -96,7 +96,7 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
             value={digit}
             onChange={(e) => handleChange(e.target, index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            className="w-12 h-16 md:w-16 md:h-20 border-4 border-black rounded-[20px] text-center text-3xl font-[1000] focus:bg-black focus:text-white transition-all outline-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:shadow-none translate-y-0 focus:-translate-y-1"
+            className="w-9 h-12 md:w-12 md:h-16 border-[3px] border-black rounded-[12px] text-center text-xl md:text-2xl font-[1000] focus:bg-black focus:text-white transition-all outline-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] focus:shadow-none translate-y-0 focus:-translate-y-1"
           />
         ))}
       </div>
@@ -107,7 +107,7 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
           size="xl"
           className="w-full !rounded-full italic font-[1000] tracking-[0.3em] !py-8 shadow-2xl disabled:opacity-20"
           onClick={() => onConfirm(code.join(""))}
-          disabled={code.join("").length < 6 || isLoading}
+          disabled={code.join("").length < 8 || isLoading}
         >
           {isLoading ? "DOĞRULANIYOR..." : "DEVAM ET →"}
         </Button>

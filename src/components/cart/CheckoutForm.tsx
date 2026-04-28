@@ -9,7 +9,7 @@ import {
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import type { ICheckoutForm } from "../../types/checkout";
-import { useState, type ChangeEvent, useEffect } from "react";
+import { useState, type ChangeEvent } from "react";
 import { baseEmail } from "../../utils/schemas";
 
 export const checkoutSchema = yup.object().shape({
@@ -21,10 +21,7 @@ export const checkoutSchema = yup.object().shape({
     .required("ADRES GEREKLİ.")
     .min(10, "DETAYLI ADRES GİRİN."),
   city: yup.string().required("ŞEHİR SEÇİN."),
-  phone: yup
-    .string()
-    .required("TELEFON GEREKLİ.")
-    .matches(/^\+90\s\d{10}$/, "GEÇERLİ BİR NUMARA GİRİN."),
+  phone: yup.string().required("TELEFON GEREKLİ."),
   cardName: yup.string().required("KART İSMİ GEREKLİ."),
   cardNumber: yup
     .string()
@@ -33,7 +30,7 @@ export const checkoutSchema = yup.object().shape({
   expiryDate: yup
     .string()
     .required("SKT GEREKLİ.")
-    .matches(/^(0[1-9]|1[0-2])\/(2[6-9]|3[0-6])$/, "GEÇERLİ TARİH (AA/YY)"),
+    .matches(/^(0[4-9]|1[0-2])\/(2[6-9]|3[0-6])$/, "GEÇERLİ TARİH (AA/YY)"),
   cvc: yup.string().required("CVC GEREKLİ.").length(3, "3 HANE."),
 });
 
@@ -46,6 +43,7 @@ const CheckoutForm = ({
   onCheckoutSubmit,
   filteredCities,
 }: CheckoutFormProps) => {
+
   const [showCityList, setShowCityList] = useState<boolean>(false);
 
   const {
@@ -57,10 +55,6 @@ const CheckoutForm = ({
     resolver: yupResolver(checkoutSchema),
     mode: "onChange",
   });
-
-  useEffect(() => {
-    setValue("phone", "+90 " as PathValue<ICheckoutForm, "phone">);
-  }, [setValue]);
 
   const errorStyle = (hasError: unknown) =>
     hasError ? { borderColor: "red" } : {};
@@ -74,16 +68,6 @@ const CheckoutForm = ({
       shouldDirty: true,
       shouldTouch: true,
     });
-  };
-
-  const handlePhoneChange = (e: ChangeEvent<HTMLInputElement>) => {
-    let inputVal = e.target.value;
-    if (!inputVal.startsWith("+90 ")) {
-      inputVal = "+90 " + inputVal.replace(/^\+90\s?/, "");
-    }
-    const numbersOnly = inputVal.slice(4).replace(/\D/g, "").slice(0, 10);
-    const finalValue = "+90 " + numbersOnly;
-    updateValue("phone", finalValue as PathValue<ICheckoutForm, "phone">);
   };
 
   const handleNameChange = (
@@ -130,14 +114,14 @@ const CheckoutForm = ({
     <form
       id="checkout-form"
       onSubmit={handleSubmit(onCheckoutSubmit, onInvalid)}
-      className="space-y-12 font-satoshi"
+      className="space-y-12"
     >
       <div className="space-y-10">
         <div className="flex items-center gap-4 border-b-2 border-zinc-100 pb-4">
           <span className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-black italic">
             01
           </span>
-          <h2 className="text-2xl font-[1000] uppercase italic tracking-tighter">
+          <h2 className="text-2xl font-heavy uppercase italic">
             TESLİMAT BİLGİLERİ
           </h2>
         </div>
@@ -148,14 +132,14 @@ const CheckoutForm = ({
             placeholder="AD"
             style={errorStyle(errors.firstName)}
             onChange={(e) => handleNameChange(e, "firstName")}
-            className="!rounded-3xl !py-5 font-black italic uppercase"
+            className="!rounded-3xl !py-5"
           />
           <Input
             {...register("lastName")}
             placeholder="SOYAD"
             style={errorStyle(errors.lastName)}
             onChange={(e) => handleNameChange(e, "lastName")}
-            className="!rounded-3xl !py-5 font-black italic uppercase"
+            className="!rounded-3xl !py-5"
           />
 
           <div className="md:col-span-2">
@@ -164,10 +148,10 @@ const CheckoutForm = ({
               placeholder="E-POSTA"
               style={errorStyle(errors.email)}
               onChange={handleEmailChange}
-              className="!rounded-3xl !py-5 font-black"
+              className="!rounded-3xl !py-5"
             />
             {errors.email && (
-              <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold italic uppercase">
+              <p className="text-red-500 text-[10px] ml-4 mt-1">
                 {errors.email.message}
               </p>
             )}
@@ -176,13 +160,13 @@ const CheckoutForm = ({
           <div className="md:col-span-2">
             <Input
               {...register("phone")}
-              onChange={handlePhoneChange}
-              placeholder="+90 5XX XXX XX XX"
+              placeholder="TELEFON (Örn: 0555...)"
               style={errorStyle(errors.phone)}
-              className="!rounded-3xl !py-5 font-black italic tracking-widest"
+              onChange={(e) => handleNumberOnlyChange(e, "phone", 11)}
+              className="!rounded-3xl !py-5"
             />
             {errors.phone && (
-              <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold italic uppercase">
+              <p className="text-red-500 text-[10px] ml-4 mt-1">
                 {errors.phone.message}
               </p>
             )}
@@ -193,10 +177,10 @@ const CheckoutForm = ({
               {...register("address")}
               placeholder="ADRES"
               style={errorStyle(errors.address)}
-              className="!rounded-3xl !py-5 font-black italic uppercase"
+              className="!rounded-3xl !py-5"
             />
             {errors.address && (
-              <p className="text-red-500 text-[10px] ml-4 mt-1 font-bold italic uppercase">
+              <p className="text-red-500 text-[10px] ml-4 mt-1">
                 {errors.address.message}
               </p>
             )}
@@ -205,14 +189,14 @@ const CheckoutForm = ({
           <div className="relative">
             <Input
               {...register("city")}
-              placeholder="ŞEHİR SEÇİN"
+              placeholder="ŞEHİR"
               onFocus={() => setShowCityList(true)}
               style={errorStyle(errors.city)}
-              className="!rounded-3xl !py-5 font-black italic uppercase cursor-pointer"
+              className="!rounded-3xl !py-5"
               readOnly
             />
             {showCityList && (
-              <div className="absolute top-full left-0 w-full mt-2 bg-white border border-zinc-100 rounded-[30px] shadow-2xl z-50 max-h-60 overflow-y-auto p-4 scrollbar-hide">
+              <div className="absolute top-full left-0 w-full mt-2 bg-white border rounded-[30px] shadow-2xl z-50 max-h-60 overflow-y-auto p-4">
                 {filteredCities.map((city) => (
                   <div
                     key={city}
@@ -223,7 +207,7 @@ const CheckoutForm = ({
                       );
                       setShowCityList(false);
                     }}
-                    className="p-4 hover:bg-black hover:text-white rounded-2xl cursor-pointer uppercase text-[11px] font-black transition-colors"
+                    className="p-4 hover:bg-black hover:text-white rounded-2xl cursor-pointer uppercase text-[11px]"
                   >
                     {city}
                   </div>
@@ -239,7 +223,7 @@ const CheckoutForm = ({
           <span className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-black italic">
             02
           </span>
-          <h2 className="text-2xl font-[1000] uppercase italic tracking-tighter">
+          <h2 className="text-2xl font-heavy uppercase italic">
             ÖDEME DETAYLARI
           </h2>
         </div>
@@ -249,7 +233,7 @@ const CheckoutForm = ({
             placeholder="KART SAHİBİ"
             style={errorStyle(errors.cardName)}
             onChange={(e) => handleNameChange(e, "cardName")}
-            className="!rounded-3xl !py-5 font-black italic uppercase"
+            className="!rounded-3xl !py-5"
           />
           <div className="relative">
             <Input
@@ -257,10 +241,10 @@ const CheckoutForm = ({
               placeholder="KART NUMARASI"
               style={errorStyle(errors.cardNumber)}
               onChange={(e) => handleNumberOnlyChange(e, "cardNumber", 16)}
-              className="!rounded-3xl !py-5 font-black tracking-[0.2em]"
+              className="!rounded-3xl !py-5"
             />
             <FiCreditCard
-              className="absolute right-6 top-1/2 -translate-y-1/2 text-black"
+              className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-300"
               size={24}
             />
           </div>
@@ -270,14 +254,14 @@ const CheckoutForm = ({
               placeholder="AA/YY"
               style={errorStyle(errors.expiryDate)}
               onChange={handleExpiryChange}
-              className="!rounded-3xl !py-5 text-center font-black"
+              className="!rounded-3xl !py-5 text-center"
             />
             <Input
               {...register("cvc")}
               placeholder="CVC"
               style={errorStyle(errors.cvc)}
               onChange={(e) => handleNumberOnlyChange(e, "cvc", 3)}
-              className="!rounded-3xl !py-5 text-center font-black"
+              className="!rounded-3xl !py-5 text-center"
             />
           </div>
         </div>
