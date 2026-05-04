@@ -78,7 +78,7 @@ const ProductInfo = ({
               onClick={() => setActiveImg(i)}
               className={`aspect-square rounded-2xl overflow-hidden border-2 bg-[#F0F0F0] transition-all shrink-0 w-24 lg:w-full ${
                 activeImg === i
-                  ? "border-black ring-2 ring-black"
+                  ? "border-black ring-black"
                   : "border-transparent opacity-60"
               }`}
             >
@@ -90,18 +90,18 @@ const ProductInfo = ({
             </button>
           ))}
         </div>
-        <div className="flex-1 rounded-[40px] overflow-hidden flex items-center justify-center p-8 bg-[#F0F0F0]">
+        <div className="w-full h-full rounded-[40px] overflow-hidden border border-zinc-400 bg-[#F0F0F0] group">
           <img
             src={product?.images?.[activeImg] || product?.image || ""}
             alt={product.name}
-            className="w-full h-full object-cover mix-blend-multiply"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"
           />
         </div>
       </div>
 
       <div className="lg:col-span-5 text-left space-y-6">
         <div className="flex justify-between items-start gap-4">
-          <h1 className="text-5xl font-[1000] uppercase italic tracking-tighter leading-[0.85] flex-1">
+          <h1 className="text-4xl font-[1000] uppercase tracking-tighter leading-[0.85] flex-1">
             {product.name}
           </h1>
           <button

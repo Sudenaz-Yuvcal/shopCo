@@ -16,7 +16,8 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
   onBack,
   isLoading,
 }) => {
-  const [code, setCode] = useState<string[]>(new Array(8).fill(""));
+  const codeLength = 8;
+  const [code, setCode] = useState<string[]>(new Array(codeLength).fill(""));
   const [timeLeft, setTimeLeft] = useState(59);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -26,18 +27,23 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
       setCanResend(true);
       return;
     }
-
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
-
     return () => clearInterval(timer);
   }, [timeLeft]);
 
   const handleResendClick = () => {
     if (!canResend || !onResend) return;
+
+    const emptyCode = new Array(codeLength).fill("");
+    setCode(emptyCode);
+
+    inputRefs.current[0]?.focus();
+
     setCanResend(false);
     setTimeLeft(59);
+
     onResend();
   };
 
@@ -49,11 +55,12 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
     const value = element.value;
     if (isNaN(Number(value))) return;
 
+    const lastChar = value.substring(value.length - 1);
     const newCode = [...code];
-    newCode[index] = value;
+    newCode[index] = lastChar;
     setCode(newCode);
 
-    if (value !== "" && index < 5) {
+    if (lastChar !== "" && index < codeLength - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -65,7 +72,7 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
     if (e.key === "Backspace" && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-    if (e.key === "Enter" && code.join("").length === 8) {
+    if (e.key === "Enter" && code.join("").length === codeLength) {
       onConfirm(code.join(""));
     }
   };
@@ -105,9 +112,9 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
         <Button
           variant="primary"
           size="xl"
-          className="w-full !rounded-full italic font-[1000] tracking-[0.3em] !py-8 shadow-2xl disabled:opacity-20"
+          className="w-full !rounded-full italic font-[1000] tracking-[0.3em] !py-8 shadow-2xl disabled:opacity-20 cursor-pointer"
           onClick={() => onConfirm(code.join(""))}
-          disabled={code.join("").length < 8 || isLoading}
+          disabled={isLoading || code.join("").length < codeLength}
         >
           {isLoading ? "DOĞRULANIYOR..." : "DEVAM ET →"}
         </Button>

@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet-async";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { RiEqualizerLine, RiCloseLine, RiArrowDownSLine } from "react-icons/ri";
-import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import Button from "../components/Ui/Button";
 import CategorySidebar from "../sections/category/category-sidebar";
 import ProductGrid from "../sections/category/category-product-grid";
@@ -11,6 +10,7 @@ import { getProducts } from "../api/productService";
 import { getCleanProducts } from "../utils/filterProducts";
 import type { Product } from "../types/product";
 import type { FilterState } from "../types/filter";
+import type { APIProduct } from "../types/api";
 
 const Category = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,10 +22,10 @@ const Category = () => {
   const productsPerPage = 9;
 
   const initialFilters: FilterState = {
-    color: null,
-    price: 1000,
+    colors: [],
+    price: 5000,
     selectedCategories: [],
-    size: null,
+    sizes: [],
     selectedBrands: [],
   };
 
@@ -38,20 +38,53 @@ const Category = () => {
     ...initialFilters,
   });
 
-  const CATEGORY_MAP = [
-    { id: "1", name: "Clothes", label: "Giyim" },
-    { id: "2", name: "Electronics", label: "Elektronik" },
-    { id: "3", name: "Shoes", label: "Ayakkabı" },
-    { id: "4", name: "Miscellaneous", label: "Aksesuar" },
-    { id: "5", name: "Furniture", label: "Mobilya" },
+  const CATEGORY_OPTIONS = [
+    { id: "1", name: "Casual" },
+    { id: "2", name: "Formal" },
+    { id: "3", name: "Gym" },
+    { id: "4", name: "Party" },
   ];
+
   const BRANDS = ["ZARA", "GUCCI", "PRADA", "VERSACE", "CALVIN KLEIN"];
+
+  const COLOR_PALETTE = [
+    { name: "Mavi", id: "#31344F", hex: "#31344F", tailwind: "bg-[#31344F]" },
+    { name: "Haki", id: "#4F4631", hex: "#4F4631", tailwind: "bg-[#4F4631]" },
+    { name: "Siyah", id: "#000000", hex: "#000000", tailwind: "bg-[#000000]" },
+    {
+      name: "Beyaz",
+      id: "#FFFFFF",
+      hex: "#FFFFFF",
+      tailwind: "bg-[#FFFFFF] border border-zinc-200",
+    },
+    {
+      name: "Kırmızı",
+      id: "#FF3333",
+      hex: "#FF3333",
+      tailwind: "bg-[#FF3333]",
+    },
+  ];
+
+  const AVAILABLE_SIZES = [
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL",
+    "36",
+    "37",
+    "38",
+    "39",
+    "40",
+    "41",
+    "42",
+  ];
 
   const { data: products = [], isLoading: loading } = useQuery<Product[]>({
     queryKey: ["category-products"],
     queryFn: async () => {
-      const response = await getProducts();
-      return getCleanProducts(response);
+      const rawData = await getProducts();
+      return getCleanProducts(rawData as unknown as APIProduct[]);
     },
     staleTime: 1000 * 60 * 5,
   });
@@ -61,71 +94,74 @@ const Category = () => {
       .filter((p) => {
         const searchMatch =
           !searchQuery ||
-          p.name.toLowerCase().includes(searchQuery.toLowerCase());
+          (p.name || p.title)
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase());
 
-        const productPrice = p.value || p.price || 0;
+        const productPrice = Number(p.price || p.value || 0);
         const priceMatch = productPrice <= appliedFilters.price;
 
-        const effectiveBrands = brandParam
-          ? [brandParam.toLowerCase()]
-          : appliedFilters.selectedBrands.map((b) => b.toLowerCase());
-        const brandMatch =
-          effectiveBrands.length === 0 ||
-          (p.brand && effectiveBrands.includes(p.brand.toLowerCase().trim()));
+        const brandFilterMatch =
+          appliedFilters.selectedBrands.length === 0 ||
+          appliedFilters.selectedBrands.some(
+            (b) => b.toUpperCase() === (p.brand?.toUpperCase() || ""),
+          );
 
-        const effectiveCategories = categoryParam
-          ? [categoryParam.toLowerCase().trim()]
-          : appliedFilters.selectedCategories.map((c) =>
-              c.toLowerCase().trim(),
+        const urlCategoryMatch =
+          !categoryParam ||
+          p.category?.toLowerCase() === categoryParam.toLowerCase();
+
+        const sidebarCategoryMatch =
+          appliedFilters.selectedCategories.length === 0 ||
+          appliedFilters.selectedCategories.some((catId) => {
+            const categoryObj = CATEGORY_OPTIONS.find((c) => c.id === catId);
+            return (
+              String(p.category_id) === String(catId) ||
+              p.category?.toLowerCase() === categoryObj?.name.toLowerCase()
             );
-
-        const categoryMatch =
-          effectiveCategories.length === 0 ||
-          effectiveCategories.includes(
-            String(p.categoryId).toLowerCase().trim(),
-          ) ||
-          (p.category &&
-            effectiveCategories.includes(p.category.toLowerCase().trim()));
+          });
 
         const colorMatch =
-          !appliedFilters.color ||
-          p.variants?.some(
+          appliedFilters.colors.length === 0 ||
+          (p.variants ?? []).some(
             (v) =>
-              v.color.toLowerCase() === appliedFilters.color?.toLowerCase(),
+              v.color &&
+              appliedFilters.colors.includes(v.color) &&
+              Number(v.stock || 0) > 0,
           );
 
         const sizeMatch =
-          !appliedFilters.size ||
-          p.variants?.some(
-            (v) => v.size.toLowerCase() === appliedFilters.size?.toLowerCase(),
+          appliedFilters.sizes.length === 0 ||
+          (p.variants ?? []).some(
+            (v) =>
+              v.size &&
+              appliedFilters.sizes.includes(v.size) &&
+              Number(v.stock || 0) > 0,
           );
+
+        const isAnyVariantInStock = (p.variants ?? []).some(
+          (v) => Number(v.stock || 0) > 0,
+        );
 
         return (
           searchMatch &&
           priceMatch &&
-          brandMatch &&
-          categoryMatch &&
+          brandFilterMatch &&
+          urlCategoryMatch &&
+          sidebarCategoryMatch &&
           colorMatch &&
-          sizeMatch
+          sizeMatch &&
+          isAnyVariantInStock
         );
       })
       .sort((a, b) => {
-        const valA = a.value || a.price || 0;
-        const valB = b.value || b.price || 0;
-        if (sortBy === "price-low") return valA - valB;
-        if (sortBy === "price-high") return valB - valA;
+        const priceA = a.price || a.value || 0;
+        const priceB = b.price || b.value || 0;
+        if (sortBy === "price-low") return priceA - priceB;
+        if (sortBy === "price-high") return priceB - priceA;
         return (b.rating || 0) - (a.rating || 0);
       });
-  }, [
-    products,
-    searchQuery,
-    appliedFilters,
-    sortBy,
-    categoryParam,
-    brandParam,
-  ]);
-
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  }, [products, searchQuery, appliedFilters, sortBy, categoryParam]);
 
   const currentProducts = useMemo(() => {
     const lastIndex = currentPage * productsPerPage;
@@ -133,18 +169,7 @@ const Category = () => {
     return filteredProducts.slice(firstIndex, lastIndex);
   }, [filteredProducts, currentPage]);
 
-  const renderPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) pages.push(1, 2, 3, "...", totalPages);
-      else if (currentPage >= totalPages - 2)
-        pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
-      else pages.push(1, "...", currentPage, "...", totalPages);
-    }
-    return pages;
-  };
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
   const handleApplyFilter = () => {
     setAppliedFilters({ ...tempFilters });
@@ -167,17 +192,17 @@ const Category = () => {
         : [...prev.selectedBrands, brand],
     }));
 
-  const handleCategoryToggle = (cat: string) => {
+  const handleCategoryToggle = (catId: string) =>
     setTempFilters((prev) => ({
       ...prev,
-      selectedCategories: prev.selectedCategories.includes(cat)
-        ? prev.selectedCategories.filter((i) => i !== cat)
-        : [...prev.selectedCategories, cat],
+      selectedCategories: prev.selectedCategories.includes(catId)
+        ? prev.selectedCategories.filter((i) => i !== catId)
+        : [...prev.selectedCategories, catId],
     }));
-  };
 
   const displayTitle =
-    (searchQuery ? `"${searchQuery}"` : brandParam || categoryParam) ||
+    brandParam ||
+    (searchQuery ? `"${searchQuery}"` : categoryParam) ||
     "MAĞAZA";
 
   return (
@@ -186,14 +211,14 @@ const Category = () => {
         <title>{displayTitle} | SHOP.CO</title>
       </Helmet>
 
-      <div className="max-w-7xl mx-auto px-6 py-12 font-satoshi">
+      <div className="max-w-7xl mx-auto px-6 py-12 text-left font-satoshi">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2 text-[9px] font-black text-zinc-300 uppercase tracking-[0.3em] italic">
             <Link to="/" className="hover:text-black transition-colors">
               ANA SAYFA
             </Link>
             <span>/</span>
-            <span className="text-black uppercase">MAĞAZA</span>
+            <span className="text-black">MAĞAZA</span>
           </div>
           <Button
             onClick={() => setIsFilterOpen(true)}
@@ -213,17 +238,9 @@ const Category = () => {
               handleBrandToggle={handleBrandToggle}
               handleCategoryToggle={handleCategoryToggle}
               BRANDS={BRANDS}
-              CATEGORIES={CATEGORY_MAP.map((c) => c.id)}
-              COLOR_OPTIONS={[
-                { name: "Siyah", id: "Siyah", tailwind: "bg-black" },
-                { name: "Mavi", id: "Mavi", tailwind: "bg-blue-900" },
-                { name: "Haki", id: "Haki", tailwind: "bg-[#4F4631]" },
-                {
-                  name: "Beyaz",
-                  id: "Beyaz",
-                  tailwind: "bg-white border border-zinc-200",
-                },
-              ]}
+              CATEGORIES={CATEGORY_OPTIONS}
+              AVAILABLE_COLORS={COLOR_PALETTE}
+              AVAILABLE_SIZES={AVAILABLE_SIZES}
             />
           </div>
 
@@ -232,31 +249,24 @@ const Category = () => {
               <h1 className="text-5xl md:text-3xl font-[1000] text-black uppercase italic tracking-tighter leading-none">
                 {displayTitle}
               </h1>
-              <div className="flex flex-col md:items-end gap-2 text-right">
+              <div className="flex flex-col md:items-end gap-2">
                 <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.3em] italic">
-                  {loading
-                    ? "ARANIYOR..."
-                    : `${filteredProducts.length} TASARIM LİSTELENDİ`}
+                  {filteredProducts.length} TASARIM LİSTELENDİ
                 </p>
                 <div className="flex items-center gap-2 border-b-2 border-black/5 pb-1">
-                  <span className="text-zinc-400 text-[10px] font-black uppercase italic">
-                    Sırala:
-                  </span>
-                  <div className="relative">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => {
-                        setSortBy(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="appearance-none bg-transparent pr-6 font-black text-[11px] uppercase italic text-black outline-none cursor-pointer"
-                    >
-                      <option value="popular">En Popüler</option>
-                      <option value="price-low">Düşük Fiyat</option>
-                      <option value="price-high">Yüksek Fiyat</option>
-                    </select>
-                    <RiArrowDownSLine className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-black" />
-                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => {
+                      setSortBy(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="appearance-none bg-transparent pr-6 font-black text-[11px] uppercase italic text-black outline-none cursor-pointer"
+                  >
+                    <option value="popular">En Popüler</option>
+                    <option value="price-low">Düşük Fiyat</option>
+                    <option value="price-high">Yüksek Fiyat</option>
+                  </select>
+                  <RiArrowDownSLine className="pointer-events-none text-black" />
                 </div>
               </div>
             </div>
@@ -270,66 +280,31 @@ const Category = () => {
                   />
                 ))}
               </div>
-            ) : filteredProducts.length > 0 ? (
-              <>
-                <ProductGrid
-                  products={currentProducts}
-                  handleResetFilters={handleResetFilters}
-                />
-                {totalPages > 1 && (
-                  <div className="mt-20 flex items-center justify-between border-t border-zinc-100 pt-8">
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                      }
-                      disabled={currentPage === 1}
-                      className="flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-xl hover:bg-black hover:text-white transition-all disabled:opacity-30"
-                    >
-                      <HiChevronLeft size={20} />
-                      <span className="hidden md:inline font-bold uppercase text-xs">
-                        Geri
-                      </span>
-                    </button>
-                    <div className="flex items-center gap-2">
-                      {renderPageNumbers().map((number, index) => (
-                        <button
-                          key={index}
-                          onClick={() =>
-                            typeof number === "number" && setCurrentPage(number)
-                          }
-                          className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === number ? "bg-black text-white" : "hover:bg-zinc-100 text-zinc-400"} ${number === "..." ? "cursor-default text-zinc-300" : ""}`}
-                        >
-                          {number}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                      }
-                      disabled={currentPage === totalPages}
-                      className="flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-xl hover:bg-black hover:text-white transition-all disabled:opacity-30"
-                    >
-                      <span className="hidden md:inline font-bold uppercase text-xs">
-                        İleri
-                      </span>
-                      <HiChevronRight size={20} />
-                    </button>
-                  </div>
-                )}
-              </>
             ) : (
-              <div className="flex flex-col items-center justify-center py-20 bg-zinc-50 rounded-[40px] text-center px-4">
-                <RiEqualizerLine size={32} className="text-zinc-300 mb-6" />
-                <h2 className="text-2xl font-[1000] italic uppercase tracking-tighter text-black mb-2">
-                  TASARIM BULUNAMADI
-                </h2>
-                <Button
-                  onClick={handleResetFilters}
-                  className="!bg-black text-white !rounded-full px-12 py-4 italic font-[1000] mt-4"
-                >
-                  FİLTRELERİ TEMİZLE
-                </Button>
+              <ProductGrid
+                products={currentProducts}
+                handleResetFilters={handleResetFilters}
+              />
+            )}
+
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-10 gap-2">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setCurrentPage(i + 1);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={`w-10 h-10 rounded-full font-black text-[11px] transition-all ${
+                      currentPage === i + 1
+                        ? "bg-black text-white shadow-lg scale-110"
+                        : "bg-zinc-100 text-zinc-400 hover:bg-zinc-200"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -342,7 +317,7 @@ const Category = () => {
             className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setIsFilterOpen(false)}
           />
-          <div className="relative w-full bg-white rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-500">
+          <div className="relative w-full bg-white rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
               <h2 className="text-3xl font-[1000] italic uppercase tracking-tighter">
                 FİLTRELER
@@ -362,24 +337,10 @@ const Category = () => {
               handleBrandToggle={handleBrandToggle}
               handleCategoryToggle={handleCategoryToggle}
               BRANDS={BRANDS}
-              CATEGORIES={CATEGORY_MAP.map((c) => c.name)}
-              COLOR_OPTIONS={[
-                { name: "Siyah", id: "Siyah", tailwind: "bg-black" },
-                { name: "Mavi", id: "Mavi", tailwind: "bg-blue-900" },
-                { name: "Haki", id: "Haki", tailwind: "bg-[#4F4631]" },
-                {
-                  name: "Beyaz",
-                  id: "Beyaz",
-                  tailwind: "bg-white border border-zinc-200",
-                },
-              ]}
+              CATEGORIES={CATEGORY_OPTIONS}
+              AVAILABLE_COLORS={COLOR_PALETTE}
+              AVAILABLE_SIZES={AVAILABLE_SIZES}
             />
-            <Button
-              onClick={handleApplyFilter}
-              className="w-full !rounded-full italic font-[1000] mt-10 !py-6 text-xl"
-            >
-              UYGULA
-            </Button>
           </div>
         </div>
       )}

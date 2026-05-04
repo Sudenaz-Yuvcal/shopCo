@@ -26,20 +26,27 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem("shopco_user");
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem("shopco_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.error("User data parse error:", error);
+      return null;
+    }
   });
 
   useEffect(() => {
-    if (user) localStorage.setItem("shopco_user", JSON.stringify(user));
-    else localStorage.removeItem("shopco_user");
+    if (user) {
+      localStorage.setItem("shopco_user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("shopco_user");
+    }
   }, [user]);
 
   const login = (userData: User) => setUser(userData);
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("shopco_user");
     localStorage.removeItem("shopco_orders");
     localStorage.removeItem("shopco_cart");
   };
@@ -53,6 +60,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
 export const useUser = () => {
   const context = useContext(UserContext);
-  if (!context) throw new Error("useUser must be used within a UserProvider");
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
   return context;
 };

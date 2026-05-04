@@ -63,7 +63,7 @@ const Login: React.FC = () => {
         const { user } = authData;
         const metadata = user.user_metadata;
 
-        const fullName = metadata.full_name || "DEĞERLİ ÜYE";
+        const fullName = metadata.full_name || "ADMİN";
         const nameParts = fullName.trim().split(" ");
         const firstName = nameParts[0];
         const lastName =
@@ -83,7 +83,11 @@ const Login: React.FC = () => {
           theme: "dark",
         });
 
-        navigate("/account");
+        if (user.email === "admin@shop.co") {
+          navigate("/admin/add-product");
+        } else {
+          navigate("/account");
+        }
       }
     } catch (error: any) {
       const errorMessage = error.message;

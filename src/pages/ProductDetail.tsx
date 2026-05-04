@@ -12,7 +12,7 @@ import ProductTabs from "../sections/product-detail/product-tabs";
 import ProductCard from "../components/Product/ProductCard";
 import { RiCheckLine } from "react-icons/ri";
 import Button from "../components/Ui/Button";
-
+import { slugify } from "../utils/slugify";
 
 interface LocalAPIProduct {
   id: number;
@@ -36,7 +36,7 @@ interface LocalAPIProduct {
 }
 
 interface ExtendedProduct extends Product {
-  created_at?: string;
+  created_at: string;
 }
 
 const ProductDetail = () => {
@@ -74,13 +74,14 @@ const ProductDetail = () => {
       const productData = response as unknown as LocalAPIProduct;
 
       if (!productData) return null;
-
       const adaptedProduct: ExtendedProduct = {
         id: productData.id,
         name: productData.title || productData.name || "İsimsiz Ürün",
-        title: productData.title || productData.name,
+        title: productData.title || productData.name || "İsimsiz Ürün",
         image: productData.images?.[0] || productData.image || "",
         images: productData.images || [],
+        slug: slugify(productData.title || productData.name || ""),
+        category_id: (productData.category as any)?.id || 0,
         value: productData.price,
         price: productData.price,
         oldValue: productData.oldValue || Math.round(productData.price * 1.3),
@@ -90,10 +91,9 @@ const ProductDetail = () => {
           typeof productData.category === "object"
             ? productData.category.name
             : productData.category || "Giyim",
-        color: "Mavi",
         faqs: productData.faqs || [],
         brand: productData.brand || "",
-        created_at: productData.created_at,
+        created_at: productData.created_at || new Date().toISOString(),
         stock:
           productData.variants?.reduce(
             (acc: number, curr: { stock: number }) => acc + (curr.stock || 0),
@@ -208,7 +208,7 @@ const ProductDetail = () => {
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {relatedProducts.map((p) => (
-            <ProductCard key={p.id} {...p} />
+            <ProductCard key={p.id} {...p} slug={p.slug || slugify(p.name)} />
           ))}
         </div>
       </div>

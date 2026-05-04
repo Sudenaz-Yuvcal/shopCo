@@ -1,75 +1,100 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useForm, type SubmitHandler, type Resolver } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { registerSchema } from "../utils/schemas";
 
 import Button from "../components/Ui/Button";
 import Input from "../components/Ui/Input";
 import { useUser } from "../context/UserContext";
 import LoadingOverlay from "../components/Ui/LoadingOverlay";
 import CodeVerify from "../components/Verification/CodeVerify";
-import { baseEmail, basePassword } from "../utils/schemas";
 import {
   RiMailLine,
   RiUserLine,
   RiArrowRightSLine,
   RiSparklingLine,
   RiShieldCheckLine,
+  RiPhoneLine,
 } from "react-icons/ri";
-import * as yup from "yup";
 import { supabase } from "../lib/supabase";
-
-export const registerSchema = yup.object().shape({
-  fullName: yup
-    .string()
-    .required("AD SOYAD GEREKLİ.")
-    .test("is-full-name", "AD VE SOYADINIZI TAM GİRİNİZ.", (val) =>
-      val ? val.trim().includes(" ") && val.trim().length >= 5 : false,
-    ),
-  email: baseEmail,
-  password: basePassword,
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref("password")], "ŞİFRELER EŞLEŞMİYOR.")
-    .required("ŞİFRE TEKRARI GEREKLİ."),
-  acceptTerms: yup
-    .boolean()
-    .oneOf([true], "ŞARTLARI ONAYLAMALISINIZ.")
-    .required(),
-
-  });
+import {
+  TermsText,
+  LightingText,
+  PrivacyText,
+} from "../components/Registration/LegalTexts";
+import { PatternFormat } from "react-number-format";
 
 interface IRegisterForm {
   fullName: string;
   email: string;
+  phone: string;
   password: string;
-  confirmPassword?: string;
+  confirmPassword: string;
   acceptTerms: boolean;
+  lightingText: boolean;
+  privacyPolicy: boolean;
+  marketingConsent: boolean;
 }
+
+type ModalType = "terms" | "lighting" | "privacy" | null;
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useUser();
-  const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState<IRegisterForm | null>(null);
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const isBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 5;
+
+    if (isBottom) {
+      setIsScrolledToBottom(true);
+    }
+  };
+
+  useEffect(() => {
+    setIsScrolledToBottom(false);
+  }, [activeModal]);
 
   const {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isValid },
+    setValue,
+    trigger,
     setError,
+    formState: { errors, isValid },
   } = useForm<IRegisterForm>({
-    resolver: yupResolver(registerSchema) as unknown as Resolver<IRegisterForm>,
+    resolver: yupResolver(registerSchema),
     mode: "onChange",
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+      marketingConsent: false,
+      acceptTerms: false,
+      lightingText: false,
+      privacyPolicy: false,
+    },
   });
 
   const passwordValue = watch("password", "");
   const emailValue = watch("email", "");
-
+  const termsVal = watch("acceptTerms");
+  const lightingVal = watch("lightingText");
+  const privacyVal = watch("privacyPolicy");
   const passwordStrength = useMemo(() => {
     if (!passwordValue) return 0;
     let strength = 0;
@@ -78,6 +103,23 @@ const Register: React.FC = () => {
     if (/[0-9]/.test(passwordValue)) strength += 34;
     return strength;
   }, [passwordValue]);
+
+  const openModal = (e: React.MouseEvent, type: ModalType) => {
+    e.preventDefault();
+    setActiveModal(type);
+  };
+
+  const confirmFromModal = async (type: ModalType) => {
+    if (!type) return;
+    const fieldMap: Record<string, keyof IRegisterForm> = {
+      terms: "acceptTerms",
+      lighting: "lightingText",
+      privacy: "privacyPolicy",
+    };
+    setValue(fieldMap[type], true);
+    await trigger(fieldMap[type]);
+    setActiveModal(null);
+  };
 
   const onSubmit: SubmitHandler<IRegisterForm> = async (data) => {
     setIsLoading(true);
@@ -88,28 +130,36 @@ const Register: React.FC = () => {
         options: {
           data: {
             full_name: data.fullName,
+            phone: data.phone,
             membership: "Elite",
           },
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.toLowerCase().includes("already registered")) {
+          setError("email", {
+            type: "manual",
+            message: "BU E-POSTA ZATEN KAYITLI.",
+          });
+        }
+        throw error;
+      }
 
       setFormData(data);
       setStep(2);
-      toast.info("DOĞRULAMA KODU E-POSTANA GÖNDERİLDİ.", { theme: "dark" });
+      toast.info("DOĞRULAMA KODU GÖNDERİLDİ.", { theme: "dark" });
     } catch (error: any) {
-      if (error.message.includes("already registered")) {
-        toast.error("BU E-POSTA ZATEN KULLANIMDA!", { theme: "dark" });
-        setError("email", {
-          type: "manual",
-          message: "E-posta zaten kayıtlı.",
-        });
-      } else {
-        toast.error(error.message || "KAYIT SIRASINDA BİR HATA OLUŞTU!", {
-          theme: "dark",
-        });
-      }
+      console.error("Kayıt Hatası:", error);
+      const isRateLimit =
+        error.status === 429 || error.message?.includes("429");
+
+      toast.error(
+        isRateLimit
+          ? "ÇOK FAZLA DENEME YAPTINIZ. LÜTFEN BİRAZ BEKLEYİN."
+          : error.message || "BİR HATA OLUŞTU",
+        { theme: "dark" },
+      );
     } finally {
       setIsLoading(false);
     }
@@ -118,214 +168,289 @@ const Register: React.FC = () => {
   const handleVerificationSuccess = async (code: string) => {
     if (!formData) return;
     setIsLoading(true);
-
     try {
       const { data, error } = await supabase.auth.verifyOtp({
         email: formData.email,
         token: code,
         type: "signup",
       });
+
       if (error) throw error;
 
       if (data.session) {
-        localStorage.setItem("token", data.session.access_token);
+        try {
+          await supabase.functions.invoke("welcome-email", {
+            body: {
+              email: formData.email.toLowerCase(),
+              fullName: formData.fullName.toUpperCase(),
+            },
+          });
+        } catch (mailErr) {
+          console.error("Mail gönderme işlemi başarısız:", mailErr);
+        }
 
         const nameParts = formData.fullName.trim().split(" ");
-        const firstName = nameParts[0];
+        const firstName = nameParts[0].toUpperCase();
         const lastName =
-          nameParts.length > 1 ? nameParts.slice(1).join(" ") : "ÜYE";
+          nameParts.length > 1
+            ? nameParts.slice(1).join(" ").toUpperCase()
+            : "ÜYE";
 
         login({
           id: data.user?.id,
-          name: firstName.toUpperCase(),
-          surname: lastName.toUpperCase(),
+          name: firstName,
+          surname: lastName,
           email: formData.email.toLowerCase(),
           membership: "Elite",
         });
 
-        localStorage.setItem("is_new_registrant", "true");
-        toast.success("HOŞ GELDİN! %50 İNDİRİMİN TANIMLANDI.", {
-          theme: "dark",
-          icon: <RiSparklingLine className="text-yellow-400" />,
-        });
-        navigate("/", { state: { isNewUser: true } });
+        toast.success("ELITE DÜNYASINA HOŞ GELDİN!", { theme: "dark" });
+
+        navigate("/", { state: { isNewUser: true }, replace: true });
       }
     } catch (error: any) {
-      toast.error(error.message || "DOĞRULAMA HATASI!", { theme: "dark" });
+      console.error("Doğrulama Hatası Detayı:", error);
+
+      const isRateLimit =
+        error.status === 429 ||
+        error.message?.includes("429") ||
+        error.code === "over_email_send_rate_limit";
+
+      toast.error(
+        isRateLimit
+          ? "ÇOK FAZLA DENEME YAPTINIZ. LÜTFEN BİRAZ BEKLEYİN."
+          : error.message || "KOD GEÇERSİZ VEYA SÜRESİ DOLMUŞ",
+        { theme: "dark" },
+      );
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-white relative font-satoshi overflow-hidden px-4">
       <Helmet>
         <title>Elite Üyelik | SHOP.CO</title>
       </Helmet>
-      {isLoading && (
-        <LoadingOverlay
-          message={
-            step === 1
-              ? "HESABINIZ OLUŞTURULUYOR..."
-              : "HESABINIZ HAZIRLANIYOR..."
-          }
-        />
+      {isLoading && <LoadingOverlay message="İŞLENİYOR..." />}
+
+      {activeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-xl rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b bg-zinc-50 flex justify-between items-center">
+              <h3 className="font-black italic uppercase text-sm">
+                Yasal Bilgilendirme
+              </h3>
+              <button
+                onClick={() => setActiveModal(null)}
+                className="text-[10px] font-black underline"
+              >
+                KAPAT
+              </button>
+            </div>
+            <div
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="p-8 max-h-[50vh] overflow-y-auto text-[11px] leading-relaxed text-zinc-600 font-medium italic"
+            >
+              {activeModal === "terms" && <TermsText />}
+              {activeModal === "lighting" && <LightingText />}
+              {activeModal === "privacy" && <PrivacyText />}
+            </div>
+            <div className="p-6 border-t bg-zinc-50">
+              <Button
+                onClick={() => confirmFromModal(activeModal)}
+                disabled={!isScrolledToBottom}
+                className={`w-full !py-4 !text-[10px] tracking-widest uppercase italic ${
+                  !isScrolledToBottom ? "opacity-40 cursor-not-allowed" : ""
+                }`}
+              >
+                {isScrolledToBottom
+                  ? "OKUDUM, ONAYLIYORUM"
+                  : "OKUDUM, ONAYLIYORUM"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
-      <div className="max-w-[1100px] w-full grid md:grid-cols-2 bg-white rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.12)] border border-zinc-100 overflow-hidden z-10 my-12 relative min-h-[650px]">
+      <div className="max-w-[1100px] w-full grid md:grid-cols-2 bg-white rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.12)] border border-zinc-100 overflow-hidden z-10 my-12">
         <div className="relative bg-black p-12 hidden md:flex flex-col justify-between text-left">
-          <div className="relative z-10">
-            <RiShieldCheckLine className="text-zinc-600 mb-6" size={32} />
+          <div>
+            <RiShieldCheckLine className="text-zinc-600 mb-4" size={30} />
             <h2 className="text-5xl lg:text-7xl font-[1000] text-white leading-[0.85] uppercase tracking-tighter italic">
-              TARZINI <br /> <span className="text-zinc-700">DÜNYAYA</span>{" "}
-              <br /> KONUŞTUR.
+              TARZINI <br />
+              <span className="text-zinc-700">DÜNYAYA</span>
+              <br />
+              KONUŞTUR.
             </h2>
           </div>
-          <p className="text-zinc-500 text-sm font-bold uppercase tracking-wider italic leading-relaxed relative z-10">
-            Elite üyelik ile kişiselleştirilmiş koleksiyonlar ve erken erişim
-            fırsatlarını yakala.
+          <p className="text-zinc-500 text-sm font-bold uppercase italic flex items-center gap-2">
+            <RiSparklingLine className="text-yellow-500" /> Elite üyelik ile
+            ayrıcalıkları yakala.
           </p>
         </div>
 
         <div className="p-8 md:p-14 text-left bg-white overflow-y-auto flex flex-col justify-center">
           {step === 1 ? (
-            <div className="animate-in fade-in slide-in-from-right duration-500">
-              <div className="mb-10 flex justify-between items-end">
-                <div>
-                  <h1 className="text-4xl font-[1000] uppercase tracking-tighter italic">
-                    ÜYE OL
-                  </h1>
-                  <p className="text-zinc-400 text-[10px] mt-2 uppercase tracking-[0.2em] font-black italic">
-                    MODA DÜNYAMIZA KATIL
-                  </p>
-                </div>
-                <Link to="/login" className="flex items-center gap-1 group">
-                  <span className="text-[10px] font-black uppercase border-b-2 border-black">
-                    GİRİŞ YAP
-                  </span>
-                  <RiArrowRightSLine className="group-hover:translate-x-1 transition-transform" />
+            <div className="animate-in fade-in duration-500">
+              <div className="mb-8 flex justify-between items-end">
+                <h1 className="text-4xl font-[1000] uppercase italic">
+                  ÜYE OL
+                </h1>
+                <Link
+                  to="/login"
+                  className="flex items-center gap-1 text-[10px] font-black uppercase border-b-2 border-black group"
+                >
+                  GİRİŞ YAP{" "}
+                  <RiArrowRightSLine className="group-hover:translate-x-1" />
                 </Link>
               </div>
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                <div className="space-y-2 relative">
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-2 italic">
-                    AD SOYAD
-                  </label>
-                  <div className="relative group">
-                    <RiUserLine className="absolute left-6 top-1/2 -translate-y-1/2 text-xl text-zinc-300 group-focus-within:text-black transition-colors" />
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="space-y-3">
+                  <div className="relative">
+                    <RiUserLine className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" />
                     <Input
                       {...register("fullName")}
                       placeholder="AD SOYAD"
-                      className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase ${errors.fullName ? "ring-2 ring-red-500" : ""}`}
+                      className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs uppercase ${errors.fullName ? "ring-1 ring-red-500" : ""}`}
                     />
                   </div>
-                  {errors.fullName && (
-                    <span className="absolute -bottom-5 left-2 text-[8px] font-black text-red-600 uppercase italic">
-                      {errors.fullName.message}
-                    </span>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div className="space-y-2 relative">
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 ml-2 italic">
-                    E-POSTA
-                  </label>
-                  <div className="relative group">
-                    <RiMailLine className="absolute left-6 top-1/2 -translate-y-1/2 text-xl text-zinc-300 group-focus-within:text-black transition-colors" />
+                  <div className="relative">
+                    <RiMailLine className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" />
                     <Input
                       {...register("email")}
                       type="email"
-                      placeholder="ornek@mail.com"
-                      className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs ${errors.email ? "ring-2 ring-red-500" : ""}`}
+                      placeholder="E-POSTA"
+                      className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs ${errors.email ? "ring-1 ring-red-500" : ""}`}
                     />
                   </div>
-                  {errors.email && (
-                    <span className="absolute -bottom-5 left-2 text-[8px] font-black text-red-600 uppercase italic">
-                      {errors.email.message}
-                    </span>
-                  )}
+                  <div className="relative">
+                    <RiPhoneLine className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300 z-10" />
+                    <PatternFormat
+                      format="0### ### ## ##"
+                      mask="_"
+                      customInput={Input}
+                      getInputRef={register("phone").ref}
+                      onValueChange={(values) =>
+                        setValue("phone", values.value)
+                      }
+                      type="tel"
+                      placeholder="TELEFON (05XX...)"
+                      className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs ${
+                        errors.phone ? "ring-1 ring-red-500" : ""
+                      }`}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2 relative">
-                    <Input
-                      {...register("password")}
-                      type="password"
-                      placeholder="ŞİFRE"
-                      className={`!bg-brand-soft !border-none !rounded-[20px] px-6 py-5 font-black text-xs tracking-widest ${errors.password ? "ring-2 ring-red-500" : ""}`}
-                    />
-                  </div>
-                  <div className="space-y-2 relative">
-                    <Input
-                      {...register("confirmPassword")}
-                      type="password"
-                      placeholder="TEKRAR"
-                      className={`!bg-brand-soft !border-none !rounded-[20px] px-6 py-5 font-black text-xs tracking-widest ${errors.confirmPassword ? "ring-2 ring-red-500" : ""}`}
-                    />
-                  </div>
+                  <Input
+                    {...register("password")}
+                    type="password"
+                    placeholder="ŞİFRE"
+                    className={`!bg-brand-soft !border-none !rounded-[20px] py-5 font-black text-xs ${errors.password ? "ring-1 ring-red-500" : ""}`}
+                  />
+                  <Input
+                    {...register("confirmPassword")}
+                    type="password"
+                    placeholder="TEKRAR"
+                    className={`!bg-brand-soft !border-none !rounded-[20px] py-5 font-black text-xs ${errors.confirmPassword ? "ring-1 ring-red-500" : ""}`}
+                  />
                 </div>
-                {(errors.password || errors.confirmPassword) && (
-                  <span className="text-[8px] font-black text-red-600 uppercase italic ml-2">
-                    {errors.password?.message ||
-                      errors.confirmPassword?.message}
-                  </span>
-                )}
 
                 {passwordValue && (
                   <div className="px-2 space-y-2">
-                    <div className="flex justify-between text-[8px] font-black text-zinc-400 uppercase italic">
-                      <span>Şifre Gücü</span>
-                      <span>
-                        {passwordStrength < 66
-                          ? "Zayıf"
-                          : passwordStrength < 100
-                            ? "Orta"
-                            : "Güçlü"}
-                      </span>
-                    </div>
                     <div className="h-1 w-full bg-zinc-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all duration-500 ${passwordStrength < 66 ? "bg-red-500" : passwordStrength < 100 ? "bg-yellow-500" : "bg-green-500"}`}
                         style={{ width: `${passwordStrength}%` }}
                       />
                     </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1">
+                      <span
+                        className={`text-[8px] font-bold italic uppercase ${passwordValue.length >= 8 ? "text-green-600" : "text-zinc-400"}`}
+                      >
+                        ● Minimum 8 Karakter
+                      </span>
+                      <span
+                        className={`text-[8px] font-bold italic uppercase ${/[A-Z]/.test(passwordValue) ? "text-green-600" : "text-zinc-400"}`}
+                      >
+                        ● En Az Bir Büyük Harf
+                      </span>
+                      <span
+                        className={`text-[8px] font-bold italic uppercase ${/[0-9]/.test(passwordValue) ? "text-green-600" : "text-zinc-400"}`}
+                      >
+                        ● En Az Bir Rakam
+                      </span>
+                    </div>
                   </div>
                 )}
 
-                <div className="flex items-start gap-3 px-2 pt-2 relative">
-                  <input
-                    type="checkbox"
-                    {...register("acceptTerms")}
-                    id="acceptTerms"
-                    className="mt-1 accent-black w-4 h-4 cursor-pointer"
-                  />
-                  <label
-                    htmlFor="acceptTerms"
-                    className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider italic leading-relaxed cursor-pointer"
-                  >
-                    <span className="text-black">Kullanım Şartları</span> ve{" "}
-                    <span className="text-black">KVKK</span> onaylıyorum.
-                  </label>
-                  {errors.acceptTerms && (
-                    <p className="absolute -bottom-4 left-2 text-red-600 text-[8px] italic font-black uppercase">
-                      {errors.acceptTerms.message}
+                <div className="space-y-1">
+                  {Object.values(errors).map((err, index) => (
+                    <p
+                      key={index}
+                      className="text-[9px] text-red-500 font-extrabold italic px-2"
+                    >
+                      ! {err.message}
                     </p>
-                  )}
+                  ))}
                 </div>
 
-                <div className="pt-6">
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="xl"
-                    disabled={!isValid || isLoading}
-                    className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic transition-all ${!isValid || isLoading ? "opacity-30 grayscale cursor-not-allowed" : "hover:scale-[1.02] active:scale-95 shadow-xl"}`}
-                  >
-                    {isLoading ? "İŞLENİYOR..." : "KAYIT OL VE KEŞFET →"}
-                  </Button>
+                <div className="space-y-2 pt-2 border-t border-zinc-50 mt-4">
+                  <div className="flex items-center gap-3 px-2">
+                    <input
+                      type="checkbox"
+                      {...register("marketingConsent")}
+                      className="accent-black w-3 h-3 cursor-pointer"
+                    />
+                    <label className="text-[9px] font-bold text-zinc-400 uppercase italic">
+                      Kampanyalardan haberdar olmak istiyorum.
+                    </label>
+                  </div>
+                  {[
+                    {
+                      id: "terms",
+                      label: "Kullanım Şartlarını Onaylıyorum *",
+                      val: termsVal,
+                    },
+                    {
+                      id: "lighting",
+                      label: "Aydınlatma Metnini Onaylıyorum *",
+                      val: lightingVal,
+                    },
+                    {
+                      id: "privacy",
+                      label: "Gizlilik Beyanını Onaylıyorum *",
+                      val: privacyVal,
+                    },
+                  ].map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 px-2">
+                      <input
+                        type="checkbox"
+                        checked={item.val}
+                        onChange={() => {}}
+                        onClick={(e) => openModal(e, item.id as ModalType)}
+                        className="accent-black w-3 h-3 cursor-pointer"
+                      />
+                      <label
+                        onClick={(e) => openModal(e, item.id as ModalType)}
+                        className="text-[9px] font-bold text-black uppercase italic cursor-pointer underline decoration-zinc-300"
+                      >
+                        {item.label}
+                      </label>
+                    </div>
+                  ))}
                 </div>
+
+                <Button
+                  type="submit"
+                  disabled={!isValid || isLoading}
+                  className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic ${!isValid || isLoading ? "opacity-30 grayscale cursor-not-allowed" : "hover:scale-[1.02] shadow-xl"}`}
+                >
+                  {isLoading ? "İŞLENİYOR..." : "KAYIT OL VE KEŞFET →"}
+                </Button>
               </form>
             </div>
           ) : (
@@ -334,9 +459,6 @@ const Register: React.FC = () => {
               isLoading={isLoading}
               onConfirm={handleVerificationSuccess}
               onBack={() => setStep(1)}
-              onResend={() =>
-                toast.info("YENİ KOD GÖNDERİLDİ!", { theme: "dark" })
-              }
             />
           )}
         </div>

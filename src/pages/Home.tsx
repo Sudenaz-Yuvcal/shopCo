@@ -20,14 +20,10 @@ const Home = () => {
         <Hero />
       </section>
 
-      <main className="space-y-20 py-10 md:py-20">
+      <main className="">
         <section className="animate-in slide-in-from-bottom-10 duration-700">
           <NewArrivals />
         </section>
-
-        <div className="max-w-7xl mx-auto px-6">
-          <hr className="border-zinc-100" />
-        </div>
 
         <section className="animate-in slide-in-from-bottom-10 duration-700 delay-100">
           <TopSelling />

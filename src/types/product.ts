@@ -1,31 +1,28 @@
 export interface Product {
   id: number;
-  name: string;
-  title?: string;
+  title: string;
   price: number;
-  value: number;
-  image: string;
-  category: string;
-  categoryId?: string;
-  color?: string; 
-  oldValue?: number;
+  size?: string;
+  color?: string;
+  description: string;
+  category_id: number;
+  images: string[];
+  brand: string;
+  created_at: string;
   rating: number;
-  brand?: string;
-  size?: string[]; 
-  inStock?: boolean;
-  description?: string;
-  images?: string[];
-  created_at?: string;
-  supabaseSlug?: string;
-  stock: number; 
-
-  variants?: {
+  value: number;
+  name: string;
+  category: string;
+  oldValue: number;
+  image: string;
+  stock: number;
+  slug: string;
+  variants: {
     color: string;
     size: string;
     stock: number;
   }[];
-
-  faqs?: {
+  faqs: {
     question: string;
     answer: string;
   }[];

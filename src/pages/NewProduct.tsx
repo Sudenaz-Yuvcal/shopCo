@@ -6,6 +6,7 @@ import ProductCard from "../components/Product/ProductCard";
 import NewProductBanner from "../sections/new-product/new-product-banner";
 import type { Product } from "../types/product";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
+import { slugify } from "../utils/slugify";
 
 const NewProduct = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,13 +29,15 @@ const NewProduct = () => {
 
         return {
           ...item,
-          stock: item.stock ?? 0, 
+          slug: item.slug || slugify(item.title || item.name || ""),
+          category_id: item.category?.id || 0,
+          stock: item.stock ?? 0,
           value: item.price,
           image:
             item.images && item.images.length > 0
               ? item.images[0]
-              : "https://via.placeholder.com/600",
-          rating: item.rating || 4.5, 
+              : "/public/shopCO.png",
+          rating: item.rating || 4.5,
           oldValue: Math.round(item.price * 1.3),
           category: isActuallyNew ? "NEW" : item.category?.name || "Arrival",
           brand: "SHOP.CO",
@@ -103,7 +106,14 @@ const NewProduct = () => {
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-20">
                 {currentItems.map((product) => (
-                  <ProductCard key={product.id} {...product} />
+                  <ProductCard
+                    key={product.id}
+                    {...product}
+                    slug={
+                      product.slug ||
+                      slugify(product.name || product.title || "")
+                    }
+                  />
                 ))}
               </div>
 

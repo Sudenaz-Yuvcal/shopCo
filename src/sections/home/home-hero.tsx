@@ -9,6 +9,7 @@ import HeroImageMobile from "../../assets/Rectangle.png";
 import StarImage from "/Vector.png";
 import { HERO_STATS, HERO_BRANDS } from "../../constants/Hero";
 import { StatItem } from "../../components/Home/StatItem";
+import { useNavigate } from "react-router-dom";
 
 const starPulseStyle = `
   @keyframes starPulse {
@@ -24,6 +25,8 @@ const starPulseStyle = `
 `;
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   const duplicatedBrands = [
     ...HERO_BRANDS,
     ...HERO_BRANDS,
@@ -32,6 +35,10 @@ const Hero = () => {
     ...HERO_BRANDS,
     ...HERO_BRANDS,
   ];
+
+  const handleBrandClick = (brandName: string) => {
+    navigate(`/shop?brand=${encodeURIComponent(brandName)}`);
+  };
 
   return (
     <div className="relative w-full bg-[#F2F0F1] font-satoshi flex flex-col lg:block lg:h-[calc(100vh-80px)] overflow-hidden">
@@ -109,7 +116,7 @@ const Hero = () => {
           }}
           slidesPerView={"auto"}
           spaceBetween={40}
-          allowTouchMove={false}
+          allowTouchMove={true}
           className="eventSlider"
         >
           {duplicatedBrands.map((brand, i) => (
@@ -119,6 +126,7 @@ const Hero = () => {
                   src={brand.src}
                   className="h-5 md:h-8 object-contain brightness-0 invert opacity-60 hover:opacity-100 hover:scale-110 transition-all duration-300 cursor-pointer"
                   alt={brand.name}
+                  onClick={() => handleBrandClick(brand.name)}
                 />
               </div>
             </SwiperSlide>

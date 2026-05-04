@@ -10,7 +10,6 @@ module.exports = {
     extend: {
       fontFamily: {
         satoshi: ["Satoshi", "sans-serif"],
-        integral: ["Integral CF", "sans-serif"],
       },
       fontWeight: {
         heavy: "1000",

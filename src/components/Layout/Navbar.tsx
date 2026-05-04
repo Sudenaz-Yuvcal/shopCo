@@ -50,17 +50,20 @@ const Navbar: React.FC<NavbarProps> = ({
           const { data, error } = await supabase
             .from("products")
             .select("*")
-            .ilike("name", `%${searchTerm}%`)
+            .or(`title.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%`)
             .limit(6);
-
           if (error) throw error;
 
           const mappedResults = (data || []).map((p: any) => ({
             id: p.id,
-            name: p.name,
-            category: p.category,
-            value: p.price, 
-            image: p.image_url || p.image,
+            name: p.title,
+            category: p.category_id,
+            value: p.price,
+            brand: p.brand,
+            image:
+              p.images && p.images.length > 0
+                ? p.images[0]
+                : "/placeholder.png",
           }));
 
           setSearchResults(mappedResults);
@@ -76,7 +79,6 @@ const Navbar: React.FC<NavbarProps> = ({
         setIsSearchOpen(false);
       }
     };
-
     const debounce = setTimeout(fetchSearch, 300);
     return () => clearTimeout(debounce);
   }, [searchTerm]);
@@ -101,6 +103,25 @@ const Navbar: React.FC<NavbarProps> = ({
       setSearchTerm("");
     }
   };
+  const categories = [
+    { name: "Casual", id: 1 },
+    { name: "Formal", id: 2 },
+    { name: "Party", id: 3 },
+    { name: "Gym", id: 4 },
+  ];
+
+  {
+    categories.map((cat) => (
+      <Link
+        key={cat.id}
+        to={`/shop?category=${cat.id}`}
+        onClick={() => setIsShopOpen(false)}
+        className="block px-4 py-3 hover:bg-black hover:text-white rounded-xl transition-all font-black text-[10px] italic uppercase tracking-tighter"
+      >
+        {cat.name}
+      </Link>
+    ));
+  }
 
   return (
     <header className="w-full sticky top-0 z-50 shadow-sm md:shadow-none bg-white">
@@ -157,13 +178,7 @@ const Navbar: React.FC<NavbarProps> = ({
               {isShopOpen && (
                 <div className="absolute top-full left-0 w-56 bg-white border border-black/5 shadow-2xl rounded-2xl p-4 animate-in fade-in slide-in-from-top-2">
                   <div className="space-y-1">
-                    {[
-                      "Clothes",
-                      "Shoes",
-                      "Electronics",
-                      "Miscellaneous",
-                      "Furniture",
-                    ].map((cat) => (
+                    {["Casual", "Formal", "Party", "Gym"].map((cat) => (
                       <Link
                         key={cat}
                         to={`/shop?category=${cat}`}
@@ -205,6 +220,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => searchTerm.length > 1 && setIsSearchOpen(true)}
                 onKeyDown={(e) => e.key === "Enter" && handleSeeAll()}
                 placeholder="ÜRÜN VEYA KATEGORİ ARA..."
                 className="!py-3 pl-12 w-full text-[10px] bg-brand-gray border-none !rounded-full font-black tracking-widest focus:ring-2 focus:ring-black transition-all"
@@ -284,7 +300,7 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               <RiHeartLine />
               {favorites.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-lg">
+                <span className="absolute -top-2 -right-2 bg-red text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-[1000] border-2 border-white shadow-lg">
                   {favorites.length}
                 </span>
               )}

@@ -55,7 +55,7 @@ const MainLayout: React.FC = () => {
                 <p className="text-[10px] font-black text-gray-400 tracking-[0.4em] uppercase">
                   Reyonlar
                 </p>
-                {["Erkek", "Kadın", "Çocuk"].map((item) => (
+                {["Casual", "Formal", "Party", "Gym"].map((item) => (
                   <Link
                     key={item}
                     to={`/shop?category=${item}`}

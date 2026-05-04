@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "../../api/productService";
 import ProductCard from "../../components/Product/ProductCard";
 import Button from "../../components/Ui/Button";
-import type { Product } from "../../types/product"; 
+import type { Product } from "../../types/product";
+import { slugify } from "../../utils/slugify";
 
 import "swiper/css";
 
@@ -24,16 +25,24 @@ const TopSelling = () => {
     queryKey: ["top-selling"],
     queryFn: async () => {
       const allProducts = (await getProducts()) as RawProduct[];
-
       return allProducts
         .map(
-          (item): Product => ({
+          (item: any): Product => ({
             ...item,
             id: item.id,
             name: item.title || item.name || "Popüler Ürün",
+            slug: item.slug || slugify(item.title || item.name || ""),
+            description: item.description || "Harika bir SHOP.CO ürünü.",
+            category_id: item.category?.id || 0,
+            created_at: item.created_at || new Date().toISOString(),
+            faqs: item.faqs || [],
+
             value: item.price,
             price: item.price,
-            image: item.images && item.images.length > 0 ? item.images[0] : "",
+            image:
+              item.images && item.images.length > 0
+                ? item.images[0]
+                : "/shopCO.png",
             images: item.images || [],
             rating: 4.8,
             oldValue: Math.round(item.price * 1.3),
@@ -42,7 +51,7 @@ const TopSelling = () => {
             variants: item.variants || [],
             stock:
               item.variants?.reduce(
-                (acc, curr) => acc + (curr.stock || 0),
+                (acc: number, curr: any) => acc + (curr.stock || 0),
                 0,
               ) || 0,
           }),

@@ -40,7 +40,7 @@ const CartNotification = ({
       <div className="h-1 bg-zinc-800">
         <div
           className={`h-full transition-all duration-[50ms] ${
-            notification.type === "success" ? "bg-white" : "bg-red-500"
+            notification.type === "success" ? "bg-white" : "bg-red"
           }`}
           style={{ width: `${progress}%` }}
         />

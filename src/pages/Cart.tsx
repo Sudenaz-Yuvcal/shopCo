@@ -42,7 +42,7 @@ const Cart = () => {
     isOpen: boolean;
     item: CartItem | null;
   }>({
-    isOpen: true,
+    isOpen: false,
     item: null,
   });
 
@@ -213,7 +213,13 @@ const Cart = () => {
                     key={`${item.id}-${item.size}-${item.color}`}
                     item={item}
                     onRemoveClick={() => handleOpenDeleteModal(item)}
-                    updateQuantity={updateQuantity}
+                    updateQuantity={(id, size, color, newQty) => {
+                      if (newQty < 1) {
+                        handleOpenDeleteModal(item);
+                      } else {
+                        updateQuantity(id, size, color, newQty);
+                      }
+                    }}
                   />
                 ))}
               </div>

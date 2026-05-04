@@ -103,7 +103,7 @@ const Account = () => {
           name: data.name,
           email: data.email,
         });
-        toast.success("BİLGİLERİN BAŞARIYLA GÜNCELLENDİ", { theme: "dark" });
+        toast.success("BİLGİLERİNİZ BAŞARIYLA GÜNCELLENDİ", { theme: "dark" });
       }
     } catch (error: any) {
       console.error("Güncelleme hatası:", error.message);

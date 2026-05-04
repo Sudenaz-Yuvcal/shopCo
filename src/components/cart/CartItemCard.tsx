@@ -17,12 +17,27 @@ const CartItemCard = ({
   onRemoveClick,
   updateQuantity,
 }: CartItemCardProps) => {
+  const colorMap: Record<string, string> = {
+    "#31344F": "Mavi",
+    "#4F4631": "Haki",
+    "#000000": "Siyah",
+    "#FFFFFF": "Beyaz",
+    "#FF3333": "Kırmızı",
+  };
+
+  const colorName = colorMap[item.color.toUpperCase()] || item.color;
+
+  const currentVariant = item.variants?.find(
+    (v) => v.size === item.size && v.color === item.color,
+  );
+
+  const stockLimit = currentVariant?.stock ?? (item as any).stock ?? 99;
+
   const currentQty = Number(item.quantity) || 0;
-  const maxStock = Number(item.stock) || 0;
+  const displayPrice = Number(item.price || (item as any).value || 0);
 
   const handleDecrease = () => {
     const nextQty = currentQty - 1;
-
     if (nextQty <= 0) {
       onRemoveClick();
     } else {
@@ -32,13 +47,10 @@ const CartItemCard = ({
 
   const handleIncrease = () => {
     const nextQty = currentQty + 1;
-
-    if (nextQty <= 10 && nextQty <= maxStock) {
+    if (nextQty <= 10 && nextQty <= stockLimit) {
       updateQuantity(item.id, item.size, item.color, nextQty);
     }
   };
-
-  const displayPrice = Number(item.price || (item as any).value || 0);
 
   return (
     <div className="flex gap-8 p-6 bg-zinc-50 rounded-[40px] border border-transparent hover:border-zinc-200 transition-all group">
@@ -57,7 +69,7 @@ const CartItemCard = ({
               {item.name}
             </h3>
             <p className="text-[10px] font-black text-zinc-400 mt-3 uppercase tracking-widest italic">
-              {item.size} • {item.color}
+              {item.size} • {colorName}
             </p>
           </div>
           <button
@@ -88,10 +100,10 @@ const CartItemCard = ({
 
             <button
               onClick={handleIncrease}
-              disabled={currentQty >= 10 || currentQty >= maxStock}
+              disabled={currentQty >= 10 || currentQty >= stockLimit}
               className={`transition-colors ${
-                currentQty >= 10 || currentQty >= maxStock
-                  ? "text-zinc-200 cursor-not-allowed"
+                currentQty >= 10 || currentQty >= stockLimit
+                  ? "opacity-20 cursor-not-allowed"
                   : "text-zinc-400 hover:text-black"
               }`}
               type="button"

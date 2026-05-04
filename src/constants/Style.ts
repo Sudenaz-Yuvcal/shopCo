@@ -14,18 +14,18 @@ export const DRESS_STYLES = [
     description: "Ofis ve özel davetler için kusursuz kesimler.",
   },
   {
-    name: "PARTY",
-    image: "/styles/night-out.jpg",
-    span: "md:col-span-2",
-    category: "party",
-    description: "Gecenin parlayan yıldızı olmaya hazır mısın?",
-  },
-  {
     name: "GYM",
     image: "/styles/active-performance.jpg",
     span: "md:col-span-1",
     category: "gym",
     description: "Performans ve stil antrenmanda buluşuyor.",
+  },
+  {
+    name: "PARTY",
+    image: "/styles/night-out.jpg",
+    span: "md:col-span-2",
+    category: "party",
+    description: "Gecenin parlayan yıldızı olmaya hazır mısın?",
   },
 ] as const;
 

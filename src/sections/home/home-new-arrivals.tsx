@@ -6,6 +6,7 @@ import { getProducts } from "../../api/productService";
 import ProductCard from "../../components/Product/ProductCard";
 import Button from "../../components/Ui/Button";
 import type { Product } from "../../types/product";
+import { slugify } from "../../utils/slugify";
 
 import "swiper/css";
 
@@ -16,7 +17,7 @@ interface RawProduct {
   name?: string;
   title?: string;
   variants?: { size: string; color: string; stock: number }[];
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 const NewArrivals = () => {
@@ -27,13 +28,23 @@ const NewArrivals = () => {
 
       return allProducts
         .map(
-          (item): Product => ({
+          (item: any): Product => ({
             ...item,
             id: item.id,
             name: item.title || item.name || "Yeni Ürün",
+
+            slug: item.slug || slugify(item.title || item.name || ""),
+            description: item.description || "Harika bir SHOP.CO ürünü.",
+            category_id: item.category?.id || 0,
+            created_at: item.created_at || new Date().toISOString(),
+            faqs: item.faqs || [],
+
             value: item.price,
             price: item.price,
-            image: item.images && item.images.length > 0 ? item.images[0] : "",
+            image:
+              item.images && item.images.length > 0
+                ? item.images[0]
+                : "/shopCO.png",
             images: item.images || [],
             rating: 4.5,
             oldValue: Math.round(item.price * 1.3),
@@ -42,7 +53,7 @@ const NewArrivals = () => {
             variants: item.variants || [],
             stock:
               item.variants?.reduce(
-                (acc, curr) => acc + (curr.stock || 0),
+                (acc: number, curr: any) => acc + (curr.stock || 0),
                 0,
               ) || 0,
           }),
