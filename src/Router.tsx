@@ -16,10 +16,16 @@ import Password from "./pages/Password";
 import Account from "./pages/Account";
 import Favorite from "./pages/Favorite";
 import AddProductPage from "./pages/Admin/AddProductPage";
+import VerifyPage from "./pages/VerifyPage";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
   return user ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useUser();
+  return !user ? <>{children}</> : <Navigate to="/" replace />;
 };
 
 const AppRouter: React.FC = () => {
@@ -36,10 +42,35 @@ const AppRouter: React.FC = () => {
         { path: "brands", element: <Brands /> },
         { path: "discount", element: <Discount /> },
         { path: "shop", element: <Category /> },
-        { path: "login", element: <Login /> },
-        { path: "register", element: <Register /> },
         { path: "password", element: <Password /> },
         { path: "admin/add-product", element: <AddProductPage /> },
+        { path: "success", element: <Success /> },
+
+        {
+          path: "login",
+          element: (
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          ),
+        },
+        {
+          path: "register",
+          element: (
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          ),
+        },
+        {
+          path: "verify",
+          element: (
+            <PublicRoute>
+              <VerifyPage />
+            </PublicRoute>
+          ),
+        },
+
         {
           path: "checkout",
           element: (
@@ -47,10 +78,6 @@ const AppRouter: React.FC = () => {
               <Checkout />
             </ProtectedRoute>
           ),
-        },
-        {
-          path: "success",
-          element: <Success />,
         },
         {
           path: "account",
@@ -66,7 +93,6 @@ const AppRouter: React.FC = () => {
   ];
 
   const element = useRoutes(routes);
-
   return element;
 };
 

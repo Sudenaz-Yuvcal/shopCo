@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -37,6 +37,20 @@ const Category = () => {
   const [appliedFilters, setAppliedFilters] = useState<FilterState>({
     ...initialFilters,
   });
+
+  useEffect(() => {
+    if (brandParam) {
+      const brandValue = brandParam.toUpperCase();
+      setAppliedFilters((prev) => ({
+        ...prev,
+        selectedBrands: [brandValue],
+      }));
+      setTempFilters((prev) => ({
+        ...prev,
+        selectedBrands: [brandValue],
+      }));
+    }
+  }, [brandParam]);
 
   const CATEGORY_OPTIONS = [
     { id: "1", name: "Casual" },
@@ -101,11 +115,16 @@ const Category = () => {
         const productPrice = Number(p.price || p.value || 0);
         const priceMatch = productPrice <= appliedFilters.price;
 
-        const brandFilterMatch =
-          appliedFilters.selectedBrands.length === 0 ||
-          appliedFilters.selectedBrands.some(
-            (b) => b.toUpperCase() === (p.brand?.toUpperCase() || ""),
+        const brandFilterMatch = (() => {
+          const activeBrands = [...appliedFilters.selectedBrands];
+          if (brandParam) activeBrands.push(brandParam);
+
+          if (activeBrands.length === 0) return true;
+
+          return activeBrands.some(
+            (b) => b.toLowerCase() === p.brand?.toLowerCase(),
           );
+        })();
 
         const urlCategoryMatch =
           !categoryParam ||

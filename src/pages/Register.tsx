@@ -54,12 +54,8 @@ const Register: React.FC = () => {
   const handleScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
-
     const isBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 5;
-
-    if (isBottom) {
-      setIsScrolledToBottom(true);
-    }
+    if (isBottom) setIsScrolledToBottom(true);
   };
 
   useEffect(() => {
@@ -91,10 +87,10 @@ const Register: React.FC = () => {
   });
 
   const passwordValue = watch("password", "");
-  const emailValue = watch("email", "");
   const termsVal = watch("acceptTerms");
   const lightingVal = watch("lightingText");
   const privacyVal = watch("privacyPolicy");
+
   const passwordStrength = useMemo(() => {
     if (!passwordValue) return 0;
     let strength = 0;
@@ -142,22 +138,21 @@ const Register: React.FC = () => {
             type: "manual",
             message: "BU E-POSTA ZATEN KAYITLI.",
           });
+          return;
         }
         throw error;
       }
 
       setFormData(data);
       setStep(2);
-      toast.info("DOĞRULAMA KODU GÖNDERİLDİ.", { theme: "dark" });
+      toast.info("DOĞRULAMA KODU E-POSTA ADRESİNİZE GÖNDERİLDİ.", {
+        theme: "dark",
+      });
     } catch (error: any) {
-      console.error("Kayıt Hatası:", error);
       const isRateLimit =
         error.status === 429 || error.message?.includes("429");
-
       toast.error(
-        isRateLimit
-          ? "ÇOK FAZLA DENEME YAPTINIZ. LÜTFEN BİRAZ BEKLEYİN."
-          : error.message || "BİR HATA OLUŞTU",
+        isRateLimit ? "ÇOK FAZLA DENEME. LÜTFEN BEKLEYİN." : error.message,
         { theme: "dark" },
       );
     } finally {
@@ -177,18 +172,7 @@ const Register: React.FC = () => {
 
       if (error) throw error;
 
-      if (data.session) {
-        try {
-          await supabase.functions.invoke("welcome-email", {
-            body: {
-              email: formData.email.toLowerCase(),
-              fullName: formData.fullName.toUpperCase(),
-            },
-          });
-        } catch (mailErr) {
-          console.error("Mail gönderme işlemi başarısız:", mailErr);
-        }
-
+      if (data.user) {
         const nameParts = formData.fullName.trim().split(" ");
         const firstName = nameParts[0].toUpperCase();
         const lastName =
@@ -197,7 +181,7 @@ const Register: React.FC = () => {
             : "ÜYE";
 
         login({
-          id: data.user?.id,
+          id: data.user.id,
           name: firstName,
           surname: lastName,
           email: formData.email.toLowerCase(),
@@ -205,27 +189,17 @@ const Register: React.FC = () => {
         });
 
         toast.success("ELITE DÜNYASINA HOŞ GELDİN!", { theme: "dark" });
-
-        navigate("/", { state: { isNewUser: true }, replace: true });
+        navigate("/"); 
       }
     } catch (error: any) {
-      console.error("Doğrulama Hatası Detayı:", error);
-
-      const isRateLimit =
-        error.status === 429 ||
-        error.message?.includes("429") ||
-        error.code === "over_email_send_rate_limit";
-
-      toast.error(
-        isRateLimit
-          ? "ÇOK FAZLA DENEME YAPTINIZ. LÜTFEN BİRAZ BEKLEYİN."
-          : error.message || "KOD GEÇERSİZ VEYA SÜRESİ DOLMUŞ",
-        { theme: "dark" },
-      );
+      toast.error(error.message || "KOD GEÇERSİZ VEYA SÜRESİ DOLMUŞ", {
+        theme: "dark",
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-white relative font-satoshi overflow-hidden px-4">
       <Helmet>
@@ -260,13 +234,9 @@ const Register: React.FC = () => {
               <Button
                 onClick={() => confirmFromModal(activeModal)}
                 disabled={!isScrolledToBottom}
-                className={`w-full !py-4 !text-[10px] tracking-widest uppercase italic ${
-                  !isScrolledToBottom ? "opacity-40 cursor-not-allowed" : ""
-                }`}
+                className={`w-full !py-4 !text-[10px] tracking-widest uppercase italic ${!isScrolledToBottom ? "opacity-40" : ""}`}
               >
-                {isScrolledToBottom
-                  ? "OKUDUM, ONAYLIYORUM"
-                  : "OKUDUM, ONAYLIYORUM"}
+                OKUDUM, ONAYLIYORUM
               </Button>
             </div>
           </div>
@@ -278,10 +248,8 @@ const Register: React.FC = () => {
           <div>
             <RiShieldCheckLine className="text-zinc-600 mb-4" size={30} />
             <h2 className="text-5xl lg:text-7xl font-[1000] text-white leading-[0.85] uppercase tracking-tighter italic">
-              TARZINI <br />
-              <span className="text-zinc-700">DÜNYAYA</span>
-              <br />
-              KONUŞTUR.
+              TARZINI <br /> <span className="text-zinc-700">DÜNYAYA</span>{" "}
+              <br /> KONUŞTUR.
             </h2>
           </div>
           <p className="text-zinc-500 text-sm font-bold uppercase italic flex items-center gap-2">
@@ -337,9 +305,7 @@ const Register: React.FC = () => {
                       }
                       type="tel"
                       placeholder="TELEFON (05XX...)"
-                      className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs ${
-                        errors.phone ? "ring-1 ring-red-500" : ""
-                      }`}
+                      className={`!bg-brand-soft !border-none !rounded-[20px] pl-16 py-5 font-black text-xs ${errors.phone ? "ring-1 ring-red-500" : ""}`}
                     />
                   </div>
                 </div>
@@ -366,23 +332,6 @@ const Register: React.FC = () => {
                         className={`h-full transition-all duration-500 ${passwordStrength < 66 ? "bg-red-500" : passwordStrength < 100 ? "bg-yellow-500" : "bg-green-500"}`}
                         style={{ width: `${passwordStrength}%` }}
                       />
-                    </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1">
-                      <span
-                        className={`text-[8px] font-bold italic uppercase ${passwordValue.length >= 8 ? "text-green-600" : "text-zinc-400"}`}
-                      >
-                        ● Minimum 8 Karakter
-                      </span>
-                      <span
-                        className={`text-[8px] font-bold italic uppercase ${/[A-Z]/.test(passwordValue) ? "text-green-600" : "text-zinc-400"}`}
-                      >
-                        ● En Az Bir Büyük Harf
-                      </span>
-                      <span
-                        className={`text-[8px] font-bold italic uppercase ${/[0-9]/.test(passwordValue) ? "text-green-600" : "text-zinc-400"}`}
-                      >
-                        ● En Az Bir Rakam
-                      </span>
                     </div>
                   </div>
                 )}
@@ -430,7 +379,7 @@ const Register: React.FC = () => {
                       <input
                         type="checkbox"
                         checked={item.val}
-                        onChange={() => {}}
+                        readOnly
                         onClick={(e) => openModal(e, item.id as ModalType)}
                         className="accent-black w-3 h-3 cursor-pointer"
                       />
@@ -447,7 +396,7 @@ const Register: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={!isValid || isLoading}
-                  className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic ${!isValid || isLoading ? "opacity-30 grayscale cursor-not-allowed" : "hover:scale-[1.02] shadow-xl"}`}
+                  className={`w-full !rounded-[20px] !py-6 !text-[11px] tracking-[0.4em] italic ${!isValid || isLoading ? "opacity-30 grayscale" : "hover:scale-[1.02] shadow-xl"}`}
                 >
                   {isLoading ? "İŞLENİYOR..." : "KAYIT OL VE KEŞFET →"}
                 </Button>
@@ -455,7 +404,7 @@ const Register: React.FC = () => {
             </div>
           ) : (
             <CodeVerify
-              target={emailValue}
+              target={formData?.email || ""}
               isLoading={isLoading}
               onConfirm={handleVerificationSuccess}
               onBack={() => setStep(1)}

@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { BRANDS_DATA } from "../constants/Brand";
 import BrandCard from "../sections/brands/brand-card";
+import { slugify } from "../utils/slugify"; 
 
 const Brands = () => {
   const navigate = useNavigate();
@@ -38,7 +39,11 @@ const Brands = () => {
             <BrandCard
               key={brand.id}
               brand={brand}
-              onClick={() => navigate(`/shop?brand=${brand.name}`)}
+              onClick={() => {
+               
+                const brandFilter = slugify(brand.name);
+                navigate(`/shop?brand=${brandFilter}`);
+              }}
             />
           ))}
 

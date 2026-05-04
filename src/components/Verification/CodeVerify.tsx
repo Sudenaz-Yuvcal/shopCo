@@ -2,9 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import Button from "../Ui/Button";
 
 interface CodeVerifyProps {
-  target: string;
+  target?: string;
   onConfirm: (code: string) => void;
-  onResend?: () => void;
   onBack?: () => void;
   isLoading?: boolean;
 }
@@ -12,40 +11,12 @@ interface CodeVerifyProps {
 const CodeVerify: React.FC<CodeVerifyProps> = ({
   target,
   onConfirm,
-  onResend,
   onBack,
   isLoading,
 }) => {
   const codeLength = 8;
   const [code, setCode] = useState<string[]>(new Array(codeLength).fill(""));
-  const [timeLeft, setTimeLeft] = useState(59);
-  const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  useEffect(() => {
-    if (timeLeft <= 0) {
-      setCanResend(true);
-      return;
-    }
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  const handleResendClick = () => {
-    if (!canResend || !onResend) return;
-
-    const emptyCode = new Array(codeLength).fill("");
-    setCode(emptyCode);
-
-    inputRefs.current[0]?.focus();
-
-    setCanResend(false);
-    setTimeLeft(59);
-
-    onResend();
-  };
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
@@ -77,6 +48,23 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const data = e.clipboardData
+      .getData("text")
+      .trim()
+      .slice(0, codeLength)
+      .split("");
+    const newCode = [...code];
+    data.forEach((char, idx) => {
+      if (!isNaN(Number(char))) {
+        newCode[idx] = char;
+      }
+    });
+    setCode(newCode);
+    const nextIndex = Math.min(data.length, codeLength - 1);
+    inputRefs.current[nextIndex]?.focus();
+  };
+
   return (
     <div className="w-full flex flex-col items-center justify-center space-y-10 animate-in fade-in zoom-in duration-500">
       <div className="text-center space-y-3">
@@ -84,14 +72,14 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
           GÜVENLİK KODU
         </h2>
         <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] italic leading-relaxed">
-          KOD ŞURAYA GÖNDERİLDİ: <br />
+          8 HANELİ KOD ŞURAYA GÖNDERİLDİ: <br />
           <span className="text-black border-b-2 border-black/10">
             {target}
           </span>
         </p>
       </div>
 
-      <div className="flex justify-center gap-1.5 md:gap-2">
+      <div className="flex justify-center gap-1 md:gap-1.5">
         {code.map((digit, index) => (
           <input
             key={index}
@@ -101,9 +89,10 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
               inputRefs.current[index] = el;
             }}
             value={digit}
+            onPaste={handlePaste}
             onChange={(e) => handleChange(e.target, index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            className="w-9 h-12 md:w-12 md:h-16 border-[3px] border-black rounded-[12px] text-center text-xl md:text-2xl font-[1000] focus:bg-black focus:text-white transition-all outline-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] focus:shadow-none translate-y-0 focus:-translate-y-1"
+            className="w-8 h-12 md:w-11 md:h-16 border-[3px] border-black rounded-[12px] text-center text-lg md:text-2xl font-[1000] focus:bg-black focus:text-white transition-all outline-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] focus:shadow-none translate-y-0 focus:-translate-y-1"
           />
         ))}
       </div>
@@ -111,37 +100,25 @@ const CodeVerify: React.FC<CodeVerifyProps> = ({
       <div className="w-full max-w-sm space-y-6">
         <Button
           variant="primary"
-          size="xl"
-          className="w-full !rounded-full italic font-[1000] tracking-[0.3em] !py-8 shadow-2xl disabled:opacity-20 cursor-pointer"
+          className={`w-full !rounded-[24px] italic font-[1000] tracking-[0.3em] !py-8 shadow-2xl transition-all ${
+            code.join("").length < codeLength || isLoading
+              ? "opacity-30 grayscale cursor-not-allowed"
+              : "hover:scale-[1.02]"
+          }`}
           onClick={() => onConfirm(code.join(""))}
           disabled={isLoading || code.join("").length < codeLength}
         >
-          {isLoading ? "DOĞRULANIYOR..." : "DEVAM ET →"}
+          {isLoading ? "DOĞRULANIYOR..." : "KODU ONAYLA →"}
         </Button>
 
         <div className="flex flex-col items-center gap-4 pt-2">
-          <button
-            onClick={handleResendClick}
-            type="button"
-            disabled={!canResend}
-            className={`text-[10px] font-black uppercase tracking-widest italic border-b transition-colors ${
-              canResend
-                ? "text-black border-black hover:opacity-70"
-                : "text-zinc-300 border-transparent cursor-not-allowed"
-            }`}
-          >
-            {canResend
-              ? "KODU TEKRAR GÖNDER"
-              : `YENİ KOD İÇİN BEKLEYİN (${timeLeft}S)`}
-          </button>
-
           {onBack && (
             <button
               onClick={onBack}
               type="button"
-              className="text-[10px] font-black uppercase tracking-widest text-zinc-300 hover:text-red-500 transition-colors italic"
+              className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors italic"
             >
-              ← BİLGİLERİ DÜZENLE
+              ← BİLGİLERİ GÜNCELLE
             </button>
           )}
         </div>

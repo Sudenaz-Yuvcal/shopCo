@@ -125,7 +125,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="w-full sticky top-0 z-50 shadow-sm md:shadow-none bg-white">
-      {showBanner && (
+      {!user && showBanner && (
         <div className="w-full bg-black text-white py-2.5 px-4 relative">
           <div className="max-w-7xl mx-auto flex items-center justify-center text-center">
             <p className="text-[10px] md:text-xs font-light tracking-wide italic">
