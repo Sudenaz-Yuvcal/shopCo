@@ -35,7 +35,7 @@ const LogoutModal = ({ onClose, onConfirm }: LogoutModalProps) => (
         <Button
           variant="primary"
           onClick={onConfirm}
-          className="w-full !rounded-full !py-5 !bg-red-600 hover:!bg-red-700 italic tracking-[0.3em]"
+          className="w-full !rounded-full !py-5 !bg-red hover:!bg-red italic tracking-[0.3em]"
         >
           EVET, ÇIKIŞ YAP
         </Button>

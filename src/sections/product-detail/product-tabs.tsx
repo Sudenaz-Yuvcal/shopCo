@@ -98,8 +98,7 @@ const ProductTabs = ({ product }: { product: Product }) => {
 
   return (
     <div className="mt-32 w-full scale-[0.9] origin-top">
-      <div className="mt-32 w-full">
-        <div className="flex border-b border-zinc-100 mb-12">
+      <div className="mt-32 w-full flex border-b border-zinc-100 mb-12">
           {["Product Details", "Reviews", "FAQs"].map((tab) => (
             <button
               key={tab}
@@ -200,7 +199,7 @@ const ProductTabs = ({ product }: { product: Product }) => {
                           {review.name}
                         </h4>
                         <RiCheckLine
-                          className="bg-green-500 text-white rounded-full p-0.5"
+                          className="bg-green text-white rounded-full p-0.5"
                           size={16}
                         />
                       </div>
@@ -310,7 +309,6 @@ const ProductTabs = ({ product }: { product: Product }) => {
           </div>
         )}
       </div>
-    </div>
   );
 };
 

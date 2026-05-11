@@ -38,12 +38,10 @@ const Login: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors, isValid },
-    setError,
   } = useForm<ILoginForm>({
     resolver: yupResolver(loginSchema) as unknown as Resolver<ILoginForm>,
     mode: "onChange",
   });
-
   const onSubmit: SubmitHandler<ILoginForm> = async (data) => {
     setIsLoading(true);
 
@@ -53,67 +51,98 @@ const Login: React.FC = () => {
     try {
       const { data: authData, error: authError } =
         await supabase.auth.signInWithPassword({
-          email: data.email,
+          email: data.email.trim().toLowerCase(),
           password: data.password,
         });
 
       if (authError) throw authError;
 
       if (authData.session && authData.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from("users")
+          .select("is_active")
+          .eq("id", authData.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Profil kontrol hatası:", profileError.message);
+        }
+        if (profile && profile.is_active === false) {
+          await supabase.auth.signOut();
+
+          toast.error("HESABINIZ BANLANMIŞTIR. ERİŞİM ENGELLENDİ!", {
+            theme: "dark",
+            style: {
+              border: "2px solid #ef4444",
+              padding: "16px",
+              fontWeight: "bold",
+            },
+          });
+
+          setIsLoading(false);
+          return;
+        }
+
         const { user } = authData;
         const metadata = user.user_metadata;
+        const isAdmin = user.email?.toLowerCase() === "admin@shop.co";
 
-        const fullName = metadata.full_name || "ADMİN";
+        const fullName =
+          metadata.full_name || (isAdmin ? "ADMIN OWNER" : "DEĞERLİ ÜYE");
         const nameParts = fullName.trim().split(" ");
         const firstName = nameParts[0];
         const lastName =
-          nameParts.length > 1 ? nameParts.slice(1).join(" ") : "ÜYE";
+          nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
 
-        login({
+        const userData = {
           id: user.id,
           name: firstName.toUpperCase(),
           surname: lastName.toUpperCase(),
-          email: user.email || data.email,
+          email: user.email!,
           membership: metadata.membership || "Standard",
-        });
+          role: isAdmin ? ("admin" as const) : ("user" as const),
+        };
 
+        login(userData);
         localStorage.setItem("token", authData.session.access_token);
+        localStorage.setItem("shopco_user", JSON.stringify(userData));
 
         toast.success(`HOŞ GELDİN ${firstName.toUpperCase()}!`, {
           theme: "dark",
         });
 
-        if (user.email === "admin@shop.co") {
-          navigate("/admin/add-product");
-        } else {
-          navigate("/account");
-        }
+        setTimeout(() => {
+          if (isAdmin) {
+            navigate("/admin", { replace: true });
+          } else {
+            navigate("/", { replace: true });
+          }
+        }, 100);
       }
-    } catch (error: any) {
-      const errorMessage = error.message;
+    } catch (error: unknown) {
+      let errorMessage = "BİR HATA OLUŞTU";
 
-      if (
-        errorMessage.includes("Invalid login credentials") ||
-        errorMessage.includes("Email not confirmed")
-      ) {
-        toast.error(
-          errorMessage.includes("Email not confirmed")
-            ? "LÜTFEN E-POSTA ADRESİNİZİ ONAYLAYIN!"
-            : "E-POSTA VEYA ŞİFRE HATALI!",
-          { theme: "dark" },
-        );
-        setError("password", {
-          type: "manual",
-          message: "Kimlik bilgileri eşleşmedi.",
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      if (errorMessage.includes("Invalid login credentials")) {
+        toast.error("E-POSTA VEYA ŞİFRE HATALI!", { 
+          theme: "dark",
+          className: "font-black italic text-[10px] tracking-widest"
         });
       } else {
-        toast.error("GİRİŞ YAPILIRKEN BİR HATA OLUŞTU!", { theme: "dark" });
+        toast.error("GİRİŞ YAPILIRKEN BİR HATA OLUŞTU!", { 
+          theme: "dark",
+          className: "font-black italic text-[10px] tracking-widest"
+        });
       }
+      
+      console.error("Giriş Hatası:", errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-white relative font-satoshi overflow-hidden px-4">
       <Helmet>

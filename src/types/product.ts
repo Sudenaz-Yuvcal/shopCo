@@ -2,8 +2,8 @@ export interface Product {
   id: number;
   title: string;
   price: number;
-  size?: string;
-  color?: string;
+  size?: string;  
+  color?: string; 
   description: string;
   category_id: number;
   images: string[];
@@ -17,6 +17,7 @@ export interface Product {
   image: string;
   stock: number;
   slug: string;
+  image_url?:string;
   variants: {
     color: string;
     size: string;
@@ -26,4 +27,10 @@ export interface Product {
     question: string;
     answer: string;
   }[];
+}
+
+export interface ProductVariant {
+  color: string;
+  size: string;
+  stock: number | string;
 }

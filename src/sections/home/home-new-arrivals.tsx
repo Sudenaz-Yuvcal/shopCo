@@ -16,29 +16,33 @@ interface RawProduct {
   images?: string[];
   name?: string;
   title?: string;
+  description?: string;
+  category?: { id: number; name: string };
+  created_at?: string;
+  slug?: string;
+  faqs?: { question: string; answer: string }[];
   variants?: { size: string; color: string; stock: number }[];
-  [key: string]: any;
 }
 
 const NewArrivals = () => {
   const { data: products = [], isLoading: loading } = useQuery({
     queryKey: ["new-arrivals-home"],
     queryFn: async () => {
-      const allProducts = (await getProducts()) as RawProduct[];
+      const response = await getProducts();
+      const allProducts = response as unknown as RawProduct[];
 
       return allProducts
         .map(
-          (item: any): Product => ({
+          (item: RawProduct): Product => ({
             ...item,
             id: item.id,
+            title: item.title || item.name || "Yeni Ürün",
             name: item.title || item.name || "Yeni Ürün",
-
             slug: item.slug || slugify(item.title || item.name || ""),
             description: item.description || "Harika bir SHOP.CO ürünü.",
             category_id: item.category?.id || 0,
             created_at: item.created_at || new Date().toISOString(),
             faqs: item.faqs || [],
-
             value: item.price,
             price: item.price,
             image:
@@ -53,7 +57,7 @@ const NewArrivals = () => {
             variants: item.variants || [],
             stock:
               item.variants?.reduce(
-                (acc: number, curr: any) => acc + (curr.stock || 0),
+                (acc: number, curr) => acc + (curr.stock || 0),
                 0,
               ) || 0,
           }),

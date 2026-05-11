@@ -1,14 +1,39 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import { RiShieldUserLine } from "react-icons/ri";
 
-const AdminRoute = () => {
-  const { user } = useUser();
+export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useUser();
 
-  if (!user || user.email !== "admin@shop.co") {
-    return <Navigate to="/login" replace />;
+  interface AdminUser {
+    email?: string;
+    role?: string;
+    user_metadata?: {
+      role?: string;
+    };
+  }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center font-satoshi">
+        <div className="relative">
+          <RiShieldUserLine size={48} className="text-white animate-pulse" />
+          <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full animate-pulse" />
+        </div>
+        <p className="mt-6 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 animate-shop-fade-in">
+          Sistem Yetkisi Doğrulanıyor...
+        </p>
+      </div>
+    );
   }
 
-  return <Outlet />;
-};
+  const isAdmin =
+    user?.email === "admin@shop.co" ||
+    (user as AdminUser)?.role === "admin" ||
+    (user as AdminUser)?.user_metadata?.role === "admin";
 
-export default AdminRoute;
+  return isAdmin ? (
+    <div className="animate-shop-fade-in">{children}</div>
+  ) : (
+    <Navigate to="/" replace />
+  );
+};

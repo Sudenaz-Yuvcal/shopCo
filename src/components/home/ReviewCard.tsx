@@ -26,7 +26,7 @@ export const ReviewCard = React.forwardRef<HTMLDivElement, ReviewCardProps>(
       <div className="flex items-center gap-2">
         <h4 className="font-bold text-lg text-black">{customer.name}</h4>
         {customer.verified && (
-          <span className="bg-green-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+          <span className="bg-green text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
             ✓
           </span>
         )}

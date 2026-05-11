@@ -1,24 +1,17 @@
 import { FiPackage, FiShoppingBag } from "react-icons/fi";
-
-interface OrderItem {
-  image: string;
-  name: string;
-  size: string;
-  color: string;
-  quantity: number;
-}
-
-interface Order {
-  id: string | number;
-  date: string;
-  status: string;
-  total: number;
-  items: OrderItem[];
-}
+import type { Order } from "../../types/order";
 
 interface OrdersSectionProps {
   orders: Order[];
 }
+const statusLabels = {
+  pending: "Bekliyor",
+  processing: "Hazırlanıyor",
+  shipped: "Kargoda",
+  delivered: "Teslim Edildi",
+  cancelled: "İptal Edildi",
+  returned: "İade Oluşturuldu",
+};
 
 const OrdersSection = ({ orders }: OrdersSectionProps) => (
   <div className="animate-in fade-in slide-in-from-right-8 duration-700 space-y-10">
@@ -51,7 +44,7 @@ const OrdersSection = ({ orders }: OrdersSectionProps) => (
                     DURUM
                   </p>
                   <span className="bg-zinc-100 text-black px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest italic group-hover:bg-black group-hover:text-white transition-colors">
-                    {order.status}
+                    {statusLabels[order.status]}{" "}
                   </span>
                 </div>
                 <div className="text-right">

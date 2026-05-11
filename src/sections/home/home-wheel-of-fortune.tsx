@@ -149,7 +149,7 @@ const WheelOfFortune = () => {
               e.stopPropagation();
               setIsVisible(false);
             }}
-            className="absolute -top-4 -right-2 bg-black text-white rounded-full p-1.5 z-[9999] shadow-lg hover:bg-red-700 transition-colors border-2 border-white/20 active:scale-90"
+            className="absolute -top-4 -right-2 bg-black text-white rounded-full p-1.5 z-[9999] shadow-lg hover:bg-red transition-colors border-2 border-white/20 active:scale-90"
           >
             <FiX size={14} />
           </button>
@@ -177,7 +177,7 @@ const WheelOfFortune = () => {
               />
               {canSpin && (
                 <span className="absolute -top-1 -right-1 flex h-6 w-6">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red opacity-75"></span>
                 </span>
               )}
             </div>
@@ -205,7 +205,7 @@ const WheelOfFortune = () => {
             <FiX size={40} />
           </button>
 
-          <div className="relative w-full max-w-6xl bg-zinc-900/50 border border-white/10 rounded-[40px] p-6 md:p-12 flex flex-col md:flex-row items-center gap-12 overflow-hidden shadow-2xl z-10">
+          <div className="relative w-full max-w-6xl bg-zinc-900/50 border border-white/10 rounded-[40px] p-6 md:p-12 flex flex-col md:flex-row items-center gap-16 overflow-hidden shadow-2xl z-10">
             <div className="flex-1 space-y-8 text-center md:text-left z-10 order-2 md:order-1">
               <div className="inline-flex items-center gap-2 bg-yellow-400/10 text-yellow-400 px-4 py-2 rounded-full border border-yellow-400/20">
                 <FiAward />

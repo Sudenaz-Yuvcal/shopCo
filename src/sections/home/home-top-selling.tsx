@@ -10,33 +10,43 @@ import { slugify } from "../../utils/slugify";
 
 import "swiper/css";
 
+interface FAQ {
+  question: string;
+  answer: string;
+}
+
 interface RawProduct {
   id: number;
   price: number;
   images?: string[];
   name?: string;
   title?: string;
+  description?: string;
+  slug?: string;
+  category?: { id: number; name?: string };
+  created_at?: string;
+  faqs?: FAQ[];
   variants?: { size: string; color: string; stock: number }[];
-  [key: string]: any;
 }
 
 const TopSelling = () => {
   const { data: products = [], isLoading: loading } = useQuery({
     queryKey: ["top-selling"],
     queryFn: async () => {
-      const allProducts = (await getProducts()) as RawProduct[];
+      const response = await getProducts();
+      const allProducts = response as unknown as RawProduct[];
+
       return allProducts
         .map(
-          (item: any): Product => ({
-            ...item,
+          (item: RawProduct): Product => ({
             id: item.id,
+            title: item.title || item.name || "Popüler Ürün",
             name: item.title || item.name || "Popüler Ürün",
             slug: item.slug || slugify(item.title || item.name || ""),
             description: item.description || "Harika bir SHOP.CO ürünü.",
             category_id: item.category?.id || 0,
             created_at: item.created_at || new Date().toISOString(),
             faqs: item.faqs || [],
-
             value: item.price,
             price: item.price,
             image:
@@ -51,7 +61,7 @@ const TopSelling = () => {
             variants: item.variants || [],
             stock:
               item.variants?.reduce(
-                (acc: number, curr: any) => acc + (curr.stock || 0),
+                (acc: number, curr) => acc + (curr.stock || 0),
                 0,
               ) || 0,
           }),

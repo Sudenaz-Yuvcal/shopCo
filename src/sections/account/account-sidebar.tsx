@@ -29,7 +29,8 @@ const AccountSidebar = ({
   setShowLogoutModal,
   menuItems,
 }: AccountSidebarProps) => (
-  <aside className="w-full space-y-3 sticky top-32 shrink-0">
+  <aside className="w-full space-y-3 sticky top-32 shrink-0 ml-2 lg:ml-8">
+    {" "}
     <div className="bg-black p-8 rounded-[40px] mb-8 flex items-center gap-5 shadow-2xl relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
       <div className="w-14 h-14 bg-white text-black rounded-full flex items-center justify-center font-[1000] text-xl italic uppercase shrink-0 border-2 border-white/20 shadow-xl group-hover:scale-110 transition-transform">
@@ -44,8 +45,7 @@ const AccountSidebar = ({
         </p>
       </div>
     </div>
-
-    <div className="space-y-2">
+    <div className="space-y-2 pl-4 lg:pl-8">
       {menuItems.map((item) => (
         <Button
           key={item.id}
@@ -71,11 +71,10 @@ const AccountSidebar = ({
           />
         </Button>
       ))}
-
       <Button
         variant="outline"
         onClick={() => setShowLogoutModal(true)}
-        className="w-full !justify-start !px-6 !py-5 !rounded-2xl mt-8 !text-[11px] tracking-[0.2em] gap-4 !border-red-600/20 !text-red-600 hover:!bg-red-600 hover:!text-white italic"
+        className="w-full !justify-start !px-6 !py-5 !rounded-2xl mt-8 !text-[11px] tracking-[0.2em] gap-4 !border-red-600/20 !text-red-600 hover:!bg-red hover:!text-white italic"
       >
         <FiLogOut size={16} />
         OTURUMU KAPAT

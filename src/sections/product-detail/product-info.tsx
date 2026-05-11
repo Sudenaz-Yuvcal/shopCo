@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   RiHeartLine,
   RiHeartFill,
@@ -17,12 +17,14 @@ interface ProductInfoProps {
   userAddress?: string;
 }
 
+const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"];
+
 const colorMap: Record<string, string> = {
   Siyah: "bg-black",
   Mavi: "bg-[#31344F]",
   Haki: "bg-[#4F4631]",
   Beyaz: "bg-white border-zinc-200",
-  Kırmızı: "bg-red-600",
+  Kırmızı: "bg-red",
 };
 
 const ProductInfo = ({
@@ -37,17 +39,62 @@ const ProductInfo = ({
   const [quantity, setQuantity] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
 
-  const availableColors = Array.from(
-    new Set(product.variants?.map((v) => v.color) || []),
-  );
-  const availableSizes = Array.from(
-    new Set(product.variants?.map((v) => v.size) || []),
-  );
+  const sortSizes = (a: string, b: string) => {
+    const numA = parseInt(a);
+    const numB = parseInt(b);
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+    const indexA = SIZE_ORDER.indexOf(a.toUpperCase());
+    const indexB = SIZE_ORDER.indexOf(b.toUpperCase());
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    return a.localeCompare(b);
+  };
+
+  const availableColors = useMemo(() => {
+    return Array.from(new Set(product.variants?.map((v) => v.color) || []));
+  }, [product.variants]);
+
+  const availableSizes = useMemo(() => {
+    const sizes = Array.from(
+      new Set(product.variants?.map((v) => v.size) || []),
+    );
+    return sizes.sort(sortSizes);
+  }, [product.variants]);
+
+  useEffect(() => {
+    if (!selectedColor) return;
+
+    const isCurrentSizeAvailable = product.variants?.some(
+      (v) =>
+        v.color === selectedColor && v.size === selectedSize && v.stock > 0,
+    );
+
+    if (!isCurrentSizeAvailable) {
+      const bestVariant = product.variants
+        ?.filter((v) => v.color === selectedColor && v.stock > 0)
+        .sort((a, b) => sortSizes(a.size, b.size))[0];
+
+      if (bestVariant) {
+        setSelectedSize(bestVariant.size);
+      } else {
+        setSelectedSize(availableSizes[0] || "");
+      }
+    }
+  }, [selectedColor]);
 
   useEffect(() => {
     setActiveImg(0);
-    if (availableColors.length > 0) setSelectedColor(availableColors[0]);
-    if (availableSizes.length > 0) setSelectedSize(availableSizes[0]);
+    if (availableColors.length > 0 && !selectedColor) {
+      const firstColor = availableColors[0];
+      setSelectedColor(firstColor);
+
+      const firstInStock = product.variants
+        ?.filter((v) => v.color === firstColor && v.stock > 0)
+        .sort((a, b) => sortSizes(a.size, b.size))[0];
+
+      setSelectedSize(
+        firstInStock ? firstInStock.size : availableSizes[0] || "",
+      );
+    }
   }, [product]);
 
   const currentVariant = product.variants?.find(
@@ -152,7 +199,6 @@ const ProductInfo = ({
         <p className="text-zinc-400 text-[13px] font-medium leading-relaxed max-w-sm">
           {product.description}
         </p>
-
         <div className="h-px bg-zinc-100 w-full" />
 
         <div className="space-y-4">
@@ -164,7 +210,7 @@ const ProductInfo = ({
               <button
                 key={colorName}
                 onClick={() => setSelectedColor(colorName)}
-                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${colorMap[colorName] || "bg-zinc-300"} ${
+                className={`w-11 h-11 rounded-full flex items-center border-2 border-zinc-800 justify-center transition-all ${colorMap[colorName] || "bg-zinc-300"} ${
                   selectedColor === colorName
                     ? "ring-2 ring-black ring-offset-4"
                     : "opacity-80 hover:opacity-100"
@@ -221,7 +267,7 @@ const ProductInfo = ({
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 disabled={currentStock <= 0}
-                className="text-zinc-500 hover:text-black transition-colors disabled:opacity-30"
+                className="text-zinc-500 hover:text-black disabled:opacity-30"
               >
                 <FiMinus size={22} />
               </button>
@@ -258,12 +304,6 @@ const ProductInfo = ({
                 : "STOKTA YOK"}
             </Button>
           </div>
-
-          {quantity >= 10 && currentStock > 10 && (
-            <p className="text-[10px] font-bold text-amber-600 italic ml-4">
-              * Tek seferde en fazla 10 adet alabilirsiniz.
-            </p>
-          )}
         </div>
 
         {userAddress && (

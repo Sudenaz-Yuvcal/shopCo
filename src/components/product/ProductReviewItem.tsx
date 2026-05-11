@@ -29,7 +29,7 @@ export const ReviewItem = ({ review }: { review: Review }) => (
       </h4>
       {review.verified && (
         <span
-          className="bg-green-500 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
+          className="bg-green text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
           title="Doğrulanmış Müşteri"
         >
           ✓

@@ -30,3 +30,4 @@ export const BRANDS_DATA = [
     color: "from-zinc-400/20",
   },
 ];
+export const BRANDS = ["ZARA", "GUCCI", "PRADA", "VERSACE", "CALVIN KLEIN"];

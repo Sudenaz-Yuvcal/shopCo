@@ -8,14 +8,14 @@ interface CategorySidebarProps {
   setTempFilters: React.Dispatch<React.SetStateAction<FilterState>>;
   handleApplyFilter: () => void;
   handleResetFilters: () => void;
-  handleBrandToggle: (brand: string) => void;  
+  handleBrandToggle: (brand: string) => void;
   handleCategoryToggle: (catId: string) => void;
-  BRANDS: string[]; 
+  BRANDS: string[];
   CATEGORIES: { id: string; name: string }[];
   AVAILABLE_SIZES: string[];
   AVAILABLE_COLORS: {
     name: string;
-    id: string; 
+    id: string;
     tailwind: string;
     hex?: string;
   }[];
@@ -26,7 +26,7 @@ const CategorySidebar = ({
   setTempFilters,
   handleApplyFilter,
   handleResetFilters,
-  handleBrandToggle, 
+  handleBrandToggle,
   handleCategoryToggle,
   BRANDS,
   CATEGORIES,
@@ -69,31 +69,31 @@ const CategorySidebar = ({
           <div className="grid grid-cols-1 gap-3">
             {CATEGORIES.map((cat) => (
               <label
-                key={cat.id}
+                key={cat.name}
                 className="flex items-center gap-3 cursor-pointer group"
               >
                 <input
                   type="checkbox"
                   className="hidden"
                   checked={(tempFilters.selectedCategories || []).includes(
-                    cat.id,
+                    cat.name,
                   )}
-                  onChange={() => handleCategoryToggle(cat.id)}
+                  onChange={() => handleCategoryToggle(cat.name)}
                 />
                 <div
                   className={`w-5 h-5 border-2 rounded-lg flex items-center justify-center transition-all ${
-                    (tempFilters.selectedCategories || []).includes(cat.id)
+                    (tempFilters.selectedCategories || []).includes(cat.name)
                       ? "bg-black border-black shadow-lg"
                       : "border-zinc-200 group-hover:border-black"
                   }`}
                 >
-                  {(tempFilters.selectedCategories || []).includes(cat.id) && (
+                  {(tempFilters.selectedCategories || []).includes(cat.name) && (
                     <RiCheckLine className="text-white" size={14} />
                   )}
                 </div>
                 <span
                   className={`text-[11px] font-black uppercase italic tracking-wide ${
-                    (tempFilters.selectedCategories || []).includes(cat.id)
+                    (tempFilters.selectedCategories || []).includes(cat.name)
                       ? "text-black"
                       : "text-zinc-400"
                   }`}

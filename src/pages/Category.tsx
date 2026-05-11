@@ -11,6 +11,12 @@ import { getCleanProducts } from "../utils/filterProducts";
 import type { Product } from "../types/product";
 import type { FilterState } from "../types/filter";
 import type { APIProduct } from "../types/api";
+import { BRANDS } from "../constants/Brand";
+import {
+  CATEGORY_OPTIONS,
+  COLOR_PALETTE,
+  AVAILABLE_SIZES,
+} from "../constants/Style";
 
 const Category = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -52,48 +58,6 @@ const Category = () => {
     }
   }, [brandParam]);
 
-  const CATEGORY_OPTIONS = [
-    { id: "1", name: "Casual" },
-    { id: "2", name: "Formal" },
-    { id: "3", name: "Gym" },
-    { id: "4", name: "Party" },
-  ];
-
-  const BRANDS = ["ZARA", "GUCCI", "PRADA", "VERSACE", "CALVIN KLEIN"];
-
-  const COLOR_PALETTE = [
-    { name: "Mavi", id: "#31344F", hex: "#31344F", tailwind: "bg-[#31344F]" },
-    { name: "Haki", id: "#4F4631", hex: "#4F4631", tailwind: "bg-[#4F4631]" },
-    { name: "Siyah", id: "#000000", hex: "#000000", tailwind: "bg-[#000000]" },
-    {
-      name: "Beyaz",
-      id: "#FFFFFF",
-      hex: "#FFFFFF",
-      tailwind: "bg-[#FFFFFF] border border-zinc-200",
-    },
-    {
-      name: "Kırmızı",
-      id: "#FF3333",
-      hex: "#FF3333",
-      tailwind: "bg-[#FF3333]",
-    },
-  ];
-
-  const AVAILABLE_SIZES = [
-    "S",
-    "M",
-    "L",
-    "XL",
-    "XXL",
-    "36",
-    "37",
-    "38",
-    "39",
-    "40",
-    "41",
-    "42",
-  ];
-
   const { data: products = [], isLoading: loading } = useQuery<Product[]>({
     queryKey: ["category-products"],
     queryFn: async () => {
@@ -133,11 +97,7 @@ const Category = () => {
         const sidebarCategoryMatch =
           appliedFilters.selectedCategories.length === 0 ||
           appliedFilters.selectedCategories.some((catId) => {
-            const categoryObj = CATEGORY_OPTIONS.find((c) => c.id === catId);
-            return (
-              String(p.category_id) === String(catId) ||
-              p.category?.toLowerCase() === categoryObj?.name.toLowerCase()
-            );
+            return String(p.category_id) === String(catId);
           });
 
         const colorMatch =
@@ -219,10 +179,19 @@ const Category = () => {
         : [...prev.selectedCategories, catId],
     }));
 
-  const displayTitle =
-    brandParam ||
-    (searchQuery ? `"${searchQuery}"` : categoryParam) ||
-    "MAĞAZA";
+  const displayTitle = useMemo(() => {
+    if (brandParam) return brandParam.toUpperCase();
+    if (searchQuery) return `"${searchQuery}"`;
+
+    if (categoryParam) {
+      const foundCategory = CATEGORY_OPTIONS.find(
+        (c) => String(c.id) === String(categoryParam),
+      );
+      return foundCategory ? foundCategory.name : categoryParam;
+    }
+
+    return "MAĞAZA";
+  }, [brandParam, searchQuery, categoryParam]);
 
   return (
     <div className="bg-white min-h-screen">

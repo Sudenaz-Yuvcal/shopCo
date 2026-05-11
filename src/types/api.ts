@@ -4,6 +4,9 @@ export interface APIProduct {
   description: string;
   title: string;
   price: number;
+  stock?:string;
+  slug:string;
+  rating:string;
   images: string[];
   category: {
     id: number;

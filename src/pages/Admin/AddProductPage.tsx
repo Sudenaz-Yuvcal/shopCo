@@ -2,22 +2,39 @@ import { useForm, useFieldArray, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-toastify";
-import Button from "../../components/Ui/Button";
+import { toast } from "react-hot-toast";
 import { FAQ_SAMPLES } from "../../constants/FaqSamples";
 import { supabase } from "../../lib/supabase";
 import {
-  HiPlus,
-  HiTrash,
-  HiTerminal,
-  HiPhotograph,
-  HiQuestionMarkCircle,
-  HiTag,
-  HiCheckCircle,
-} from "react-icons/hi";
+  RiAddLine,
+  RiDeleteBin6Line,
+  RiTerminalBoxLine,
+  RiImageLine,
+  RiQuestionMark,
+  RiCheckboxCircleFill,
+} from "react-icons/ri";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import { COLOR_PALETTE, AVAILABLE_SIZES } from "../../constants/Style";
+import { BRANDS } from "../../constants/Brand";
+import { CATEGORIES } from "../../constants/Style";
+
+const convertToSlug = (text: string) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[ğĞ]/g, "g")
+    .replace(/[üÜ]/g, "u")
+    .replace(/[şŞ]/g, "s")
+    .replace(/[ıİ]/g, "i")
+    .replace(/[öÖ]/g, "o")
+    .replace(/[çÇ]/g, "c")
+    .replace(/[^\w-]+/g, "")
+    .replace(/--+/g, "-");
+};
 
 const onlyNumbers = (e: React.KeyboardEvent<HTMLInputElement>) => {
   if (
@@ -30,36 +47,17 @@ const onlyNumbers = (e: React.KeyboardEvent<HTMLInputElement>) => {
   }
 };
 
-const CATEGORIES = [
-  { id: 1, name: "Casual" },
-  { id: 2, name: "Formal" },
-  { id: 3, name: "Gym" },
-  { id: 4, name: "Party" },
-];
-
 const SIZE_TYPES = ["Beden", "Numara", "Standart"];
-
-const COLOR_PALETTE = [
-  { name: "Mavi", hex: "#31344F" },
-  { name: "Haki", hex: "#4F4631" },
-  { name: "Siyah", hex: "#000000" },
-  { name: "Beyaz", hex: "#FFFFFF" },
-  { name: "Kırmızı", hex: "#FF3333" },
-];
-
-const BRANDS = ["ZARA", "GUCCI", "PRADA", "VERSACE", "CALVIN KLEIN"];
 
 interface VariantInput {
   color: string;
   size: string;
   stock: number;
 }
-
 interface FAQInput {
   question: string;
   answer: string;
 }
-
 interface AddProductInputs {
   name: string;
   brand: string;
@@ -72,7 +70,6 @@ interface AddProductInputs {
   variants: VariantInput[];
   faqs: FAQInput[];
 }
-
 interface FormattedProduct {
   title: string;
   price: number;
@@ -131,18 +128,18 @@ const schema: yup.ObjectSchema<AddProductInputs> = yup
   .required();
 
 const AddProductPage = () => {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user } = useUser();
   const [activeSizeTypes, setActiveSizeTypes] = useState<
     Record<number, string>
   >({});
-
   const [selectedSampleIndex, setSelectedSampleIndex] = useState<string>("");
 
   useEffect(() => {
     if (!user || user.email !== "admin@shop.co") {
-      toast.error("YETKİSİZ ERİŞİM!");
       navigate("/login");
     }
   }, [user, navigate]);
@@ -168,12 +165,46 @@ const AddProductPage = () => {
     },
   });
 
+  useEffect(() => {
+    if (isEditMode && id) {
+      const fetchProduct = async () => {
+        const { data } = await supabase
+          .from("products")
+          .select("*")
+          .eq("id", id)
+          .single();
+        if (data) {
+          reset({
+            name: data.title,
+            brand: data.brand,
+            price: String(data.price),
+            description: data.description,
+            categoryId: data.category_id,
+            imageUrl1: data.images[0] || "",
+            imageUrl2: data.images[1] || "",
+            imageUrl3: data.images[2] || "",
+            variants: data.variants,
+            faqs: data.faqs || [],
+          });
+          const sizeMap: Record<number, string> = {};
+          data.variants.forEach((v: any, idx: number) => {
+            if (["S", "M", "L", "XL", "XXL"].includes(v.size))
+              sizeMap[idx] = "Beden";
+            else if (v.size === "Standart") sizeMap[idx] = "Standart";
+            else sizeMap[idx] = "Numara";
+          });
+          setActiveSizeTypes(sizeMap);
+        }
+      };
+      fetchProduct();
+    }
+  }, [id, isEditMode, reset]);
+
   const {
     fields: variantFields,
     append: appendVariant,
     remove: removeVariant,
   } = useFieldArray({ control, name: "variants" });
-
   const {
     fields: faqFields,
     append: appendFaq,
@@ -182,40 +213,52 @@ const AddProductPage = () => {
 
   const handleAddSelectedFAQ = () => {
     if (selectedSampleIndex === "") return;
-
-    const samples = FAQ_SAMPLES as unknown as FAQInput[];
-    const sample = samples[Number(selectedSampleIndex)];
-
+    const sample = FAQ_SAMPLES[Number(selectedSampleIndex)];
     if (sample) {
       appendFaq({ question: sample.question, answer: sample.answer });
       setSelectedSampleIndex("");
-      toast.success("Soru eklendi.");
     }
   };
 
   const mutation = useMutation({
-    mutationFn: async (newProduct: FormattedProduct) => {
-      const { data, error } = await supabase
-        .from("products")
-        .insert([newProduct])
-        .select();
-      if (error) throw new Error(error.message);
-      return data;
+    mutationFn: async (productData: FormattedProduct) => {
+      if (isEditMode) {
+        const { data, error } = await supabase
+          .from("products")
+          .update(productData)
+          .eq("id", id)
+          .select();
+        if (error) throw new Error(error.message);
+        return data;
+      } else {
+        const { data, error } = await supabase
+          .from("products")
+          .insert([productData])
+          .select();
+        if (error) throw new Error(error.message);
+        return data;
+      }
     },
+
     onSuccess: () => {
-      toast.success("ÜRÜN BAŞARIYLA EKLENDİ!");
+      toast.success(isEditMode ? "GÜNCELLEME BAŞARILI" : "SİSTEME KAYDEDİLDİ");
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      reset();
-      setActiveSizeTypes({});
-    },
-    onError: (error: any) => {
-      toast.error(`Hata: ${error.message}`);
+
+      if (!isEditMode) {
+        reset();
+        setActiveSizeTypes({});
+      } else {
+        navigate("/admin/products");
+      }
     },
   });
-
+  
   const onSubmit: SubmitHandler<AddProductInputs> = (data) => {
-    const formattedData: FormattedProduct = {
+    const productSlug = convertToSlug(data.name);
+
+    const formattedData = {
       title: data.name,
+      slug: productSlug,
       price: Number(data.price),
       brand: data.brand,
       description: data.description,
@@ -226,127 +269,204 @@ const AddProductPage = () => {
       variants: data.variants,
       faqs: data.faqs,
     };
+
     mutation.mutate(formattedData);
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F9F9] text-black font-satoshi pb-32">
-      <div className="bg-white border-b border-zinc-200 px-8 py-6 flex justify-between items-center sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-black flex items-center justify-center rounded-xl">
-            <HiTerminal className="text-white text-xl" />
-          </div>
-          <h1 className="text-2xl font-[1000] italic uppercase tracking-tighter">
-            Shop.Co <span className="text-zinc-400">/ ENGINE</span>
+    <div className="animate-shop-fade-in pb-20 font-satoshi">
+      <div className="flex justify-between items-end mb-12 px-4">
+        <div>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2">
+            Inventory System v2.0
+          </p>
+          <h1 className="text-6xl font-black italic uppercase tracking-tighter leading-none text-white">
+            {isEditMode ? "Ürünü Düzenle" : "Yeni Ürün"}
           </h1>
+        </div>
+        <div className="hidden md:flex items-center gap-2 text-zinc-500 bg-white/5 px-6 py-3 rounded-full border border-white/10 backdrop-blur-md">
+          <RiTerminalBoxLine size={18} />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+            Terminal Active
+          </span>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 mt-16">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-16">
-          <section className="bg-white p-10 rounded-[3rem] border border-zinc-200 shadow-sm space-y-10">
-            <h2 className="section-title">Genel Bilgiler</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-6">
-                <div className="input-group">
-                  <label className="label-sm">Ürün İsmi</label>
-                  <input
-                    {...register("name")}
-                    className={`admin-input ${errors.name ? "border-red-500" : ""}`}
-                  />
-                </div>
-                <div className="input-group">
-                  <label className="label-sm">Marka</label>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-8 text-white px-2"
+      >
+        <div className="bg-zinc-900/40 border border-white/10 rounded-[48px] p-8 md:p-12 backdrop-blur-xl shadow-2xl">
+          <h2 className="text-xs font-black italic uppercase tracking-[0.3em] mb-12 flex items-center gap-4">
+            <span className="w-12 h-[1px] bg-white/20"></span>
+            01. Genel Parametreler
+          </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div className="lg:col-span-7 space-y-10">
+              <div className="group">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 ml-6 block group-focus-within:text-white transition-all">
+                  Ürün İsmi
+                </label>
+                <input
+                  {...register("name")}
+                  className={`admin-input-capsule bg-black ${errors.name ? "border-red-500" : "border-white/10 focus:border-white"}`}
+                  placeholder="ÖR: VERCEL LOGO TEE"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 ml-6 block">
+                    Marka Seçimi
+                  </label>
                   <select
                     {...register("brand")}
-                    className={`admin-input bg-transparent uppercase ${errors.brand ? "border-red-500" : ""}`}
+                    className="bg-black admin-input-capsule border-white/10 focus:border-white appearance-none"
                   >
-                    <option value="">Marka Seçiniz</option>
+                    <option value="" className="bg-black">
+                      Seçiniz
+                    </option>
                     {BRANDS.map((b) => (
-                      <option key={b} value={b}>
+                      <option key={b} value={b} className="bg-black">
                         {b}
                       </option>
                     ))}
                   </select>
                 </div>
-                <div className="input-group">
-                  <label className="label-sm">Fiyat (USD)</label>
+                <div>
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 ml-6 block">
+                    Birim Fiyat ($)
+                  </label>
                   <input
                     {...register("price")}
                     onKeyDown={onlyNumbers}
-                    className={`admin-input font-bold ${errors.price ? "border-red-500" : ""}`}
+                    className="bg-black admin-input-capsule border-white/10 focus:border-white font-black italic text-lg text-center"
+                    placeholder="0.00"
                   />
                 </div>
-                <div className="input-group">
-                  <label className="label-sm flex items-center gap-1">
-                    <HiTag /> Kategori
-                  </label>
-                  <select
-                    {...register("categoryId")}
-                    className="admin-input bg-transparent uppercase"
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
-              <div className="bg-zinc-50 p-8 rounded-[2.5rem] border border-zinc-100 space-y-4">
-                <label className="label-sm flex items-center gap-2">
-                  <HiPhotograph /> Görsel Slotları
+
+              <div>
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 ml-6 block">
+                  Kategori
                 </label>
-                <input
-                  {...register("imageUrl1")}
-                  className={`admin-input-sm bg-white ${errors.imageUrl1 ? "border-red-500" : ""}`}
-                  placeholder="Ana Görsel URL"
-                />
-                <input
-                  {...register("imageUrl2")}
-                  className="admin-input-sm bg-white"
-                  placeholder="URL 2 (Opsiyonel)"
-                />
-                <input
-                  {...register("imageUrl3")}
-                  className="admin-input-sm bg-white"
-                  placeholder="URL 3 (Opsiyonel)"
-                />
+                <select
+                  {...register("categoryId")}
+                  className="bg-black admin-input-capsule border-white/10 focus:border-white appearance-none uppercase"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-black">
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+
+            <div className="lg:col-span-5">
+              <div className="bg-black/60 p-8 rounded-[40px] border border-white/5 space-y-6 h-full flex flex-col justify-center">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2 flex items-center gap-3 px-2">
+                  <RiImageLine size={20} className="text-white" /> Visual Assets
+                </label>
+
+                <div className="space-y-4">
+                  <div className="relative">
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-zinc-600">
+                      01
+                    </span>
+                    <input
+                      {...register("imageUrl1")}
+                      className="admin-input-capsule !pl-14 border-white/5 bg-zinc-900/50 focus:bg-black"
+                      placeholder="Primary Image URL"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-zinc-600">
+                      02
+                    </span>
+                    <input
+                      {...register("imageUrl2")}
+                      className="admin-input-capsule !pl-14 border-white/5 bg-zinc-900/50 focus:bg-black"
+                      placeholder="Secondary URL"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-zinc-600">
+                      03
+                    </span>
+                    <input
+                      {...register("imageUrl3")}
+                      className="admin-input-capsule !pl-14 border-white/5 bg-zinc-900/50 focus:bg-black"
+                      placeholder="Tertiary URL"
+                    />
+                  </div>
+                </div>
+                <p className="text-[9px] text-zinc-600 uppercase font-bold tracking-tighter text-center pt-2">
+                  Desteklenen formatlar: JPG, PNG, WEBP
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 group">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4 ml-6 block group-focus-within:text-white">
+              Ürün Açıklaması
+            </label>
             <textarea
               {...register("description")}
-              className={`admin-input h-24 normal-case resize-none ${errors.description ? "border-red-500" : ""}`}
-              placeholder="Açıklama..."
+              className="w-full bg-black border-2 border-white/5 rounded-[32px] p-8 text-zinc-300 outline-none focus:border-white transition-all resize-none h-40 text-sm leading-relaxed"
+              placeholder="Ürün teknik detaylarını ve hikayesini buraya giriniz..."
             />
-          </section>
+          </div>
+        </div>
+        <div className="space-y-6">
+          <h2 className="text-sm font-black italic uppercase tracking-widest px-4 border-l-4 border-white ml-2">
+            02. Stok & Varyasyon
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {variantFields.map((field, index) => (
+              <div
+                key={field.id}
+                className="bg-admin-card border border-admin-border p-6 rounded-[24px] group hover:border-white/20 transition-all"
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <span className="bg-white text-black px-3 py-1 rounded text-[10px] font-black uppercase">
+                    Variant #{index + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(index)}
+                    className="bg-black text-zinc-600 hover:text-admin-danger transition-colors p-2"
+                  >
+                    <RiDeleteBin6Line size={18} />
+                  </button>
+                </div>
 
-          <section className="space-y-8">
-            <h3 className="section-title px-4">Stok Yönetimi</h3>
-            <div className="space-y-4">
-              {variantFields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="bg-white p-6 rounded-[2rem] border border-zinc-200 shadow-sm"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
-                    <div className="md:col-span-3 space-y-2">
-                      <label className="label-xs">Renk</label>
-                      <select
-                        {...register(`variants.${index}.color`)}
-                        className={`admin-select-sm ${errors.variants?.[index]?.color ? "border-red-500 border" : ""}`}
-                      >
-                        <option value="">Seç</option>
-                        {COLOR_PALETTE.map((c) => (
-                          <option key={c.hex} value={c.name}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="md:col-span-5 space-y-2">
-                      <label className="label-xs">Ölçü</label>
-                      <div className="flex gap-2 p-1 bg-zinc-100 rounded-xl">
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-[9px] font-black text-admin-muted uppercase tracking-widest mb-2 block">
+                      Renk Skalası
+                    </label>
+                    <select
+                      {...register(`variants.${index}.color`)}
+                      className="bg-black admin-select-premium !py-2 !text-xs"
+                    >
+                      <option value="">Seç</option>
+                      {COLOR_PALETTE.map((c) => (
+                        <option key={c.hex} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[9px] font-black text-admin-muted uppercase tracking-widest mb-2 block">
+                        Tip
+                      </label>
+                      <div className="flex gap-1 bg-black/40 p-1 rounded-xl">
                         {SIZE_TYPES.map((type) => (
                           <button
                             key={type}
@@ -361,158 +481,158 @@ const AddProductPage = () => {
                                 type === "Standart" ? "Standart" : "",
                               );
                             }}
-                            className={`flex-1 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${activeSizeTypes[index] === type ? "bg-black text-white" : "text-zinc-400"}`}
+                            className={`flex-1 py-1.5 text-[8px] font-black uppercase rounded-lg transition-all ${activeSizeTypes[index] === type ? "bg-white text-black" : "text-zinc-500 hover:text-zinc-300"}`}
                           >
                             {type}
                           </button>
                         ))}
                       </div>
-                      {activeSizeTypes[index] !== "Standart" && (
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-black text-admin-muted uppercase tracking-widest mb-2 block">
+                        Ölçü/Stok
+                      </label>
+                      <div className="flex items-center gap-2">
+                        {activeSizeTypes[index] !== "Standart" && (
+                          <select
+                            {...register(`variants.${index}.size`)}
+                            className="bg-black admin-select-premium !py-2 !text-xs flex-1"
+                          >
+                            <option value="">Değer</option>
+                            {AVAILABLE_SIZES.map((s) => (
+                              <option key={s} value={s}>
+                                {s}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                         <input
-                          {...register(`variants.${index}.size`)}
-                          className={`admin-input-sm mt-2 border-dashed ${errors.variants?.[index]?.size ? "border-red-500" : ""}`}
-                          placeholder="L veya 42"
+                          {...register(`variants.${index}.stock`)}
+                          type="text"
+                          onKeyDown={onlyNumbers}
+                          className="bg-black admin-input-premium !py-2 !text-center !text-xs w-20"
+                          placeholder="Stok"
                         />
-                      )}
-                    </div>
-                    <div className="md:col-span-3">
-                      <label className="label-xs">Stok</label>
-                      <input
-                        {...register(`variants.${index}.stock`)}
-                        type="text"
-                        onKeyDown={onlyNumbers}
-                        className={`admin-input-sm text-center ${errors.variants?.[index]?.stock ? "border-red-500" : ""}`}
-                      />
-                    </div>
-                    <div className="md:col-span-1 flex justify-center pb-2">
-                      <button
-                        type="button"
-                        onClick={() => removeVariant(index)}
-                        className="p-3 text-zinc-200 hover:text-red-500"
-                      >
-                        <HiTrash size={22} />
-                      </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => appendVariant({ color: "", size: "", stock: 0 })}
+              className="border-2 border-dashed border-white/5 rounded-[24px] p-8 flex flex-col items-center justify-center text-admin-muted hover:border-white/20 hover:text-white transition-all bg-white/[0.01]"
+            >
+              <RiAddLine size={32} className="mb-2" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                Yeni Varyasyon Tanımla
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-zinc-950/50 border border-admin-border p-10 rounded-admin">
+          <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-10">
+            <h3 className="text-sm font-black italic uppercase tracking-widest flex items-center gap-2 border-l-4 border-white pl-4">
+              <RiQuestionMark /> Support / FAQ
+            </h3>
+            <div className="flex gap-2">
+              <select
+                value={selectedSampleIndex}
+                onChange={(e) => setSelectedSampleIndex(e.target.value)}
+                className="bg-black border border-white/10 text-[10px] font-black uppercase px-4 py-2 rounded-full outline-none focus:border-white transition-all"
+              >
+                <option value="">Hazır Şablonlar...</option>
+                {(FAQ_SAMPLES as any).map((s: any, i: number) => (
+                  <option key={i} value={i}>
+                    {s.question}
+                  </option>
+                ))}
+              </select>
               <button
                 type="button"
-                onClick={() => appendVariant({ color: "", size: "", stock: 0 })}
-                className="w-full py-6 border-2 border-dashed border-zinc-200 rounded-[2rem] flex items-center justify-center gap-2 text-zinc-400 hover:text-black"
+                onClick={handleAddSelectedFAQ}
+                disabled={selectedSampleIndex === ""}
+                className="bg-white text-black p-2 rounded-full disabled:opacity-20 transition-all hover:scale-110 active:scale-90"
               >
-                <HiPlus />{" "}
-                <span className="font-black uppercase text-xs">
-                  Varyant Ekle
-                </span>
+                <RiAddLine size={20} />
               </button>
             </div>
-          </section>
+          </div>
 
-          <section className="bg-zinc-100 p-10 rounded-[3rem] space-y-8">
-            <div className="flex justify-between items-center px-4">
-              <h3 className="section-title flex items-center gap-2">
-                <HiQuestionMarkCircle /> Destek
-              </h3>
-
-              <div className="flex items-center gap-2">
-                <select
-                  value={selectedSampleIndex}
-                  onChange={(e) => setSelectedSampleIndex(e.target.value)}
-                  className="px-4 py-3 rounded-2xl text-[10px] font-black uppercase border-none bg-white shadow-sm outline-none cursor-pointer"
-                >
-                  <option value="">Örnek Soru Seç...</option>
-                  {(FAQ_SAMPLES as unknown as FAQInput[]).map((sample, idx) => (
-                    <option key={idx} value={idx}>
-                      {sample.question}
-                    </option>
-                  ))}
-                </select>
+          <div className="space-y-4">
+            {faqFields.map((field, index) => (
+              <div
+                key={field.id}
+                className="bg-black/60 border border-white/5 p-6 rounded-3xl relative group"
+              >
                 <button
                   type="button"
-                  onClick={handleAddSelectedFAQ}
-                  disabled={selectedSampleIndex === ""}
-                  className="p-3 bg-black text-white rounded-2xl disabled:opacity-20 transition-all shadow-lg"
+                  onClick={() => removeFaq(index)}
+                  className="absolute top-6 right-6 text-zinc-700 hover:text-admin-danger transition-colors"
                 >
-                  <HiPlus size={20} />
+                  <RiDeleteBin6Line size={18} />
                 </button>
+                <input
+                  {...register(`faqs.${index}.question`)}
+                  className="w-full bg-transparent text-white font-bold italic border-b border-white/5 py-2 mb-4 outline-none focus:border-white transition-all text-sm uppercase tracking-tight"
+                  placeholder="Question..."
+                />
+                <textarea
+                  {...register(`faqs.${index}.answer`)}
+                  className="w-full bg-zinc-900/50 text-zinc-400 text-xs p-4 rounded-xl outline-none focus:text-white transition-all h-20 resize-none"
+                  placeholder="Answer text..."
+                />
               </div>
-            </div>
-
-            <div className="space-y-4">
-              {faqFields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="bg-white p-8 rounded-[2.5rem] shadow-sm relative border border-zinc-200"
-                >
-                  <button
-                    type="button"
-                    onClick={() => removeFaq(index)}
-                    className="absolute top-8 right-8 p-2 text-zinc-300 hover:text-red-500"
-                  >
-                    <HiTrash size={20} />
-                  </button>
-                  <input
-                    {...register(`faqs.${index}.question`)}
-                    className={`w-full text-lg font-bold border-b py-3 mb-4 outline-none ${errors.faqs?.[index]?.question ? "border-red-500" : ""}`}
-                    placeholder="Soru..."
-                  />
-                  <textarea
-                    {...register(`faqs.${index}.answer`)}
-                    className={`w-full h-24 bg-zinc-50 p-4 rounded-2xl text-sm outline-none ${errors.faqs?.[index]?.answer ? "border-red-400 border" : ""}`}
-                    placeholder="Cevap..."
-                  />
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={() => appendFaq({ question: "", answer: "" })}
-                className="w-full py-8 bg-white border border-dashed border-zinc-200 rounded-[2.5rem] flex flex-col items-center justify-center text-zinc-400 hover:bg-black hover:text-white transition-all"
-              >
-                <HiPlus size={24} />{" "}
-                <span className="font-black uppercase text-[10px]">
-                  Manuel Soru Ekle
-                </span>
-              </button>
-            </div>
-          </section>
-
-          <div className="pt-10">
-            <Button
-              type="submit"
-              disabled={mutation.isPending}
-              className="w-full !rounded-[3rem] !py-12 bg-black text-white shadow-2xl transition-all"
+            ))}
+            <button
+              type="button"
+              onClick={() => appendFaq({ question: "", answer: "" })}
+              className="w-full py-6 border border-dashed border-white/5 rounded-3xl text-admin-muted text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
             >
-              <div className="flex flex-col items-center">
-                <span className="text-[11px] font-black tracking-[0.6em] opacity-40 mb-3 uppercase">
-                  {mutation.isPending ? "Data İşleniyor" : "Güvenli Kayıt"}
-                </span>
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl font-[1000] italic uppercase tracking-tighter">
-                    {mutation.isPending ? "GÖNDERİLİYOR..." : "SİSTEME KAYDET"}
-                  </span>
-                  {!mutation.isPending && (
-                    <HiCheckCircle className="text-5xl text-white animate-pulse" />
-                  )}
-                </div>
-              </div>
-            </Button>
+              Manuel Soru Ekle
+            </button>
           </div>
-        </form>
-      </div>
+        </div>
+
+        <div className="sticky bottom-8 z-[60]">
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            className="w-full bg-white text-black py-8 rounded-[40px] shadow-[0_20px_50px_rgba(255,255,255,0.1)] hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 group overflow-hidden relative"
+          >
+            <div className="flex flex-col items-center relative z-10">
+              <span className="text-[8px] font-black tracking-[0.5em] mb-2 opacity-50 uppercase">
+                {mutation.isPending
+                  ? "Connecting Terminal..."
+                  : "Security Hash: Verified"}
+              </span>
+              <div className="flex items-center gap-4">
+                <span className="text-3xl font-heavy italic uppercase tracking-tighter">
+                  {mutation.isPending
+                    ? "GÖNDERİLİYOR"
+                    : isEditMode
+                      ? "GÜNCELLEMELERİ YAYINLA"
+                      : "ÜRÜNÜ SİSTEME EKLE"}
+                </span>
+                <RiCheckboxCircleFill
+                  size={32}
+                  className={`${mutation.isPending ? "animate-spin" : "animate-pulse"}`}
+                />
+              </div>
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          </button>
+        </div>
+      </form>
 
       <style>{`
-        .section-title { font-size: 1.875rem; font-weight: 1000; font-style: italic; text-transform: uppercase; border-left: 8px solid black; padding-left: 1.5rem; }
-        .admin-input { width: 100%; border-bottom: 2px solid #F4F4F5; padding: 1rem 0; font-weight: 700; text-transform: uppercase; outline: none; transition: border-color 0.3s; }
-        .admin-input:focus { border-color: black; }
-        .admin-input.border-red-500 { border-bottom: 2px solid #ef4444 !important; }
-        .admin-input-sm { width: 100%; border: 1px solid #E4E4E7; padding: 0.85rem; font-weight: 700; border-radius: 16px; outline: none; font-size: 13px; transition: border-color 0.3s; }
-        .admin-input-sm.border-red-500 { border: 1px solid #ef4444 !important; }
-        .admin-select-sm { width: 100%; background: #F4F4F5; border-radius: 16px; padding: 0.85rem; font-size: 12px; font-weight: 800; border: 1px solid transparent; transition: border-color 0.3s; }
-        .admin-select-sm.border-red-500 { border-color: #ef4444 !important; }
-        .label-sm { text-[10px] font-black uppercase text-zinc-400 tracking-[0.2em]; margin-bottom: 0.5rem; display: block; }
-        .label-xs { text-[9px] font-black uppercase text-zinc-400 tracking-[0.2em]; margin-bottom: 0.5rem; display: block; }
+        .admin-input-premium { @apply w-full bg-transparent border-b-2 border-white/5 py-4 font-bold uppercase outline-none focus:border-white transition-all text-sm tracking-tight; }
+        .admin-select-premium { @apply w-full bg-black/50 border border-white/5 rounded-2xl py-4 px-4 text-[10px] font-black uppercase outline-none focus:border-white transition-all cursor-pointer appearance-none; }
+        .admin-input-sm-premium { @apply w-full bg-zinc-900/50 border border-white/5 rounded-xl py-3 px-4 text-xs font-medium outline-none focus:border-white transition-all; }
+        .admin-input-premium.border-admin-danger { @apply border-admin-danger/50 focus:border-admin-danger; }
       `}</style>
     </div>
   );

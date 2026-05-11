@@ -2,89 +2,98 @@ import { useCart } from "../context/CartContext";
 import { Helmet } from "react-helmet-async";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import type { ICheckoutForm } from "../types/checkout";
 import CheckoutForm from "../components/Cart/CheckoutForm";
 import CheckoutSummary from "../sections/checkout/checkout-summary";
-import { TURKISH_CITIES } from "../constants/Cities";
 import { supabase } from "../lib/supabase";
+import { TURKISH_CITIES } from "../constants/Cities";
+import type { ICheckoutForm } from "../types/checkout";
 
 const Checkout = () => {
   const { cart, totals, clearCart } = useCart();
   const navigate = useNavigate();
-  const { watch } = useForm<ICheckoutForm>();
-
-  const watchedCity = watch("city") || "";
-  const filteredCities = TURKISH_CITIES.filter((city) =>
-    city.toLowerCase().includes(watchedCity.toLowerCase()),
-  );
 
   const handleCheckoutSubmit = async (data: ICheckoutForm) => {
-    for (const item of cart) {
-      const selectedVariant = item.variants?.find(
-        (v: { size: string; stock: number }) => v.size === item.size,
-      );
+    console.log("Butona basıldı, fonksiyon başladı");
 
-      const currentStock = selectedVariant?.stock ?? 0;
-
-      if (item.quantity > currentStock) {
-        toast.error(
-          `Üzgünüz, ${item.title} (${item.size}) için yeterli stok yok! (Kalan: ${currentStock})`,
-          {
-            position: "top-center",
-            theme: "dark",
-          },
-        );
-        return;
-      }
-    }
-
-    const loadingToast = toast.loading("ÖDEME VE STOKLAR İŞLENİYOR...", {
-      position: "top-center",
+    const loadingToast = toast.loading("SİPARİŞİNİZ HAZIRLANIYOR...", {
       theme: "dark",
     });
 
     try {
-      const updatePromises = cart.map((item) =>
-        supabase.rpc("update_variant_stock_jsonb", {
-          target_id: item.id,
-          variant_size: item.size,
-          variant_color: item.color, 
-          amount_change: -item.quantity,
-        }),
-      );
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      console.log("2. Kullanıcı:", user?.id || "Giriş yapılmamış");
 
-      const results = await Promise.all(updatePromises);
+      const payload = {
+        customer_name: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        address: `${data.address}, ${data.city}`,
+        total_price:
+          Number(totals.final?.toString().replace(/[^0-9.-]+/g, "")) || 0,
+        status: "pending",
+        items: cart.map((item) => ({
+          id: item.id,
+          title: item.title,
+          quantity: item.quantity,
+          price: item.price,
+          size: item.size,
+          color: item.color,
+        })),
+        user_id: user?.id || null,
+      };
 
-      const firstError = results.find((res) => res.error);
-      if (firstError) {
-        throw new Error(
-          firstError.error?.message || "Stok güncellenirken bir sorun oluştu.",
+      console.log("3. Gönderilen Veri (Payload):", payload);
+
+      const { data: orderResponse, error: orderError } = await supabase
+        .from("orders")
+        .insert([payload])
+        .select();
+
+      if (orderError) {
+        console.error("4. SUPABASE HATASI:", orderError.message);
+        toast.update(loadingToast, {
+          render: `Hata: ${orderError.message}`,
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+          theme: "dark",
+        });
+        return;
+      }
+
+      console.log("5. BAŞARILI! Gelen Veri:", orderResponse);
+
+      try {
+        const updatePromises = cart.map((item) =>
+          supabase.rpc("update_variant_stock_jsonb", {
+            target_id: item.id,
+            variant_size: item.size,
+            amount_change: -item.quantity,
+          }),
         );
+        await Promise.all(updatePromises);
+      } catch (stockErr) {
+        console.warn("Stok güncellenirken hata oluştu:", stockErr);
       }
 
       toast.update(loadingToast, {
-        render: "ÖDEME ONAYLANDI VE STOKLAR GÜNCELLENDİ!",
+        render: "SİPARİŞ ALINDI! YÖNLENDİRİLİYORSUNUZ...",
         type: "success",
         isLoading: false,
         autoClose: 2000,
         theme: "dark",
       });
 
-      console.log("Müşteri Bilgileri:", data);
-
       clearCart();
-      setTimeout(() => {
-        navigate("/success");
-      }, 800);
-    } catch (error: unknown) {
-      let errorMessage = "İşlem başarısız oldu.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
+      setTimeout(() => navigate("/success"), 800);
+    } catch (err: unknown) {
+      console.error("Beklenmedik Hata:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Bir şeyler ters gitti.";
 
       toast.update(loadingToast, {
-        render: errorMessage,
+        render: errorMessage.toUpperCase(),
         type: "error",
         isLoading: false,
         autoClose: 3000,
@@ -103,7 +112,7 @@ const Checkout = () => {
         <div className="lg:col-span-7">
           <CheckoutForm
             onCheckoutSubmit={handleCheckoutSubmit}
-            filteredCities={filteredCities}
+            filteredCities={[...TURKISH_CITIES]}
           />
         </div>
 
@@ -123,12 +132,6 @@ const Checkout = () => {
             >
               {cart.length === 0 ? "SEPETİNİZ BOŞ" : "ÖDEMEYİ TAMAMLA"}
             </button>
-
-            {cart.length > 0 && (
-              <p className="text-[10px] text-zinc-400 text-center font-medium italic uppercase tracking-tighter">
-                * Ödemeniz 256-bit SSL şifreleme ile korunmaktadır.
-              </p>
-            )}
           </div>
         </div>
       </div>

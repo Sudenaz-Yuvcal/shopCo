@@ -120,6 +120,21 @@ const Register: React.FC = () => {
   const onSubmit: SubmitHandler<IRegisterForm> = async (data) => {
     setIsLoading(true);
     try {
+      const { data: bannedUser } = await supabase
+        .from("users")
+        .select("is_active")
+        .eq("email", data.email.trim().toLowerCase())
+        .single();
+
+      if (bannedUser && bannedUser.is_active === false) {
+        toast.error("BU E-POSTA ADRESİ ENGELLENMİŞTİR. KAYIT YAPILAMAZ!", {
+          theme: "dark",
+          style: { border: "2px solid #ef4444" },
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -148,12 +163,27 @@ const Register: React.FC = () => {
       toast.info("DOĞRULAMA KODU E-POSTA ADRESİNİZE GÖNDERİLDİ.", {
         theme: "dark",
       });
-    } catch (error: any) {
-      const isRateLimit =
-        error.status === 429 || error.message?.includes("429");
+    } catch (error: unknown) {
+      let errorMessage = "BİR HATA OLUŞTU";
+      let status: number | undefined;
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        if ("status" in error) {
+          status = (error as { status: number }).status;
+        }
+      }
+
+      const isRateLimit = status === 429 || errorMessage.includes("429");
+
       toast.error(
-        isRateLimit ? "ÇOK FAZLA DENEME. LÜTFEN BEKLEYİN." : error.message,
-        { theme: "dark" },
+        isRateLimit
+          ? "ÇOK FAZLA DENEME. LÜTFEN BEKLEYİN."
+          : errorMessage.toUpperCase(),
+        {
+          theme: "dark",
+          className: "font-black italic text-xs uppercase",
+        },
       );
     } finally {
       setIsLoading(false);
@@ -180,20 +210,30 @@ const Register: React.FC = () => {
             ? nameParts.slice(1).join(" ").toUpperCase()
             : "ÜYE";
 
-        login({
+        const userData = {
           id: data.user.id,
           name: firstName,
           surname: lastName,
           email: formData.email.toLowerCase(),
-          membership: "Elite",
-        });
+          membership: "Elite" as const,
+        };
+
+        login(userData);
+        localStorage.setItem("shopco_user", JSON.stringify(userData));
 
         toast.success("ELITE DÜNYASINA HOŞ GELDİN!", { theme: "dark" });
-        navigate("/"); 
+        navigate("/");
       }
-    } catch (error: any) {
-      toast.error(error.message || "KOD GEÇERSİZ VEYA SÜRESİ DOLMUŞ", {
+    } catch (error: unknown) {
+      let errorMessage = "KOD GEÇERSİZ VEYA SÜRESİ DOLMUŞ";
+
+      if (error instanceof Error && error.message) {
+        errorMessage = error.message.toUpperCase();
+      }
+
+      toast.error(errorMessage, {
         theme: "dark",
+        className: "font-black italic text-xs uppercase",
       });
     } finally {
       setIsLoading(false);
@@ -329,7 +369,7 @@ const Register: React.FC = () => {
                   <div className="px-2 space-y-2">
                     <div className="h-1 w-full bg-zinc-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-500 ${passwordStrength < 66 ? "bg-red-500" : passwordStrength < 100 ? "bg-yellow-500" : "bg-green-500"}`}
+                        className={`h-full transition-all duration-500 ${passwordStrength < 66 ? "bg-red" : passwordStrength < 100 ? "bg-yellow-500" : "bg-green"}`}
                         style={{ width: `${passwordStrength}%` }}
                       />
                     </div>

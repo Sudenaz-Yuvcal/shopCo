@@ -17,6 +17,16 @@ import Input from "../Ui/Input";
 import Button from "../Ui/Button";
 import WheelOfFortune from "../../sections/home/home-wheel-of-fortune";
 import { supabase } from "../../lib/supabase";
+import { CATEGORIES } from "../../constants/Style";
+import { CATEGORY_OPTIONS } from "../../constants/Style";
+interface SupabaseProduct {
+  id: string | number;
+  title: string;
+  category_id: string;
+  price: number;
+  brand: string;
+  images: string[];
+}
 
 interface NavbarProps {
   setIsMenuOpen: (val: boolean) => void;
@@ -49,13 +59,16 @@ const Navbar: React.FC<NavbarProps> = ({
         try {
           const { data, error } = await supabase
             .from("products")
-            .select("*")
+            .select("id, title, category_id, price, brand, images")
             .or(`title.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%`)
             .limit(6);
+
           if (error) throw error;
 
-          const mappedResults = (data || []).map((p: any) => ({
-            id: p.id,
+          const mappedResults: Partial<Product>[] = (
+            (data as SupabaseProduct[]) || []
+          ).map((p) => ({
+            id: Number(p.id),
             name: p.title,
             category: p.category_id,
             value: p.price,
@@ -103,25 +116,6 @@ const Navbar: React.FC<NavbarProps> = ({
       setSearchTerm("");
     }
   };
-  const categories = [
-    { name: "Casual", id: 1 },
-    { name: "Formal", id: 2 },
-    { name: "Party", id: 3 },
-    { name: "Gym", id: 4 },
-  ];
-
-  {
-    categories.map((cat) => (
-      <Link
-        key={cat.id}
-        to={`/shop?category=${cat.id}`}
-        onClick={() => setIsShopOpen(false)}
-        className="block px-4 py-3 hover:bg-black hover:text-white rounded-xl transition-all font-black text-[10px] italic uppercase tracking-tighter"
-      >
-        {cat.name}
-      </Link>
-    ));
-  }
 
   return (
     <header className="w-full sticky top-0 z-50 shadow-sm md:shadow-none bg-white">
@@ -178,13 +172,14 @@ const Navbar: React.FC<NavbarProps> = ({
               {isShopOpen && (
                 <div className="absolute top-full left-0 w-56 bg-white border border-black/5 shadow-2xl rounded-2xl p-4 animate-in fade-in slide-in-from-top-2">
                   <div className="space-y-1">
-                    {["Casual", "Formal", "Party", "Gym"].map((cat) => (
+                    {CATEGORIES.map((cat) => (
                       <Link
-                        key={cat}
-                        to={`/shop?category=${cat}`}
+                        key={cat.name}
+                        to={`/shop?category=${cat.name}`}
+                        onClick={() => setIsShopOpen(false)}
                         className="block px-4 py-3 hover:bg-black hover:text-white rounded-xl transition-all font-black text-[10px] italic uppercase tracking-tighter"
                       >
-                        {cat}
+                        {cat.name}
                       </Link>
                     ))}
                   </div>
@@ -238,9 +233,9 @@ const Navbar: React.FC<NavbarProps> = ({
                     <div className="p-3">
                       {searchResults.map((p) => (
                         <div
-                          key={p.id}
+                          key={p.name}
                           onClick={() => {
-                            navigate(`/product/${p.id}`);
+                            navigate(`/product/${p.name}`);
                             setIsSearchOpen(false);
                             setSearchTerm("");
                           }}
@@ -255,8 +250,10 @@ const Navbar: React.FC<NavbarProps> = ({
                             <h4 className="font-[1000] text-[11px] uppercase italic truncate text-black">
                               {p.name}
                             </h4>
-                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                              {p.category}
+                            <p>
+                              {CATEGORY_OPTIONS.find(
+                                (c) => String(c.id) === String(p.category),
+                              )?.name || p.category}
                             </p>
                           </div>
                           <p className="font-[1000] text-sm italic tracking-tighter text-black">
@@ -268,7 +265,7 @@ const Navbar: React.FC<NavbarProps> = ({
                     <Button
                       variant="primary"
                       onClick={handleSeeAll}
-                      className="w-full !p-4 !text-[10px] tracking-[0.4em] italic"
+                      className="w-full !p-4 !text-[10px] tracking-[0.4em] italic uppercase font-black"
                     >
                       TÜM SONUÇLARI GÖR →
                     </Button>
@@ -307,18 +304,20 @@ const Navbar: React.FC<NavbarProps> = ({
             </Link>
             <Link
               to={user ? "/account" : "/login"}
-              className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-[11px] font-black border-2 border-black/10 shadow-xl hover:scale-110 transition-all overflow-hidden uppercase italic"
+              className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-[11px] font-[1000] border-2 border-black/10 shadow-xl hover:scale-110 transition-all overflow-hidden uppercase italic"
             >
-              {user?.avatar ? (
-                <img
-                  src={user.avatar.replace(/[\[\]"]/g, "")}
-                  alt={user.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : user ? (
-                user.name[0]
+              {user ? (
+                user.avatar ? (
+                  <img
+                    src={String(user.avatar).replace(/[\[\]"']/g, "")}
+                    alt={user.name || "User"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  user.name?.charAt(0) || <RiUserLine />
+                )
               ) : (
-                <RiUserLine />
+                <RiUserLine size={20} />
               )}
             </Link>
           </div>

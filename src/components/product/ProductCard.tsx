@@ -1,23 +1,41 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Product } from "../../types/product";
+import type { Product, ProductVariant } from "../../types/product";
 import {
   RiHeartLine,
   RiHeartFill,
   RiCloseLine,
   RiShoppingBagLine,
   RiCheckboxCircleFill,
+  RiCheckLine,
 } from "react-icons/ri";
 import { useFavorite } from "../../context/FavoriteContext";
 import { useCart } from "../../context/CartContext";
 import { StarRating } from "./ProductStarRating";
 import Button from "../Ui/Button";
+import { slugify } from "../../utils/slugify";
 
 interface ProductCardProps extends Product {
   slug: string;
   created_at: string;
   title: string;
 }
+
+const colorMap: Record<string, string> = {
+  Siyah: "#000000",
+  Mavi: "#31344F",
+  Haki: "#4F4631",
+  Beyaz: "#FFFFFF",
+  Kırmızı: "#DC2626",
+};
+
+const sortSizes = (a: string, b: string) => {
+  const numA = parseInt(a);
+  const numB = parseInt(b);
+  if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+  const order = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"];
+  return order.indexOf(a.toUpperCase()) - order.indexOf(b.toUpperCase());
+};
 
 const ProductCard = (product: ProductCardProps) => {
   const {
@@ -51,29 +69,53 @@ const ProductCard = (product: ProductCardProps) => {
   const displayPrice = price || value || 0;
 
   const allAvailableColors = useMemo(
-    () => Array.from(new Set(variants.map((v: any) => v.color))),
+    () => Array.from(new Set(variants.map((v: ProductVariant) => v.color))),
     [variants],
   );
+
   const allAvailableSizes = useMemo(
-    () => Array.from(new Set(variants.map((v: any) => v.size))),
+    () => Array.from(new Set(variants.map((v: ProductVariant) => v.size))),
     [variants],
   );
 
   const checkStock = (color: string | null, size: string | null) => {
     if (!color && !size) return true;
     return variants.some(
-      (v: any) =>
+      (v: ProductVariant) =>
         (color ? v.color === color : true) &&
         (size ? v.size === size : true) &&
         Number(v.stock) > 0,
     );
   };
 
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    const isSizeStillAvailable = variants.some(
+      (v: ProductVariant) =>
+        v.color === color && v.size === selectedSize && Number(v.stock) > 0,
+    );
+
+    if (!isSizeStillAvailable) {
+      const firstAvailableVariant = variants
+        .filter((v: ProductVariant) => v.color === color && Number(v.stock) > 0)
+        .sort((a: ProductVariant, b: ProductVariant) =>
+          sortSizes(a.size, b.size),
+        )[0];
+
+      setSelectedSize(
+        firstAvailableVariant ? firstAvailableVariant.size : null,
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (isSelecting && !selectedColor && allAvailableColors.length > 0) {
+      handleColorSelect(allAvailableColors[0]);
+    }
+  }, [isSelecting]);
+
   const isOutOfStock =
-    variants.reduce(
-      (acc: number, curr: any) => acc + Number(curr.stock || 0),
-      0,
-    ) <= 0;
+    variants.reduce((acc, curr) => acc + Number(curr.stock || 0), 0) <= 0;
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -82,13 +124,6 @@ const ProductCard = (product: ProductCardProps) => {
       setIsSelecting(false);
       setIsAdded(true);
       setTimeout(() => setIsAdded(false), 2000);
-    }
-  };
-
-  const handleColorSelect = (color: string) => {
-    setSelectedColor(color);
-    if (selectedSize && !checkStock(color, selectedSize)) {
-      setSelectedSize(null);
     }
   };
 
@@ -104,16 +139,19 @@ const ProductCard = (product: ProductCardProps) => {
     ? new Date().getTime() - new Date(created_at).getTime() <=
       3 * 24 * 60 * 60 * 1000
     : false;
+
   const discount =
     oldValue && oldValue > displayPrice
       ? Math.round(((oldValue - displayPrice) / oldValue) * 100)
       : 0;
+
   const mainImage =
     images?.[0]?.replace(/[\[\]"']/g, "") ||
-    (typeof image === "string" ? image.replace(/[\[\]"']/g, "") : image);
-  const productPath = supabaseSlug
-    ? `/shopCo/${supabaseSlug}`
-    : `/shopCo/product-${id}`;
+    (typeof image === "string"
+      ? image.replace(/[\[\]"']/g, "")
+      : "/placeholder.png");
+
+  const productPath = `/product/${supabaseSlug || slugify(displayName)}`;
 
   return (
     <div className="relative group w-full font-satoshi transition-all duration-300">
@@ -140,10 +178,9 @@ const ProductCard = (product: ProductCardProps) => {
           alt={displayName}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-
         <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
           {isNew && (
-            <div className="bg-red-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase">
+            <div className="bg-red text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase">
               YENİ
             </div>
           )}
@@ -153,7 +190,6 @@ const ProductCard = (product: ProductCardProps) => {
             </div>
           )}
         </div>
-
         {!isOutOfStock && variants.length > 0 && !isAdded && (
           <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
             <Button
@@ -168,7 +204,6 @@ const ProductCard = (product: ProductCardProps) => {
             </Button>
           </div>
         )}
-
         {isAdded && (
           <div className="absolute inset-0 bg-black/80 z-50 flex flex-col items-center justify-center text-white animate-in zoom-in">
             <RiCheckboxCircleFill size={32} className="text-green-400 mb-1" />
@@ -232,7 +267,7 @@ const ProductCard = (product: ProductCardProps) => {
                   Beden Seç
                 </p>
                 <div className="flex flex-wrap gap-2.5 px-1">
-                  {allAvailableSizes.map((size: any) => {
+                  {[...allAvailableSizes].sort(sortSizes).map((size) => {
                     const isAvailable = checkStock(selectedColor, size);
                     return (
                       <button
@@ -254,23 +289,29 @@ const ProductCard = (product: ProductCardProps) => {
                 <p className="text-[11px] font-black text-zinc-400 uppercase mb-4 px-1">
                   Renk Seç
                 </p>
-                <div className="flex flex-wrap gap-4 px-1">
-                  {allAvailableColors.map((color: any) => {
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 px-2">
+                  {allAvailableColors.map((color) => {
                     const isAvailable = checkStock(color, null);
+                    const hexColor = colorMap[color] || color;
                     return (
                       <button
                         key={color}
                         type="button"
                         disabled={!isAvailable}
                         onClick={() => handleColorSelect(color)}
-                        style={{
-                          backgroundColor: color === "siyah" ? "#000" : color,
-                        }}
-                        className={`w-10 h-10 rounded-full border-2 transition-all shadow-md 
+                        className={`w-10 h-10 border-2 border-zinc-800 rounded-full transition-all shadow-md 
                           ${!isAvailable ? "opacity-20 grayscale cursor-not-allowed" : "hover:scale-110"}
-                          ${selectedColor === color ? "ring-4 ring-offset-2 ring-black border-transparent scale-110" : "border-zinc-200"}`}
-                        title={color}
-                      />
+                          ${selectedColor === color ? "ring-2 ring-offset-1 ring-black border-transparent scale-110" : "border-zinc-200"}`}
+                        style={{ backgroundColor: hexColor }}
+                      >
+                        {selectedColor === color && (
+                          <div
+                            className={`w-full h-full flex items-center justify-center rounded-full ${color === "Beyaz" ? "text-black" : "text-white"}`}
+                          >
+                            <RiCheckLine size={20} />
+                          </div>
+                        )}
+                      </button>
                     );
                   })}
                 </div>
@@ -280,7 +321,7 @@ const ProductCard = (product: ProductCardProps) => {
                 variant="primary"
                 disabled={!selectedSize || !selectedColor}
                 onClick={handleQuickAdd}
-                className="w-full py-5 font-black uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-[0.98]"
+                className="w-full py-5 font-black uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-[0.98] !bg-black !text-white"
               >
                 {!selectedSize || !selectedColor
                   ? "SEÇİM YAPIN"

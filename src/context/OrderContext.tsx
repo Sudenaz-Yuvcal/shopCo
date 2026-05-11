@@ -1,6 +1,12 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
 
- interface OrderItem {
+interface OrderItem {
   id: number;
   name: string;
   image: string;
@@ -10,7 +16,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
   color: string;
 }
 
- interface Order {
+interface Order {
   id: string;
   date: string;
   total: number;

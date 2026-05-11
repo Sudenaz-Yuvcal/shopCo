@@ -22,7 +22,7 @@ interface LocalAPIProduct {
   images?: string[];
   image?: string;
   description?: string;
-  category?: { name: string } | string;
+  category?: { id?: number; name: string } | string; 
   brand?: string;
   created_at?: string;
   oldValue?: number;
@@ -57,49 +57,49 @@ const ProductDetail = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
-  const getProductIdFromSlug = (slugStr: string | undefined): string | null => {
-    if (!slugStr) return null;
-    const parts = slugStr.split("-");
-    const lastPart = parts[parts.length - 1];
-    return isNaN(Number(lastPart)) ? slugStr : lastPart;
-  };
-
-  const actualId = getProductIdFromSlug(slug);
-
   const { data, isLoading: loading } = useQuery({
-    queryKey: ["product-detail", actualId],
+    queryKey: ["product-detail", slug],
     queryFn: async () => {
-      if (!actualId) throw new Error("Ürün kimliği bulunamadı");
-      const response = await getProductBySlug(actualId);
-      const productData = response as unknown as LocalAPIProduct;
+      if (!slug) throw new Error("Ürün kimliği (slug) bulunamadı");
+
+      const productData = (await getProductBySlug(slug)) as LocalAPIProduct;
 
       if (!productData) return null;
+
       const adaptedProduct: ExtendedProduct = {
         id: productData.id,
-        name: productData.title || productData.name || "İsimsiz Ürün",
-        title: productData.title || productData.name || "İsimsiz Ürün",
-        image: productData.images?.[0] || productData.image || "",
-        images: productData.images || [],
-        slug: slugify(productData.title || productData.name || ""),
-        category_id: (productData.category as any)?.id || 0,
+        name: productData.title ?? productData.name ?? "İsimsiz Ürün",
+        title: productData.title ?? productData.name ?? "İsimsiz Ürün",
+        image: productData.images?.[0] ?? productData.image ?? "",
+        images: productData.images ?? [],
+        slug: slugify(productData.title ?? productData.name ?? ""),
+
+        category_id:
+          productData.category && typeof productData.category === "object"
+            ? (productData.category.id ?? 0)
+            : 0,
+
         value: productData.price,
         price: productData.price,
-        oldValue: productData.oldValue || Math.round(productData.price * 1.3),
-        description: productData.description || "Açıklama bulunamadı.",
-        rating: productData.rating || 4.8,
+        oldValue: productData.oldValue ?? Math.round(productData.price * 1.3),
+        description: productData.description ?? "Açıklama bulunamadı.",
+        rating: productData.rating ?? 4.8,
+
         category:
           typeof productData.category === "object"
             ? productData.category.name
-            : productData.category || "Giyim",
-        faqs: productData.faqs || [],
-        brand: productData.brand || "",
-        created_at: productData.created_at || new Date().toISOString(),
+            : (productData.category ?? "Giyim"),
+
+        faqs: productData.faqs ?? [],
+        brand: productData.brand ?? "",
+        created_at: productData.created_at ?? new Date().toISOString(),
+
         stock:
           productData.variants?.reduce(
-            (acc: number, curr: { stock: number }) => acc + (curr.stock || 0),
+            (acc, curr) => acc + (curr.stock ?? 0),
             0,
-          ) || 0,
-        variants: productData.variants || [],
+          ) ?? 0,
+        variants: productData.variants ?? [],
       };
 
       return {
@@ -107,7 +107,7 @@ const ProductDetail = () => {
         relatedProducts: [] as ExtendedProduct[],
       };
     },
-    enabled: !!actualId,
+    enabled: !!slug,
   });
 
   const product = data?.product;

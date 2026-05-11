@@ -8,6 +8,7 @@ interface SupabaseProductRow {
   images: string[];
   created_at: string;
   brand?: string;
+  slug: string; 
   faqs?: { question: string; answer: string }[];
   variants: {
     size: string;
@@ -28,6 +29,10 @@ export interface APIProduct {
   description: string;
   images: string[];
   brand: string;
+  title?:string;
+  stock?:number;
+  rating?:number;
+  slug: string;
   faqs: { question: string; answer: string }[];
   variants: {
     size: string;
@@ -49,6 +54,7 @@ const mapProductRow = (row: SupabaseProductRow): APIProduct => ({
   description: row.description || "",
   images: row.images || [],
   brand: row.brand || "",
+  slug: row.slug || "",
   faqs: row.faqs || [],
   category: row.category || null,
   created_at: row.created_at,
@@ -71,24 +77,19 @@ export const getProducts = async (): Promise<APIProduct[]> => {
 };
 
 export const getProductBySlug = async (
-  identifier: string,
+  slug: string,
 ): Promise<APIProduct | null> => {
   try {
-    const idStr = identifier.includes("-")
-      ? identifier.split("-").pop()
-      : identifier;
-    const cleanId = parseInt(String(idStr).replace(/\D/g, ""), 10);
-
-    if (isNaN(cleanId)) {
-      console.error("Geçersiz ID formatı:", identifier);
+    if (!slug) {
+      console.error("Sorgulama için geçerli bir slug sağlanmadı.");
       return null;
     }
 
     const { data, error } = await supabase
       .from("products")
       .select(`*, category:categories (id, name, image)`)
-      .eq("id", cleanId)
-      .single();
+      .eq("slug", slug)
+      .maybeSingle(); 
 
     if (error) throw error;
     return data ? mapProductRow(data) : null;

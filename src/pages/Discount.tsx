@@ -2,15 +2,34 @@ import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "../api/productService";
-import { useFavorite } from "../context/FavoriteContext";
 import DiscountBanner from "../sections/discount/discount-banner";
 import DiscountHeader from "../sections/discount/discount-header";
-import DiscountGrid from "../sections/discount/discount-grid";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import type { Product } from "../types/product";
+import ProductCard from "../components/Product/ProductCard";
+import type { APIProduct } from "../api/productService";
+
+interface RawProductData extends Partial<APIProduct> {
+  id: number;
+  price: number;
+  title?: string; 
+  name?: string; 
+  images?: string[];
+  stock?: number;
+}
+
+interface RawProductData {
+  id: number;
+  price: number;
+  title?: string;
+  images?: string[];
+  stock?: number;
+  rating?: number;
+  slug?: string;
+  created_at?: string;
+}
 
 const Discount = () => {
-  const { toggleFavorite, isInFavorites } = useFavorite();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
@@ -19,12 +38,11 @@ const Discount = () => {
   >({
     queryKey: ["discount-products"],
     queryFn: async (): Promise<Product[]> => {
-      const allProducts = await getProducts();
+      const allProducts: RawProductData[] = await getProducts();
 
       return allProducts
-        .map((product: any) => {
+        .map((product: RawProductData): Product => {
           const hasOldPrice = product.price * 1.4;
-
           return {
             ...product,
             stock: product.stock ?? 0,
@@ -35,14 +53,11 @@ const Discount = () => {
             category: "Discounted",
           } as Product;
         })
-        .filter((p) => p.oldValue && p.oldValue > p.price);
+        .filter((p: Product) => (p.oldValue ?? 0) > p.price);
     },
   });
 
-  const productsArray = Array.isArray(discountProducts)
-    ? (discountProducts as Product[])
-    : [];
-
+  const productsArray = Array.isArray(discountProducts) ? discountProducts : [];
   const totalPages = Math.ceil(productsArray.length / itemsPerPage);
 
   const currentItems = useMemo(() => {
@@ -79,7 +94,7 @@ const Discount = () => {
         {loading ? (
           <div className="mt-16 flex flex-col items-center gap-4 animate-pulse">
             <div className="h-1 bg-black w-32" />
-            <div className="italic font-[1000] text-2xl text-black uppercase tracking-tighter">
+            <div className="italic font-black text-2xl text-black uppercase tracking-tighter">
               FIRSATLAR YÜKLENİYOR...
             </div>
             <div className="h-1 bg-black w-32" />
@@ -88,11 +103,16 @@ const Discount = () => {
           <div className="animate-in fade-in slide-in-from-bottom-5 duration-700">
             <DiscountHeader count={productsArray.length} />
 
-            <DiscountGrid
-              products={currentItems}
-              toggleFavorite={toggleFavorite}
-              isInFavorites={isInFavorites}
-            />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mt-10">
+              {currentItems.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  {...product}
+                  slug={product.slug || ""}
+                  created_at={product.created_at || ""}
+                />
+              ))}
+            </div>
 
             {totalPages > 1 && (
               <div className="mt-20 flex items-center justify-between border-t border-zinc-100 pt-8">

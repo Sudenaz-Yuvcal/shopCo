@@ -2,11 +2,11 @@ import { FiPercent, FiClock } from "react-icons/fi";
 
 const DiscountBanner = () => (
   <div className="w-full bg-zinc-950 rounded-[48px] p-10 md:p-20 mb-16 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)] border border-white/5">
-    <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/10 rounded-full blur-[120px] -mr-20 -mt-20" />
+    <div className="absolute top-0 right-0 w-96 h-96 bg-red/10 rounded-full blur-[120px] -mr-20 -mt-20" />
     <div className="absolute bottom-0 left-0 w-64 h-64 bg-zinc-800/20 rounded-full blur-[100px] -ml-20 -mb-20" />
 
     <div className="relative z-10 space-y-6 text-center md:text-left">
-      <div className="inline-flex items-center gap-2 bg-red-600 text-white px-5 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.2em] animate-pulse shadow-xl shadow-red-600/20">
+      <div className="inline-flex items-center gap-2 bg-red text-white px-5 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.2em] animate-pulse shadow-xl shadow-red-600/20">
         <FiPercent size={14} /> FIRSAT GÜNLERİ BAŞLADI
       </div>
 

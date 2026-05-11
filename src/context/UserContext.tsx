@@ -14,10 +14,12 @@ interface User {
   avatar?: string;
   address?: string;
   membership: "Elite" | "Standard";
+  role?: "admin" | "user";
 }
 
 interface UserContextType {
   user: User | null;
+  loading: boolean;
   login: (userData: User) => void;
   logout: () => void;
 }
@@ -25,15 +27,24 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      const saved = localStorage.getItem("shopco_user");
-      return saved ? JSON.parse(saved) : null;
-    } catch (error) {
-      console.error("User data parse error:", error);
-      return null;
-    }
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUser = () => {
+      try {
+        const saved = localStorage.getItem("shopco_user");
+        if (saved) {
+          setUser(JSON.parse(saved));
+        }
+      } catch (error) {
+        console.error("User data parse error:", error);
+      } finally {
+        setLoading(false); 
+      }
+    };
+    loadUser();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -43,16 +54,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  const login = (userData: User) => setUser(userData);
-
+  const login = (userData: User) => {
+    setUser(userData);
+    localStorage.setItem("shopco_user", JSON.stringify(userData));
+  };
   const logout = () => {
     setUser(null);
     localStorage.removeItem("shopco_orders");
     localStorage.removeItem("shopco_cart");
+    localStorage.removeItem("shopco_user");
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </UserContext.Provider>
   );

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { FiArrowLeft, FiShoppingBag } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
 import { useOrder } from "../context/OrderContext";
@@ -93,12 +93,11 @@ const Cart = () => {
   const onCheckoutSubmit = async (data: ICheckoutForm) => {
     if (!user) return showNotify("LÜTFEN ÖNCE GİRİŞ YAPIN!", "error");
 
-    showNotify("SİPARİŞİNİZ İŞLENİYOR, LÜTFEN BEKLEYİN...", "success");
+    showNotify("SİPARİŞİNİZ İŞLENİYOR...", "success");
 
     try {
       for (const item of cart) {
         const cleanId = parseInt(String(item.id).replace(/\D/g, ""), 10);
-
         const { error: rpcError } = await supabase.rpc(
           "update_variant_stock_jsonb",
           {
@@ -108,19 +107,74 @@ const Cart = () => {
             amount_change: -item.quantity,
           },
         );
+        if (rpcError)
+          throw new Error(`${item.name} stok hatası: ${rpcError.message}`);
+      }
 
-        if (rpcError) {
-          throw new Error(
-            `${item.name} için stok güncellenemedi: ${rpcError.message}`,
-          );
+      const { error: orderError } = await supabase
+        .from("orders")
+        .insert([
+          {
+            user_id: user.id,
+            first_name: data.firstName,
+            last_name: data.lastName,
+            email: data.email,
+            phone: data.phone,
+            status: "Alındı",
+            promo_code: isPromoApplied ? appliedPromoCode : null,
+            discount_amount: Math.round(totals.promoDiscount),
+            address: data.address,
+            city: data.city,
+            card_name: data.cardName,
+            card_number: data.cardNumber,
+            expiry_date: data.expiryDate,
+            cvc: data.cvc,
+            total_amount: Math.round(totals.final),
+            items: cart.map((item) => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              size: item.size,
+              color: item.color,
+              image: item.image,
+            })),
+          },
+        ])
+        .select();
+
+      if (orderError) throw new Error(`Sipariş hatası: ${orderError.message}`);
+
+      if (isPromoApplied && appliedPromoCode) {
+        const { error: promoUpdateError } = await supabase.rpc(
+          "increment_coupon_usage",
+          {
+            quote_code: appliedPromoCode.toUpperCase(),
+          },
+        );
+
+        if (promoUpdateError) {
+          console.error("Kupon sayacı güncellenemedi:", promoUpdateError);
+        } else {
+          console.log("Kupon başarıyla güncellendi!");
         }
       }
+      if (isPromoApplied && appliedPromoCode) {
+        const { error: promoError } = await supabase.rpc(
+          "increment_coupon_usage",
+          {
+            quote_code: appliedPromoCode.toUpperCase(),
+          },
+        );
+        if (promoError) console.error("Kupon sayacı artırılamadı:", promoError);
+      }
+  
 
       const orderId = addOrder(
         cart.map((item) => ({ ...item })),
         Math.round(totals.final),
       );
-      console.log("Formdan gelen müşteri bilgileri:", data);
+
       showNotify(`SİPARİŞ BAŞARILI! NO: ${orderId}`, "success");
 
       setTimeout(() => {
@@ -135,13 +189,13 @@ const Cart = () => {
     }
   };
 
-  const filteredCities = useMemo(
-    () =>
-      TURKISH_CITIES.filter((city) =>
-        city.toLowerCase().includes(watchedCity.toLowerCase()),
-      ),
-    [watchedCity],
-  );
+  const filteredCities = useMemo(() => {
+    const allCities = [...TURKISH_CITIES];
+    if (!watchedCity) return allCities;
+    return allCities.filter((city) =>
+      city.toLowerCase().includes(watchedCity.toLowerCase()),
+    );
+  }, [watchedCity]);
 
   useEffect(() => {
     if (notification) {
@@ -161,7 +215,7 @@ const Cart = () => {
   if (cart.length === 0) return <EmptyCart />;
 
   return (
-    <div className="min-h-screen bg-white font-satoshi text-left overflow-x-hidden relative container mx-auto px-4 py-10">
+    <div className="min-h-screen bg-white font-satoshi text-left container mx-auto px-4 py-10 relative overflow-x-hidden">
       <Helmet>
         <title>Shop.co | {showCheckout ? "Güvenli Ödeme" : "Sepetim"}</title>
       </Helmet>
@@ -179,74 +233,60 @@ const Cart = () => {
         progress={progress}
       />
 
-      <div>
-        <button
-          onClick={() =>
-            showCheckout ? setShowCheckout(false) : navigate("/shop")
-          }
-          className="flex items-center gap-3 text-zinc-400 hover:text-black transition-all mb-10 group"
-        >
-          <FiArrowLeft className="group-hover:-translate-x-2 transition-transform" />
-          <span className="text-[10px] font-black tracking-widest ">
-            {showCheckout ? "SEPETE DÖN" : "ALIŞVERİŞE DEVAM ET"}
-          </span>
-        </button>
+      <button
+        onClick={() =>
+          showCheckout ? setShowCheckout(false) : navigate("/shop")
+        }
+        className="flex items-center gap-3 text-zinc-400 hover:text-black transition-all mb-10 group"
+      >
+        <FiArrowLeft className="group-hover:-translate-x-2 transition-transform" />
+        <span className="text-[10px] font-black tracking-widest ">
+          {showCheckout ? "SEPETE DÖN" : "ALIŞVERİŞE DEVAM ET"}
+        </span>
+      </button>
 
-        <div>
-          <h1 className="text-5xl md:text-4xl font-[1000] font-satoshi uppercase italic">
-            {showCheckout ? "ÖDEME" : "SEPETİM"}
-          </h1>
-          <div className="hidden md:flex items-center gap-2 text-zinc-300 mt-2">
-            <FiShoppingBag size={20} />
-            <span className="text-xs font-black italic uppercase">
-              {cart.length} PARÇA ÜRÜN
-            </span>
-          </div>
-        </div>
+      <h1 className="text-5xl md:text-4xl font-[1000] uppercase italic">
+        {showCheckout ? "ÖDEME" : "SEPETİM"}
+      </h1>
 
-        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-16 items-start mt-10">
-          <div className="lg:col-span-7 w-full space-y-8">
-            {!showCheckout ? (
-              <div className="space-y-6">
-                {cart.map((item) => (
-                  <CartItemCard
-                    key={`${item.id}-${item.size}-${item.color}`}
-                    item={item}
-                    onRemoveClick={() => handleOpenDeleteModal(item)}
-                    updateQuantity={(id, size, color, newQty) => {
-                      if (newQty < 1) {
-                        handleOpenDeleteModal(item);
-                      } else {
-                        updateQuantity(id, size, color, newQty);
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="animate-in fade-in slide-in-from-left duration-500">
-                <CheckoutForm
-                  onCheckoutSubmit={onCheckoutSubmit}
-                  filteredCities={filteredCities}
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-16 items-start mt-10">
+        <div className="lg:col-span-7 w-full space-y-8">
+          {!showCheckout ? (
+            <div className="space-y-6">
+              {cart.map((item) => (
+                <CartItemCard
+                  key={`${item.id}-${item.size}-${item.color}`}
+                  item={item}
+                  onRemoveClick={() => handleOpenDeleteModal(item)}
+                  updateQuantity={(id, size, color, newQty) =>
+                    newQty < 1
+                      ? handleOpenDeleteModal(item)
+                      : updateQuantity(id, size, color, newQty)
+                  }
                 />
-              </div>
-            )}
-          </div>
-
-          <div className="lg:col-span-5 w-full sticky top-32">
-            <div className="bg-white border-2 border-zinc-100 rounded-[32px] p-2">
-              <OrderSummary
-                totals={totals}
-                promoInput={promoInput}
-                setPromoInput={setPromoInput}
-                handleApplyPromo={handleApplyPromo}
-                isPromoApplied={isPromoApplied}
-                appliedPromoCode={appliedPromoCode}
-                showCheckout={showCheckout}
-                setShowCheckout={setShowCheckout}
+              ))}
+            </div>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-left duration-500">
+              <CheckoutForm
+                onCheckoutSubmit={onCheckoutSubmit}
+                filteredCities={filteredCities}
               />
             </div>
-          </div>
+          )}
+        </div>
+
+        <div className="lg:col-span-5 w-full sticky top-32">
+          <OrderSummary
+            totals={totals}
+            promoInput={promoInput}
+            setPromoInput={setPromoInput}
+            handleApplyPromo={handleApplyPromo}
+            isPromoApplied={isPromoApplied}
+            appliedPromoCode={appliedPromoCode}
+            showCheckout={showCheckout}
+            setShowCheckout={setShowCheckout}
+          />
         </div>
       </div>
     </div>

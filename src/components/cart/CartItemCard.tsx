@@ -1,8 +1,20 @@
 import { FiTrash2, FiPlus, FiMinus } from "react-icons/fi";
-import type { CartItem } from "../../context/CartContext";
+import type { CartItem as BaseCartItem } from "../../context/CartContext";
+
+interface Variant {
+  size: string;
+  color: string;
+  stock: number;
+}
+
+type EnhancedCartItem = BaseCartItem & {
+  variants?: Variant[];
+  value?: number | string;
+  stock?: number;
+};
 
 interface CartItemCardProps {
-  item: CartItem;
+  item: EnhancedCartItem;
   onRemoveClick: () => void;
   updateQuantity: (
     id: number,
@@ -31,29 +43,30 @@ const CartItemCard = ({
     (v) => v.size === item.size && v.color === item.color,
   );
 
-  const stockLimit = currentVariant?.stock ?? (item as any).stock ?? 99;
+  const stockLimit = currentVariant?.stock ?? item.stock ?? 99;
 
   const currentQty = Number(item.quantity) || 0;
-  const displayPrice = Number(item.price || (item as any).value || 0);
+
+  const displayPrice = Number(item.price || item.value || 0);
 
   const handleDecrease = () => {
     const nextQty = currentQty - 1;
     if (nextQty <= 0) {
       onRemoveClick();
     } else {
-      updateQuantity(item.id, item.size, item.color, nextQty);
+      updateQuantity(Number(item.id), item.size, item.color, nextQty);
     }
   };
 
   const handleIncrease = () => {
     const nextQty = currentQty + 1;
     if (nextQty <= 10 && nextQty <= stockLimit) {
-      updateQuantity(item.id, item.size, item.color, nextQty);
+      updateQuantity(Number(item.id), item.size, item.color, nextQty);
     }
   };
 
   return (
-    <div className="flex gap-8 p-6 bg-zinc-50 rounded-[40px] border border-transparent hover:border-zinc-200 transition-all group">
+    <div className="flex bg-zinc-50 rounded-[40px] border border-transparent hover:border-zinc-200 transition-all group p-4 gap-4">
       <div className="w-32 h-32 bg-white rounded-[30px] overflow-hidden shadow-sm shrink-0 border border-zinc-100">
         <img
           src={item.image || undefined}

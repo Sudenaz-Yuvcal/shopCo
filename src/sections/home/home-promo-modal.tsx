@@ -94,7 +94,7 @@ const PromoModal = () => {
 
       <div className="relative w-full max-w-5xl h-full max-h-[90vh] bg-gradient-to-br from-zinc-800 via-zinc-900 to-black rounded-[40px] overflow-hidden shadow-[0_0_120px_rgba(255,0,0,0.2)] flex flex-col items-center justify-center text-center p-8 border border-white/10 animate-in zoom-in duration-500">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-red-600/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-red/20 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
         </div>
 
