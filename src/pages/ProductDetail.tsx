@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getProductBySlug } from "../api/productService";
+import { getProductBySlug, getProducts } from "../api/productService";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
 import { useFavorite } from "../context/FavoriteContext";
@@ -22,21 +22,24 @@ interface LocalAPIProduct {
   images?: string[];
   image?: string;
   description?: string;
-  category?: { id?: number; name: string } | string; 
+  category?: { id: number; name: string } | null;
   brand?: string;
   created_at?: string;
   oldValue?: number;
   rating?: number;
   faqs?: { question: string; answer: string }[];
-  variants: {
+  variants?: {
     size: string;
     color: string;
     stock: number;
   }[];
+  slug?: string;
 }
 
 interface ExtendedProduct extends Product {
   created_at: string;
+  brand: string;
+  category_id: number;
 }
 
 const ProductDetail = () => {
@@ -46,7 +49,7 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { user } = useUser();
 
-  const [showAddedModal, setShowAddedModal] = useState(false);
+  const [showAddedModal, setShowAddedModal] = useState<boolean>(false);
   const [addedDetails, setAddedDetails] = useState({
     qty: 1,
     size: "",
@@ -57,62 +60,68 @@ const ProductDetail = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
-  const { data, isLoading: loading } = useQuery({
-    queryKey: ["product-detail", slug],
+  const adaptProduct = (p: LocalAPIProduct): ExtendedProduct => {
+    const name = p.name ?? p.title ?? "İsimsiz Ürün";
+
+    return {
+      id: p.id,
+      name: name,
+      title: name,
+      image: p.images?.[0] ?? p.image ?? "",
+      images: p.images ?? [],
+      slug: p.slug ?? slugify(name),
+      price: p.price,
+      value: p.price,
+      oldValue: p.oldValue ?? Math.round(p.price * 1.3),
+      description: p.description ?? "Açıklama bulunamadı.",
+      rating: Number(p.rating ?? 4.8),
+      category: p.category?.name ?? "Giyim",
+      category_id: p.category?.id ?? 0,
+      brand: p.brand ?? "",
+      created_at: p.created_at ?? new Date().toISOString(),
+      faqs: p.faqs ?? [],
+      variants: (p.variants ?? []).map((v) => ({
+        size: v.size,
+        color: v.color,
+        stock: Number(v.stock ?? 0),
+      })),
+
+      stock: (p.variants ?? []).reduce(
+        (acc, curr) => acc + Number(curr.stock ?? 0),
+        0,
+      ),
+    };
+  };
+
+  const { data: product, isLoading: productLoading } =
+    useQuery<ExtendedProduct | null>({
+      queryKey: ["product-detail", slug],
+      queryFn: async () => {
+        if (!slug) throw new Error("Slug bulunamadı");
+        const res = (await getProductBySlug(
+          slug,
+        )) as unknown as LocalAPIProduct;
+        return res ? adaptProduct(res) : null;
+      },
+      enabled: !!slug,
+    });
+
+  const { data: relatedProducts = [], isLoading: _relatedLoading } = useQuery<
+    ExtendedProduct[]
+  >({
+    queryKey: ["related-products", product?.category_id],
     queryFn: async () => {
-      if (!slug) throw new Error("Ürün kimliği (slug) bulunamadı");
-
-      const productData = (await getProductBySlug(slug)) as LocalAPIProduct;
-
-      if (!productData) return null;
-
-      const adaptedProduct: ExtendedProduct = {
-        id: productData.id,
-        name: productData.title ?? productData.name ?? "İsimsiz Ürün",
-        title: productData.title ?? productData.name ?? "İsimsiz Ürün",
-        image: productData.images?.[0] ?? productData.image ?? "",
-        images: productData.images ?? [],
-        slug: slugify(productData.title ?? productData.name ?? ""),
-
-        category_id:
-          productData.category && typeof productData.category === "object"
-            ? (productData.category.id ?? 0)
-            : 0,
-
-        value: productData.price,
-        price: productData.price,
-        oldValue: productData.oldValue ?? Math.round(productData.price * 1.3),
-        description: productData.description ?? "Açıklama bulunamadı.",
-        rating: productData.rating ?? 4.8,
-
-        category:
-          typeof productData.category === "object"
-            ? productData.category.name
-            : (productData.category ?? "Giyim"),
-
-        faqs: productData.faqs ?? [],
-        brand: productData.brand ?? "",
-        created_at: productData.created_at ?? new Date().toISOString(),
-
-        stock:
-          productData.variants?.reduce(
-            (acc, curr) => acc + (curr.stock ?? 0),
-            0,
-          ) ?? 0,
-        variants: productData.variants ?? [],
-      };
-
-      return {
-        product: adaptedProduct,
-        relatedProducts: [] as ExtendedProduct[],
-      };
+      if (!product) return [];
+      const all = (await getProducts()) as unknown as LocalAPIProduct[];
+      return all
+        .filter(
+          (p) => p.category?.id === product.category_id && p.id !== product.id,
+        )
+        .slice(0, 4)
+        .map(adaptProduct);
     },
-    enabled: !!slug,
+    enabled: !!product,
   });
-
-  const product = data?.product;
-  const relatedProducts = data?.relatedProducts || [];
-  const isFavorite = product ? isInFavorites(product.id) : false;
 
   const handleAddToCart = (qty: number, size: string, color: string) => {
     if (product) {
@@ -122,16 +131,15 @@ const ProductDetail = () => {
     }
   };
 
-  if (loading)
+  if (productLoading)
     return (
-      <div className="py-40 text-center font-black italic text-4xl animate-pulse text-black">
+      <div className="py-40 text-center font-black italic text-4xl animate-pulse">
         YÜKLENİYOR...
       </div>
     );
-
   if (!product)
     return (
-      <div className="py-40 text-center font-black italic text-4xl text-black">
+      <div className="py-40 text-center font-black italic text-4xl">
         ÜRÜN BULUNAMADI!
       </div>
     );
@@ -143,7 +151,7 @@ const ProductDetail = () => {
       </Helmet>
 
       {showAddedModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
           <div
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowAddedModal(false)}
@@ -153,12 +161,12 @@ const ProductDetail = () => {
               <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center">
                 <RiCheckLine size={28} />
               </div>
-              <h3 className="font-black uppercase italic text-2xl text-black">
+              <h3 className="font-black uppercase italic text-2xl">
                 SEPETE EKLENDİ
               </h3>
             </div>
             <div className="flex gap-6 mb-10 text-left">
-              <div className="w-24 h-24 rounded-2xl overflow-hidden bg-zinc-50 border border-zinc-100">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden bg-zinc-50">
                 <img
                   src={product.image}
                   className="w-full h-full object-cover"
@@ -166,14 +174,14 @@ const ProductDetail = () => {
                 />
               </div>
               <div>
-                <h4 className="font-black uppercase text-lg leading-tight text-black">
+                <h4 className="font-black uppercase text-lg leading-tight">
                   {product.name}
                 </h4>
                 <p className="text-xs font-bold text-zinc-400 uppercase mt-1">
                   {addedDetails.color} / {addedDetails.size} /{" "}
                   {addedDetails.qty} ADET
                 </p>
-                <p className="text-xl font-black italic mt-1 text-black">
+                <p className="text-xl font-black italic mt-1">
                   ${product.price * addedDetails.qty}
                 </p>
               </div>
@@ -193,7 +201,7 @@ const ProductDetail = () => {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <ProductInfo
           product={product}
-          isFavorite={isFavorite}
+          isFavorite={isInFavorites(product.id)}
           onToggleFavorite={toggleFavorite}
           onAddToCart={handleAddToCart}
           userAddress={user?.address || "Bursa, Türkiye"}
@@ -208,7 +216,7 @@ const ProductDetail = () => {
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {relatedProducts.map((p) => (
-            <ProductCard key={p.id} {...p} slug={p.slug || slugify(p.name)} />
+            <ProductCard key={p.id} {...p} />
           ))}
         </div>
       </div>

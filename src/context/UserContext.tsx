@@ -15,6 +15,7 @@ interface User {
   address?: string;
   membership: "Elite" | "Standard";
   role?: "admin" | "user";
+  created_at?: string;
 }
 
 interface UserContextType {
@@ -40,7 +41,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         console.error("User data parse error:", error);
       } finally {
-        setLoading(false); 
+        setLoading(false);
       }
     };
     loadUser();

@@ -49,6 +49,10 @@ const onlyNumbers = (e: React.KeyboardEvent<HTMLInputElement>) => {
 
 const SIZE_TYPES = ["Beden", "Numara", "Standart"];
 
+interface FAQ {
+  question: string;
+  answer: string;
+}
 interface VariantInput {
   color: string;
   size: string;
@@ -187,12 +191,16 @@ const AddProductPage = () => {
             faqs: data.faqs || [],
           });
           const sizeMap: Record<number, string> = {};
-          data.variants.forEach((v: any, idx: number) => {
-            if (["S", "M", "L", "XL", "XXL"].includes(v.size))
+          data.variants.forEach((v: VariantInput, idx: number) => {
+            if (["S", "M", "L", "XL", "XXL"].includes(v.size)) {
               sizeMap[idx] = "Beden";
-            else if (v.size === "Standart") sizeMap[idx] = "Standart";
-            else sizeMap[idx] = "Numara";
+            } else if (v.size === "Standart") {
+              sizeMap[idx] = "Standart";
+            } else {
+              sizeMap[idx] = "Numara";
+            }
           });
+
           setActiveSizeTypes(sizeMap);
         }
       };
@@ -252,7 +260,7 @@ const AddProductPage = () => {
       }
     },
   });
-  
+
   const onSubmit: SubmitHandler<AddProductInputs> = (data) => {
     const productSlug = convertToSlug(data.name);
 
@@ -542,15 +550,16 @@ const AddProductPage = () => {
               <select
                 value={selectedSampleIndex}
                 onChange={(e) => setSelectedSampleIndex(e.target.value)}
-                className="bg-black border border-white/10 text-[10px] font-black uppercase px-4 py-2 rounded-full outline-none focus:border-white transition-all"
+                className="bg-black border border-white/10 text-[10px] font-black uppercase px-4 py-2 rounded-full outline-none focus:border-white transition-all text-white"
               >
-                <option value="">Hazır Şablonlar...</option>
-                {(FAQ_SAMPLES as any).map((s: any, i: number) => (
+                <option value="">HAZIR ŞABLONLAR...</option>
+                {FAQ_SAMPLES.map((s: FAQ, i: number) => (
                   <option key={i} value={i}>
                     {s.question}
                   </option>
                 ))}
               </select>
+
               <button
                 type="button"
                 onClick={handleAddSelectedFAQ}

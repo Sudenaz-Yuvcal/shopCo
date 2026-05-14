@@ -135,10 +135,12 @@ const ProductCard = (product: ProductCardProps) => {
     };
   }, [isSelecting]);
 
-  const isNew = created_at
-    ? new Date().getTime() - new Date(created_at).getTime() <=
-      3 * 24 * 60 * 60 * 1000
-    : false;
+  const isNew =
+    product.category === "NEW" ||
+    (created_at
+      ? new Date().getTime() - new Date(created_at).getTime() <=
+        3 * 24 * 60 * 60 * 1000
+      : false);
 
   const discount =
     oldValue && oldValue > displayPrice

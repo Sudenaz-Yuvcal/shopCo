@@ -15,58 +15,75 @@ interface FAQ {
   answer: string;
 }
 
+interface Variant {
+  size: string;
+  color: string;
+  stock: number;
+}
+
 interface RawProduct {
   id: number;
   price: number;
+  sales?: number;
   images?: string[];
   name?: string;
   title?: string;
+  category_id?: number; 
+  brand?: string;
   description?: string;
   slug?: string;
-  category?: { id: number; name?: string };
+  category?: {
+    id: number;
+    name?: string;
+  };
   created_at?: string;
   faqs?: FAQ[];
-  variants?: { size: string; color: string; stock: number }[];
+  variants?: Variant[];
 }
-
-const TopSelling = () => {
+export const TopSelling = () => {
   const { data: products = [], isLoading: loading } = useQuery({
     queryKey: ["top-selling"],
     queryFn: async () => {
       const response = await getProducts();
-      const allProducts = response as unknown as RawProduct[];
+      const allProducts = response as RawProduct[];
 
-      return allProducts
-        .map(
-          (item: RawProduct): Product => ({
-            id: item.id,
-            title: item.title || item.name || "Popüler Ürün",
-            name: item.title || item.name || "Popüler Ürün",
-            slug: item.slug || slugify(item.title || item.name || ""),
-            description: item.description || "Harika bir SHOP.CO ürünü.",
-            category_id: item.category?.id || 0,
-            created_at: item.created_at || new Date().toISOString(),
-            faqs: item.faqs || [],
-            value: item.price,
-            price: item.price,
-            image:
-              item.images && item.images.length > 0
-                ? item.images[0]
-                : "/shopCO.png",
-            images: item.images || [],
-            rating: 4.8,
-            oldValue: Math.round(item.price * 1.3),
-            category: "Top Selling",
-            brand: "SHOP.CO",
-            variants: item.variants || [],
-            stock:
-              item.variants?.reduce(
-                (acc: number, curr) => acc + (curr.stock || 0),
-                0,
-              ) || 0,
-          }),
-        )
-        .slice(0, 4);
+      const sorted = allProducts.sort((a, b) => {
+        const salesA = a.sales || 0;
+        const salesB = b.sales || 0;
+
+        if (salesB !== salesA) {
+          return salesB - salesA;
+        }
+
+        const dateA = new Date(a.created_at || 0).getTime();
+        const dateB = new Date(b.created_at || 0).getTime();
+        return dateA - dateB;
+      });
+
+      return sorted.slice(0, 4).map(
+        (item): Product => ({
+          id: item.id,
+          title: item.title || item.name || "Popüler Ürün",
+          name: item.title || item.name || "Popüler Ürün",
+          slug: item.slug || slugify(item.title || item.name || ""),
+          description: item.description || "Harika bir SHOP.CO ürünü.",
+          category_id: item.category_id || item.category?.id || 0,
+          created_at: item.created_at || new Date().toISOString(),
+          faqs: item.faqs || [],
+          value: item.price,
+          price: item.price,
+          image: item.images?.[0] || "/shopCO.png",
+          images: item.images || [],
+          rating: 4.8,
+          oldValue: Math.round(item.price * 1.3),
+          category: "Top Selling",
+          brand: item.brand || "SHOP.CO", 
+          variants: item.variants || [],
+          stock:
+            item.variants?.reduce((acc, curr) => acc + (curr.stock || 0), 0) ||
+            0,
+        }),
+      );
     },
   });
 
@@ -109,8 +126,7 @@ const TopSelling = () => {
         <Link to="/shop" className="w-full md:w-auto">
           <Button
             variant="outline"
-            size="lg"
-            className="w-full md:w-64 !rounded-full font-black italic border-zinc-200 hover:bg-black hover:text-white transition-all duration-300 shadow-sm uppercase text-xs tracking-widest"
+            className="w-full md:w-64 !rounded-full font-black italic border-zinc-200 hover:bg-black hover:text-white transition-all duration-300 shadow-sm uppercase text-xs tracking-widest py-4"
           >
             Hepsini Gör
           </Button>
@@ -119,5 +135,4 @@ const TopSelling = () => {
     </section>
   );
 };
-
 export default TopSelling;

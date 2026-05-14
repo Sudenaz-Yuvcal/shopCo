@@ -69,7 +69,7 @@ const CategorySidebar = ({
           <div className="grid grid-cols-1 gap-3">
             {CATEGORIES.map((cat) => (
               <label
-                key={cat.name}
+                key={cat.id || cat.name}
                 className="flex items-center gap-3 cursor-pointer group"
               >
                 <input
@@ -87,9 +87,9 @@ const CategorySidebar = ({
                       : "border-zinc-200 group-hover:border-black"
                   }`}
                 >
-                  {(tempFilters.selectedCategories || []).includes(cat.name) && (
-                    <RiCheckLine className="text-white" size={14} />
-                  )}
+                  {(tempFilters.selectedCategories || []).includes(
+                    cat.name,
+                  ) && <RiCheckLine className="text-white" size={14} />}
                 </div>
                 <span
                   className={`text-[11px] font-black uppercase italic tracking-wide ${
@@ -153,13 +153,13 @@ const CategorySidebar = ({
           <div className="flex flex-wrap gap-3">
             {AVAILABLE_COLORS.map((colorObj) => {
               const isSelected = (tempFilters.colors || []).includes(
-                colorObj.id,
+                colorObj.name,
               );
               return (
                 <button
                   key={colorObj.id}
                   type="button"
-                  onClick={() => handleToggle("colors", colorObj.id)}
+                  onClick={() => handleToggle("colors", colorObj.name)}
                   className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all border-2 ${
                     isSelected
                       ? "border-black scale-110 shadow-md"

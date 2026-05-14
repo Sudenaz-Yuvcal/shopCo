@@ -13,7 +13,7 @@ const NewProduct = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  const { data: rawProducts, isLoading: loading } = useQuery<Product[]>({
+  const { data: products = [], isLoading: loading } = useQuery<Product[]>({
     queryKey: ["new-arrivals-page-full"],
     queryFn: async (): Promise<Product[]> => {
       const allProducts: APIProduct[] = await getProducts();
@@ -22,10 +22,9 @@ const NewProduct = () => {
       const now = new Date().getTime();
 
       const processed = allProducts.map((item: APIProduct): Product => {
-        const dateSource = item.id
-          ? new Date(Date.now() - (100 - item.id) * 3600000).toISOString()
-          : new Date().toISOString();
-        const productDate = new Date(dateSource).getTime();
+        const productDate = item.created_at
+          ? new Date(item.created_at).getTime()
+          : 0;
         const isActuallyNew = now - productDate <= THREE_DAYS_IN_MS;
 
         return {
@@ -34,10 +33,8 @@ const NewProduct = () => {
           category_id: item.category?.id || 0,
           stock: item.stock ?? 0,
           value: item.price,
-          image:
-            item.images && item.images.length > 0
-              ? item.images[0]
-              : "/public/shopCO.png",
+          created_at: item.created_at,
+          image: item.images?.[0] || "/public/shopCO.png",
           rating: item.rating || 4.5,
           oldValue: Math.round(item.price * 1.3),
           category: isActuallyNew ? "NEW" : item.category?.name || "Arrival",
@@ -45,14 +42,15 @@ const NewProduct = () => {
         } as Product;
       });
 
-      return processed.sort((a, b) => b.id - a.id);
+      const onlyNewArrivals = processed.filter((product) => {
+        if (!product.created_at) return false;
+        const pDate = new Date(product.created_at).getTime();
+        return now - pDate <= THREE_DAYS_IN_MS;
+      });
+
+      return onlyNewArrivals.sort((a, b) => b.id - a.id);
     },
   });
-
-  const products = useMemo(() => {
-    if (!rawProducts || !Array.isArray(rawProducts)) return [] as Product[];
-    return rawProducts;
-  }, [rawProducts]);
 
   const totalPages = Math.ceil(products.length / itemsPerPage);
 
@@ -104,17 +102,23 @@ const NewProduct = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-20">
-              {currentItems.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  {...product}
-                  slug={
-                    product.slug || slugify(product.name || product.title || "")
-                  }
-                />
-              ))}
-            </div>
+            {products.length === 0 ? (
+              <div className="text-center py-20 text-zinc-400 font-bold uppercase">
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-20">
+                {currentItems.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    {...product}
+                    slug={
+                      product.slug ||
+                      slugify(product.name || product.title || "")
+                    }
+                  />
+                ))}
+              </div>
+            )}
 
             {totalPages > 1 && (
               <div className="mt-20 flex items-center justify-between border-t border-zinc-100 pt-8">

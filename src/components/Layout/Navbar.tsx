@@ -217,7 +217,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onFocus={() => searchTerm.length > 1 && setIsSearchOpen(true)}
                 onKeyDown={(e) => e.key === "Enter" && handleSeeAll()}
-                placeholder="ÜRÜN VEYA KATEGORİ ARA..."
+                placeholder="ÜRÜN VEYA MARKA ARA..."
                 className="!py-3 pl-12 w-full text-[10px] bg-brand-gray border-none !rounded-full font-black tracking-widest focus:ring-2 focus:ring-black transition-all"
               />
               {isLoading ? (

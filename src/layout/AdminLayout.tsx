@@ -148,7 +148,7 @@ export default function AdminLayout() {
                 Erişim Paneli
               </p>
               <p className="font-bold italic uppercase text-xs tracking-tight">
-                Root Admin
+               Admin
               </p>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-zinc-800 to-zinc-600 border border-white/10" />

@@ -8,7 +8,7 @@ interface SupabaseProductRow {
   images: string[];
   created_at: string;
   brand?: string;
-  slug: string; 
+  slug: string;
   faqs?: { question: string; answer: string }[];
   variants: {
     size: string;
@@ -29,9 +29,9 @@ export interface APIProduct {
   description: string;
   images: string[];
   brand: string;
-  title?:string;
-  stock?:number;
-  rating?:number;
+  title?: string;
+  stock?: number;
+  rating?: number;
   slug: string;
   faqs: { question: string; answer: string }[];
   variants: {
@@ -76,6 +76,23 @@ export const getProducts = async (): Promise<APIProduct[]> => {
   }
 };
 
+export const getTopSellingProducts = async (): Promise<APIProduct[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("top_selling_products")
+      .select(`*, category:categories (id, name, image)`)
+      .order("sales", { ascending: false })
+      .limit(4);
+
+    if (error) throw error;
+
+    return (data || []).map(mapProductRow);
+  } catch (error) {
+    console.error("Top selling ürünler çekilirken hata:", error);
+    return [];
+  }
+};
+
 export const getProductBySlug = async (
   slug: string,
 ): Promise<APIProduct | null> => {
@@ -89,7 +106,7 @@ export const getProductBySlug = async (
       .from("products")
       .select(`*, category:categories (id, name, image)`)
       .eq("slug", slug)
-      .maybeSingle(); 
+      .maybeSingle();
 
     if (error) throw error;
     return data ? mapProductRow(data) : null;

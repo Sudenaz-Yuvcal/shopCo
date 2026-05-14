@@ -59,7 +59,7 @@ export default function UsersManagementPage() {
       html: `
         <div class="space-y-4 py-4">
           <div class="bg-black/5 p-4 rounded-2xl border border-black/5">
-            <p class="font-black text-black uppercase italic text-lg">${user.email}</p>
+            <p class="font-black text-black uppercase italic text-lg break-all">${user.email}</p>
           </div>
           <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest leading-relaxed">
             BU KULLANICI ŞU ANDA SİSTEMDEN <span class="${isNowBanning ? "text-red-600" : "text-green-600"}">${isNowBanning ? "MEN EDİLECEK" : "YETKİLENDİRİLECEK"}</span>. 
@@ -76,12 +76,13 @@ export default function UsersManagementPage() {
       buttonsStyling: false,
       customClass: {
         popup:
-          "border-[6px] border-black rounded-[40px] shadow-[20px_20px_0px_rgba(0,0,0,1)] p-12",
-        title: "font-heavy italic uppercase tracking-tighter text-4xl",
+          "border-[4px] md:border-[6px] border-black rounded-[30px] md:rounded-[40px] shadow-[10px_10px_0px_rgba(0,0,0,1)] md:shadow-[20px_20px_0px_rgba(0,0,0,1)] p-6 md:p-12 w-[90%] max-w-lg",
+        title:
+          "font-heavy italic uppercase tracking-tighter text-2xl md:text-4xl",
         confirmButton:
-          "bg-black text-white px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all mx-2",
+          "bg-black text-white px-6 md:px-10 py-4 md:py-5 rounded-2xl font-black uppercase text-[10px] md:text-xs tracking-widest hover:scale-105 transition-all mx-2 mt-4",
         cancelButton:
-          "bg-zinc-100 text-zinc-500 px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all mx-2",
+          "bg-zinc-100 text-zinc-500 px-6 md:px-10 py-4 md:py-5 rounded-2xl font-black uppercase text-[10px] md:text-xs tracking-widest hover:scale-105 transition-all mx-2 mt-4",
       },
     });
 
@@ -103,35 +104,91 @@ export default function UsersManagementPage() {
   };
 
   return (
-    <div className="space-y-12 animate-shop-fade-in pb-20 p-8 bg-black min-h-screen">
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+    <div className="space-y-6 md:space-y-12 animate-shop-fade-in pb-20 p-4 md:p-8 bg-black min-h-screen">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 md:gap-8">
         <div>
           <p className="text-zinc-300 text-[10px] font-black uppercase tracking-[0.4em] mb-2">
-            User Permissions
+            Kullanıcı İzinleri
           </p>
-          <h1 className="text-6xl font-heavy italic uppercase tracking-tighter leading-none text-white">
+          <h1 className="text-4xl md:text-6xl font-heavy italic uppercase tracking-tighter leading-none text-white">
             Kullanıcılar
           </h1>
         </div>
 
-        <div className="relative group">
+        <div className="relative group w-full lg:w-auto">
           <RiSearch2Line className="absolute left-6 top-1/2 -translate-y-1/2 text-black opacity-30 group-focus-within:opacity-100 transition-opacity" />
           <input
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="KİMLİK SORGULA..."
-            className="border-[4px] border-black p-5 pl-14 font-black uppercase text-[11px] tracking-widest w-full lg:w-96 outline-none focus:bg-zinc-50 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] transition-all text-black"
+            className="border-[4px] border-black p-4 md:p-5 pl-14 font-black uppercase text-[11px] tracking-widest w-full lg:w-96 outline-none focus:bg-zinc-50 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] transition-all text-black"
           />
         </div>
       </div>
 
-      <div className="border-[6px] border-black bg-white shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="border-[4px] md:border-[6px] border-black bg-white shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] md:shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <div className="md:hidden divide-y-4 divide-black">
+          {loading ? (
+            <div className="p-10 text-center font-heavy italic uppercase text-black animate-pulse">
+              Sorgulanıyor...
+            </div>
+          ) : (
+            users.map((user) => (
+              <div key={user.id} className="p-6 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-black flex items-center justify-center rounded-lg text-white shrink-0">
+                    <RiShieldUserLine size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xl text-black font-heavy italic uppercase leading-none truncate">
+                      {user.name || "İSİMSİZ ÜYE"}
+                    </p>
+                    <p className="text-[9px] text-zinc-400 lowercase font-black tracking-widest truncate mt-1">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between bg-zinc-50 p-3 border-2 border-black/5 rounded-xl">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
+                    Seviye:
+                  </span>
+                  <span className="text-[9px] font-black uppercase text-black bg-white px-2 py-1 border border-black/10 rounded">
+                    {user.membership_tier}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-2 h-2 rounded-full ${user.is_active ? "bg-green" : "bg-red"}`}
+                    />
+                    <span className="font-black uppercase text-[10px] tracking-widest">
+                      {user.is_active ? "Aktif" : "Banlı"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => toggleUserStatus(user)}
+                    className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest border-[3px] border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:shadow-none ${
+                      user.is_active
+                        ? "bg-red text-white"
+                        : "bg-green text-white"
+                    }`}
+                  >
+                    {user.is_active ? "BAN" : "AKTİF ET"}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <table className="w-full text-left border-collapse hidden md:table">
           <thead>
             <tr className="bg-black text-white border-b-4 border-black">
               <th className="p-8 font-black text-[10px] uppercase tracking-[0.3em]">
                 Kullanıcı Verisi
               </th>
-              <th className="p-8 font-black text-[10px] uppercase tracking-[0.3em] hidden md:table-cell">
+              <th className="p-8 font-black text-[10px] uppercase tracking-[0.3em]">
                 Seviye
               </th>
               <th className="p-8 font-black text-[10px] uppercase tracking-[0.3em]">
@@ -173,7 +230,7 @@ export default function UsersManagementPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="p-8 hidden md:table-cell">
+                  <td className="p-8">
                     <span className="bg-zinc-100 text-black px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg border border-black/5">
                       {user.membership_tier}
                     </span>

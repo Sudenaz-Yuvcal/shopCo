@@ -125,11 +125,9 @@ export default function Dashboard() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <span className="w-12 h-[2px] bg-white"></span>
-          <p className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-500">
-            System Analytics v2.0
-          </p>
+
         </div>
-        <h1 className="text-8xl font-heavy italic uppercase tracking-tighter leading-none">
+        <h1 className="text-5xl font-heavy italic uppercase tracking-tighter leading-none">
           Terminal
         </h1>
       </div>

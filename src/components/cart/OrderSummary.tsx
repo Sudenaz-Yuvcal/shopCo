@@ -1,9 +1,11 @@
 import { FiTag, FiRotateCcw } from "react-icons/fi";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Input from "../Ui/Input";
 import Button from "../Ui/Button";
 import { supabase } from "../../lib/supabase";
 import { useUser } from "../../context/UserContext";
+import { toast } from "react-toastify";
 
 interface CartTotals {
   raw: number;
@@ -36,6 +38,7 @@ const OrderSummary = ({
   setShowCheckout,
 }: OrderSummaryProps) => {
   const { user } = useUser();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user && isPromoApplied) {
@@ -43,7 +46,6 @@ const OrderSummary = ({
       setPromoInput("");
     }
   }, [user, isPromoApplied, handleApplyPromo, setPromoInput]);
-
   const onApplyClick = async () => {
     if (isPromoApplied) {
       handleApplyPromo("");
@@ -62,57 +64,43 @@ const OrderSummary = ({
         .single();
 
       if (error || !coupon) {
-        alert("GEÇERSİZ KUPON KODU!");
+        toast.error("GEÇERSİZ KUPON KODU!", { theme: "dark" });
         return;
       }
 
-      if (code === "HOSGELDIN50") {
-        const userData = user as { created_at?: string } | null;
-        const userJoinDate = userData?.created_at;
+      if (code === "HOSGELDIN50" && !user) {
+        toast.warn("BU KUPON İÇİN GİRİŞ YAPMALISINIZ!", { theme: "dark" });
+        return;
+      }
 
-        if (userJoinDate) {
-          const registrationDate = new Date(userJoinDate);
-          const now = new Date();
-          const diffInTime = now.getTime() - registrationDate.getTime();
-          const diffInDays = diffInTime / (1000 * 3600 * 24);
+      const minLimit = coupon.min_order_amount || coupon.min_amount || 0;
 
-          if (diffInDays > 7) {
-            alert("HOSGELDIN50 KUPONU SADECE İLK 7 GÜN İÇİN GEÇERLİDİR!");
-            return;
-          }
-        } else {
-          alert("BU KUPONU KULLANMAK İÇİN GİRİŞ YAPMALISINIZ!");
-          return;
-        }
+      if (totals.subtotal < minLimit) {
+        toast.error(`BU KUPON İÇİN EN AZ $${minLimit} SEPET TUTARI GEREKLİ!`, {
+          theme: "dark",
+        });
+        return;
       }
 
       const now = new Date();
-      const expiry = new Date(coupon.expiry_date);
-      if (now > expiry) {
-        alert("BU KUPONUN SÜRESİ DOLMUŞ!");
-        return;
-      }
-
-      if (coupon.used_count >= coupon.max_limit) {
-        alert("BU KUPONUN KULLANIM LİMİTİ DOLMUŞ!");
-        return;
-      }
-
-      if (
-        coupon.min_order_amount &&
-        totals.subtotal < coupon.min_order_amount
-      ) {
-        alert(
-          `BU KUPON İÇİN MİNİMUN SEPET TUTARI: $${coupon.min_order_amount}`,
-        );
+      if (now > new Date(coupon.expiry_date)) {
+        toast.error("BU KUPONUN SÜRESİ DOLMUŞ!", { theme: "dark" });
         return;
       }
 
       handleApplyPromo(code);
     } catch (err) {
       console.error("Promo Error:", err);
-      alert("Kupon kontrol edilirken bir hata oluştu.");
+      toast.error("BİR HATA OLUŞTU!", { theme: "dark" });
     }
+  };
+  const handleProceedToCheckout = () => {
+    if (!user) {
+      toast.warn("SİPARİŞ İÇİN GİRİŞ YAPMALISINIZ!", { theme: "dark" });
+      navigate("/login");
+      return;
+    }
+    setShowCheckout(true);
   };
 
   return (
@@ -194,7 +182,7 @@ const OrderSummary = ({
           <Button
             variant="primary"
             size="xl"
-            onClick={() => setShowCheckout(true)}
+            onClick={handleProceedToCheckout}
             className="w-full !py-6 !rounded-full italic tracking-[0.3em] shadow-2xl hover:scale-[1.02] transition-transform uppercase font-black"
           >
             ÖDEMEYE GEÇ →
