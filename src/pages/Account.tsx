@@ -306,10 +306,10 @@ const Account = () => {
       )}
       <div className="flex flex-col md:flex-row md:items-end justify-between border-b-4 border-black pb-8 mb-12 gap-6">
         <div>
-          <h1 className="text-5xl md:text-7xl font-[1000] uppercase italic tracking-tighter text-black leading-none">
+          <h1 className="text-5xl md:text-7xl font-[1000] uppercase italic tracking-tighter text-black leading-none ml-4 md:ml-12 lg:ml-20">
             HESABIM
           </h1>
-          <div className="flex items-center gap-2 mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 italic">
+          <div className="flex items-center gap-2 mt-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 italic ml-4 md:ml-12 lg:ml-20">
             <span className="w-2 h-2 bg-green rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />{" "}
             ONLINE PORTAL
           </div>

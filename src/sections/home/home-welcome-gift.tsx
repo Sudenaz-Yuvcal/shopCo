@@ -21,7 +21,7 @@ const WelcomeGift: React.FC = () => {
     navigator.clipboard
       .writeText(WELCOME_GIFT_DATA.CODE)
       .then(() => {
-        toast.success("Kupon Kodu Kopyalandı! 🔥", {
+        toast.success("Kupon Kodu Kopyalandı!", {
           position: "top-center",
           autoClose: 2000,
           theme: "dark",

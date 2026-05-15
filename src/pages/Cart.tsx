@@ -13,7 +13,7 @@ import CartItemCard from "../components/Cart/CartItemCard";
 import OrderSummary from "../components/Cart/OrderSummary";
 import CheckoutForm from "../components/Cart/CheckoutForm";
 import EmptyCart from "../sections/cart/cart-empty";
-import CartNotification from "../sections/cart/cart-notification";
+import CartNotification from "../components/Ui/CartNotification";
 import CartDeleteModal from "../components/Cart/CartDeleteModal";
 import { TURKISH_CITIES } from "../constants/Cities";
 import type { ICheckoutForm } from "../types/checkout";
@@ -168,7 +168,6 @@ const Cart = () => {
         );
         if (promoError) console.error("Kupon sayacı artırılamadı:", promoError);
       }
-  
 
       const orderId = addOrder(
         cart.map((item) => ({ ...item })),

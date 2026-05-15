@@ -29,9 +29,8 @@ const AccountSidebar = ({
   setShowLogoutModal,
   menuItems,
 }: AccountSidebarProps) => (
-  <aside className="w-full space-y-3 sticky top-32 shrink-0 ml-2 lg:ml-8">
-    {" "}
-    <div className="bg-black p-8 rounded-[40px] mb-8 flex items-center gap-5 shadow-2xl relative overflow-hidden group">
+  <aside className="w-full space-y-3 sticky top-32 shrink-0 ml-6 md:ml-12 lg:ml-20">
+    <div className="bg-black p-8 rounded-[40px] mb-8 flex items-center gap-5 shadow-2xl relative overflow-hidden group ml-4 md:ml-6">
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
       <div className="w-14 h-14 bg-white text-black rounded-full flex items-center justify-center font-[1000] text-xl italic uppercase shrink-0 border-2 border-white/20 shadow-xl group-hover:scale-110 transition-transform">
         {user.name[0]}
