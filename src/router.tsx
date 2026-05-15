@@ -57,7 +57,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
 
-  const isAdmin = user?.email === "admin@shop.co";
+  const isAdmin = user?.role === "admin";
   return isAdmin ? <>{children}</> : <Navigate to="/" replace />;
 };
 const AppRouter: React.FC = () => {

@@ -5,13 +5,6 @@ import { RiShieldUserLine } from "react-icons/ri";
 export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useUser();
 
-  interface AdminUser {
-    email?: string;
-    role?: string;
-    user_metadata?: {
-      role?: string;
-    };
-  }
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center font-satoshi">
@@ -25,11 +18,8 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
-
   const isAdmin =
-    user?.email === "admin@shop.co" ||
-    (user as AdminUser)?.role === "admin" ||
-    (user as AdminUser)?.user_metadata?.role === "admin";
+    user?.role === "admin" || (user as any)?.user_metadata?.role === "admin";
 
   return isAdmin ? (
     <div className="animate-shop-fade-in">{children}</div>

@@ -143,11 +143,11 @@ const AddProductPage = () => {
   const [selectedSampleIndex, setSelectedSampleIndex] = useState<string>("");
 
   useEffect(() => {
-    if (!user || user.email !== "admin@shop.co") {
+    if (!user || user.role !== "admin") {
       navigate("/login");
     }
   }, [user, navigate]);
-
+  
   const {
     register,
     control,

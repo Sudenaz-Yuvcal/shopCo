@@ -17,7 +17,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     users: 0,
     orders: 0,
@@ -28,24 +28,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function fetchDashboardData() {
-      const ADMIN_EMAIL = "admin@shop.co";
-
       try {
+        const {} = await supabase.auth.getUser();
+
         const [uRes, oRes, pRes, rRes] = await Promise.all([
           supabase
             .from("users")
             .select("*", { count: "exact", head: true })
-            .neq("email", ADMIN_EMAIL)
-            .neq("membership_tier", "admin"),
-          supabase
-            .from("orders")
-            .select("*", { count: "exact", head: true })
-            .neq("email", ADMIN_EMAIL),
+            .neq("role", "admin"),
+          supabase.from("orders").select("*", { count: "exact", head: true }),
           supabase.from("products").select("*", { count: "exact", head: true }),
-          supabase
-            .from("orders")
-            .select("total_amount")
-            .neq("email", ADMIN_EMAIL),
+          supabase.from("orders").select("total_amount"),
         ]);
 
         const totalRevenue =
@@ -125,7 +118,6 @@ export default function Dashboard() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <span className="w-12 h-[2px] bg-white"></span>
-
         </div>
         <h1 className="text-5xl font-heavy italic uppercase tracking-tighter leading-none">
           Terminal

@@ -85,8 +85,7 @@ const Login: React.FC = () => {
 
         const { user } = authData;
         const metadata = user.user_metadata;
-        const isAdmin = user.email?.toLowerCase() === "admin@shop.co";
-
+        const isAdmin = user?.role === "admin";
         const fullName =
           metadata.full_name || (isAdmin ? "ADMIN OWNER" : "DEĞERLİ ÜYE");
         const nameParts = fullName.trim().split(" ");
@@ -127,17 +126,17 @@ const Login: React.FC = () => {
       }
 
       if (errorMessage.includes("Invalid login credentials")) {
-        toast.error("E-POSTA VEYA ŞİFRE HATALI!", { 
+        toast.error("E-POSTA VEYA ŞİFRE HATALI!", {
           theme: "dark",
-          className: "font-black italic text-[10px] tracking-widest"
+          className: "font-black italic text-[10px] tracking-widest",
         });
       } else {
-        toast.error("GİRİŞ YAPILIRKEN BİR HATA OLUŞTU!", { 
+        toast.error("GİRİŞ YAPILIRKEN BİR HATA OLUŞTU!", {
           theme: "dark",
-          className: "font-black italic text-[10px] tracking-widest"
+          className: "font-black italic text-[10px] tracking-widest",
         });
       }
-      
+
       console.error("Giriş Hatası:", errorMessage);
     } finally {
       setIsLoading(false);
